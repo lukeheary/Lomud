@@ -1,16 +1,17 @@
 import { z } from "zod";
-import { router, publicProcedure, protectedProcedure } from "../init";
-import { events, businesses, rsvps, follows, friends } from "../../db/schema";
+import { router, publicProcedure, protectedProcedure, adminProcedure } from "../init";
+import { events, businesses, rsvps, follows, friends, users } from "../../db/schema";
 import { eq, and, desc, gte, lte, inArray, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 export const eventRouter = router({
-  createEvent: protectedProcedure
+  createEvent: adminProcedure
     .input(
       z.object({
         businessId: z.string().uuid().optional(),
         title: z.string().min(1).max(255),
         description: z.string().optional(),
+        imageUrl: z.string().url().optional(),
         startAt: z.date(),
         endAt: z.date().optional(),
         venueName: z.string().max(255).optional(),
@@ -74,6 +75,7 @@ export const eventRouter = router({
           address: input.address ?? null,
           endAt: input.endAt ?? null,
           businessId: input.businessId ?? null,
+          imageUrl: input.imageUrl ?? null,
         } as any)
         .returning();
 
@@ -201,10 +203,66 @@ export const eventRouter = router({
       // Create a map of event IDs to RSVPs
       const rsvpMap = new Map(userRsvps.map((r) => [r.eventId, r]));
 
-      // Attach user RSVP to each event
+      // Fetch current user data
+      const currentUser = await ctx.db.query.users.findFirst({
+        where: eq(users.id, ctx.auth.userId),
+      });
+
+      // Fetch user's friends
+      const userFriends = await ctx.db.query.friends.findMany({
+        where: and(
+          eq(friends.userId, ctx.auth.userId),
+          eq(friends.status, "accepted")
+        ),
+      });
+
+      const friendIds = userFriends.map((f) => f.friendUserId);
+
+      // Fetch friends' RSVPs (going status only)
+      const friendsRsvps =
+        eventIds.length > 0 && friendIds.length > 0
+          ? await ctx.db.query.rsvps.findMany({
+              where: and(
+                inArray(rsvps.eventId, eventIds),
+                inArray(rsvps.userId, friendIds),
+                eq(rsvps.status, "going")
+              ),
+              with: {
+                user: true,
+              },
+            })
+          : [];
+
+      // Create a map of event IDs to attendees (friends + current user if going)
+      const attendeesMap = new Map<string, typeof friendsRsvps>();
+
+      // Add friends first
+      for (const rsvp of friendsRsvps) {
+        if (!attendeesMap.has(rsvp.eventId)) {
+          attendeesMap.set(rsvp.eventId, []);
+        }
+        attendeesMap.get(rsvp.eventId)!.push(rsvp);
+      }
+
+      // Add current user if they're going to any events
+      for (const userRsvp of userRsvps) {
+        if (userRsvp.status === "going" && currentUser) {
+          if (!attendeesMap.has(userRsvp.eventId)) {
+            attendeesMap.set(userRsvp.eventId, []);
+          }
+          // Add current user to the beginning of the array
+          attendeesMap.get(userRsvp.eventId)!.unshift({
+            ...userRsvp,
+            user: currentUser,
+          } as any);
+        }
+      }
+
+      // Attach user RSVP and friends going to each event
       const eventsWithData = eventList.map((event) => ({
         ...event,
         userRsvp: rsvpMap.get(event.id) || null,
+        friendsGoing: attendeesMap.get(event.id) || [],
       }));
 
       return eventsWithData;

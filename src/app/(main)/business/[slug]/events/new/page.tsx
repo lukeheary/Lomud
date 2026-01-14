@@ -15,9 +15,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Loader2 } from "lucide-react";
+import { Calendar, Loader2, ImageIcon, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { US_STATES } from "@/lib/utils";
+import { UploadButton } from "@/lib/uploadthing";
+import Image from "next/image";
 
 const EVENT_CATEGORIES = [
   "music",
@@ -42,6 +44,7 @@ export default function NewEventPage() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
+    imageUrl: "",
     category: "" as (typeof EVENT_CATEGORIES)[number],
     startAt: "",
     endAt: "",
@@ -115,6 +118,7 @@ export default function NewEventPage() {
       businessId: business?.id,
       title: formData.title,
       description: formData.description || undefined,
+      imageUrl: formData.imageUrl || undefined,
       category: formData.category,
       startAt: startDate,
       endAt: endDate || undefined,
@@ -206,6 +210,58 @@ export default function NewEventPage() {
                 placeholder="Tell people about your event..."
                 rows={4}
               />
+            </div>
+
+            {/* Event Image */}
+            <div className="space-y-2">
+              <Label>Event Image</Label>
+              {formData.imageUrl ? (
+                <div className="relative w-full h-48 rounded-lg overflow-hidden border">
+                  <Image
+                    src={formData.imageUrl}
+                    alt="Event image"
+                    fill
+                    className="object-cover"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2"
+                    onClick={() => setFormData({ ...formData, imageUrl: "" })}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed rounded-lg p-6">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground text-center">
+                      Upload an image for your event
+                    </p>
+                    <UploadButton
+                      endpoint="eventImage"
+                      onClientUploadComplete={(res) => {
+                        if (res?.[0]?.url) {
+                          setFormData({ ...formData, imageUrl: res[0].url });
+                          toast({
+                            title: "Success",
+                            description: "Image uploaded successfully",
+                          });
+                        }
+                      }}
+                      onUploadError={(error: Error) => {
+                        toast({
+                          title: "Upload failed",
+                          description: error.message,
+                          variant: "destructive",
+                        });
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Date & Time */}

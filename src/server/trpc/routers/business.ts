@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { router, publicProcedure, protectedProcedure } from "../init";
+import { router, publicProcedure, protectedProcedure, adminProcedure } from "../init";
 import { businesses, follows, events, rsvps } from "../../db/schema";
 import { eq, and, desc, or, like, gte, asc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 export const businessRouter = router({
-  createBusiness: protectedProcedure
+  createBusiness: adminProcedure
     .input(
       z.object({
         slug: z
@@ -18,6 +18,7 @@ export const businessRouter = router({
           ),
         name: z.string().min(1).max(255),
         description: z.string().optional(),
+        imageUrl: z.string().url().optional(),
         address: z.string().optional(),
         city: z.string().min(1).max(100),
         state: z.string().length(2, "State must be 2-letter code"),

@@ -1,16 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import Image from "next/image";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatTime } from "@/lib/utils";
-import { Calendar, MapPin, Building2 } from "lucide-react";
+import { Calendar } from "lucide-react";
+import { format } from "date-fns";
 
 interface EventCardProps {
   event: {
     id: string;
     title: string;
+    imageUrl: string | null;
     startAt: Date;
     endAt: Date | null;
     venueName: string | null;
@@ -24,65 +27,106 @@ interface EventCardProps {
     userRsvp: {
       status: string;
     } | null;
+    friendsGoing?: Array<{
+      user: {
+        id: string;
+        firstName: string | null;
+        lastName: string | null;
+        imageUrl: string | null;
+      };
+    }>;
   };
 }
 
 export function EventCard({ event }: EventCardProps) {
-  const getRsvpBadgeVariant = (status: string | null) => {
-    if (!status) return "outline";
-    switch (status) {
-      case "going":
-        return "default";
-      case "interested":
-        return "secondary";
-      default:
-        return "outline";
-    }
-  };
+  const eventDate = new Date(event.startAt);
+  const dayOfWeek = format(eventDate, "EEE");
+  const month = format(eventDate, "MMM");
+  const day = format(eventDate, "d");
+  const startTime = formatTime(event.startAt);
+
+  const friendsGoing = event.friendsGoing || [];
+  const displayedFriends = friendsGoing.slice(0, 5);
+  const remainingCount = friendsGoing.length - displayedFriends.length;
 
   return (
-    <Link href={`/event/${event.id}`}>
-      <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1">
-              <h3 className="font-semibold text-lg leading-none tracking-tight">
-                {event.title}
-              </h3>
-              {event.business && (
-                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                  <Building2 className="h-3 w-3" />
-                  {event.business.name}
-                </p>
-              )}
+    <Link href={`/event/${event.id}`} className="group">
+      <Card className="cursor-pointer overflow-hidden bg-card transition-all duration-300 !border-none">
+        {/* Square Image */}
+        <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-muted lg:max-w-[274px]">
+          {event.imageUrl ? (
+            <Image
+              src={event.imageUrl}
+              alt={event.title}
+              fill
+              className="object-cover transition-transform duration-500"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/30 to-primary/10">
+              <Calendar className="h-24 w-24 text-muted-foreground/20" />
             </div>
-            <Badge variant="outline" className="capitalize">
+          )}
+
+          {/* Category Badge */}
+          <div className="absolute right-4 top-4">
+            <Badge variant="secondary" className="capitalize">
               {event.category}
             </Badge>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Calendar className="h-4 w-4" />
-            <span>
-              {formatTime(new Date(event.startAt))}
-              {event.endAt && ` - ${formatTime(new Date(event.endAt))}`}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <MapPin className="h-4 w-4" />
-            <span>
-              {event.venueName ? `${event.venueName} • ` : ""}{event.city}, {event.state}
-            </span>
-          </div>
-          {event.userRsvp && (
-            <Badge variant={getRsvpBadgeVariant(event.userRsvp.status)}>
-              {event.userRsvp.status === "going" && "Going"}
-              {event.userRsvp.status === "interested" && "Interested"}
-              {event.userRsvp.status === "not_going" && "Not Going"}
-            </Badge>
+
+          {/* Friends Going - Bottom Right */}
+          {friendsGoing.length > 0 && (
+            <div className="absolute bottom-4 right-4 flex items-center gap-1">
+              <div className="flex -space-x-2">
+                {displayedFriends.map((rsvp) => (
+                  <Avatar
+                    key={rsvp.user.id}
+                    className="h-8 w-8 border-2 border-background"
+                  >
+                    <AvatarImage src={rsvp.user.imageUrl || undefined} />
+                    <AvatarFallback className="text-xs">
+                      {rsvp.user.firstName?.[0]}
+                      {rsvp.user.lastName?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
+              </div>
+              {remainingCount > 0 && (
+                <div className="ml-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-muted text-xs font-semibold">
+                  +{remainingCount}
+                </div>
+              )}
+            </div>
           )}
-        </CardContent>
+        </div>
+
+        {/* Event Information */}
+        <div className="space-y-0.5 p-2">
+          {/* Title */}
+          <h3 className="line-clamp-2 text-base font-bold leading-tight transition-colors group-hover:text-primary">
+            {event.title}
+          </h3>
+
+          {/* Date & Venue */}
+          <div className="text-sm text-primary/70">
+            {dayOfWeek}, {month} {day} at {startTime}
+          </div>
+
+          <div className="text-sm text-primary/70">
+            {event.venueName && `${event.venueName}`}
+          </div>
+
+          {/* Location */}
+          {/*<div className="flex flex-row gap-1 text-sm text-muted-foreground">*/}
+          {/*  {event.business && (*/}
+          {/*    <div className="text-muted-foreground">{event.business.name}</div>*/}
+          {/*  )}*/}
+          {/*  {event.business && <span>•</span>}*/}
+          {/*  {event.city}, {event.state}*/}
+          {/*</div>*/}
+
+          {/* Business */}
+        </div>
       </Card>
     </Link>
   );

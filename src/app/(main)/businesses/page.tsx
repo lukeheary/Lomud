@@ -24,6 +24,9 @@ export default function BusinessesPage() {
     limit: 50,
   });
 
+  const { data: adminCheck } = trpc.user.isAdmin.useQuery();
+  const isAdmin = adminCheck?.isAdmin ?? false;
+
   return (
     <div className="container mx-auto py-8 space-y-6">
       {/* Header */}
@@ -34,12 +37,14 @@ export default function BusinessesPage() {
             Discover local businesses and venues
           </p>
         </div>
-        <Link href="/business/new">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Business
-          </Button>
-        </Link>
+        {isAdmin && (
+          <Link href="/business/new">
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Business
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Search */}
@@ -108,9 +113,9 @@ export default function BusinessesPage() {
             <p className="text-muted-foreground mb-4">
               {search
                 ? "Try adjusting your search"
-                : "Be the first to add a business"}
+                : "No businesses available yet"}
             </p>
-            {!search && (
+            {!search && isAdmin && (
               <Link href="/business/new">
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />

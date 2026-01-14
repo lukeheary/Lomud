@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { format, addDays, startOfDay } from "date-fns";
+import { addDays, startOfDay } from "date-fns";
 import { trpc } from "@/lib/trpc";
 import { EventCard } from "@/components/calendar/event-card";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Users, Building2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -16,10 +14,10 @@ export default function HomePage() {
   const { toast } = useToast();
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
 
-  // Calculate 7-day range starting from today
+  // Calculate date range for upcoming events (next 30 days)
   const dateRange = useMemo(() => {
     const today = startOfDay(new Date());
-    const endDate = addDays(today, 7);
+    const endDate = addDays(today, 30);
     return { startDate: today, endDate };
   }, []);
 
@@ -30,28 +28,6 @@ export default function HomePage() {
     followedOnly: activeFilter === "followed",
     friendsGoingOnly: activeFilter === "friends",
   });
-
-  // Group events by day
-  const eventsByDay = useMemo(() => {
-    if (!events) return {};
-
-    const grouped: Record<string, typeof events> = {};
-
-    for (let i = 0; i < 7; i++) {
-      const date = addDays(dateRange.startDate, i);
-      const dateKey = format(date, "yyyy-MM-dd");
-      grouped[dateKey] = [];
-    }
-
-    events.forEach((event) => {
-      const dateKey = format(new Date(event.startAt), "yyyy-MM-dd");
-      if (grouped[dateKey]) {
-        grouped[dateKey].push(event);
-      }
-    });
-
-    return grouped;
-  }, [events, dateRange.startDate]);
 
   if (error) {
     toast({
@@ -66,9 +42,9 @@ export default function HomePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Your Calendar</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Upcoming Events</h1>
           <p className="text-muted-foreground">
-            Discover local events happening this week
+            Discover local events happening in your area
           </p>
         </div>
       </div>
@@ -102,64 +78,29 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* 7-Day Calendar Grid */}
-      {!isLoading && events && (
-        <div className="space-y-6">
-          {Object.entries(eventsByDay).map(([dateKey, dayEvents]) => {
-            const date = new Date(dateKey);
-            const isToday =
-              format(new Date(), "yyyy-MM-dd") === dateKey;
-
-            return (
-              <Card key={dateKey} className={isToday ? "border-primary" : ""}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
-                    <span>
-                      {format(date, "EEEE, MMMM d")}
-                      {isToday && (
-                        <span className="ml-2 text-sm font-normal text-primary">
-                          (Today)
-                        </span>
-                      )}
-                    </span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {dayEvents.length === 0 ? (
-                    <p className="text-sm text-muted-foreground py-4">
-                      No events scheduled for this day
-                    </p>
-                  ) : (
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      {dayEvents.map((event) => (
-                        <EventCard key={event.id} event={event} />
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
+      {/* Event List */}
+      {!isLoading && events && events.length > 0 && (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {events.map((event) => (
+            <EventCard key={event.id} event={event} />
+          ))}
         </div>
       )}
 
       {/* Empty State */}
       {!isLoading && events && events.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">No events found</h3>
-            <p className="text-muted-foreground mb-4">
-              {activeFilter === "followed" &&
-                "Start following businesses to see their events here"}
-              {activeFilter === "friends" &&
-                "Add friends and see what events they're attending"}
-              {activeFilter === "all" &&
-                "Check back later for upcoming events"}
-            </p>
-          </CardContent>
-        </Card>
+        <div className="py-12 text-center">
+          <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="text-lg font-semibold mb-2">No events found</h3>
+          <p className="text-muted-foreground mb-4">
+            {activeFilter === "followed" &&
+              "Start following businesses to see their events here"}
+            {activeFilter === "friends" &&
+              "Add friends and see what events they're attending"}
+            {activeFilter === "all" &&
+              "Check back later for upcoming events"}
+          </p>
+        </div>
       )}
     </div>
   );

@@ -40,6 +40,11 @@ export const friendStatusEnum = pgEnum("friend_status", [
   "accepted",
 ]);
 
+export const userRoleEnum = pgEnum("user_role", [
+  "user",
+  "admin",
+]);
+
 // ============================================================================
 // USERS TABLE
 // ============================================================================
@@ -53,6 +58,7 @@ export const users = pgTable(
     firstName: varchar("first_name", { length: 100 }),
     lastName: varchar("last_name", { length: 100 }),
     imageUrl: text("image_url"),
+    role: userRoleEnum("role").notNull().default("user"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -80,6 +86,7 @@ export const businesses = pgTable(
     slug: varchar("slug", { length: 100 }).notNull().unique(),
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
+    imageUrl: text("image_url"),
     address: text("address"),
     city: varchar("city", { length: 100 }).notNull(),
     state: varchar("state", { length: 2 }).notNull(), // US state code
@@ -158,6 +165,7 @@ export const events = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     title: varchar("title", { length: 255 }).notNull(),
     description: text("description"),
+    imageUrl: text("image_url"),
     startAt: timestamp("start_at").notNull(),
     endAt: timestamp("end_at"),
     venueName: varchar("venue_name", { length: 255 }),

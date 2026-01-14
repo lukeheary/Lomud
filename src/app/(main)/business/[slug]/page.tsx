@@ -31,6 +31,10 @@ export default function BusinessPage() {
     { slug }
   );
 
+  // Check if admin
+  const { data: adminCheck } = trpc.user.isAdmin.useQuery();
+  const isAdmin = adminCheck?.isAdmin ?? false;
+
   // Check if following
   const { data: isFollowing } = trpc.business.isFollowing.useQuery(
     { businessId: business?.id || "" },
@@ -85,7 +89,6 @@ export default function BusinessPage() {
     }
   };
 
-  const isOwner = userId === business?.createdByUserId;
 
   if (isLoading) {
     return (
@@ -170,7 +173,7 @@ export default function BusinessPage() {
             </div>
 
             <div className="flex gap-2">
-              {isOwner && (
+              {isAdmin && (
                 <Link href={`/business/${slug}/events/new`}>
                   <Button>
                     <Plus className="h-4 w-4 mr-2" />
@@ -214,7 +217,7 @@ export default function BusinessPage() {
               <p className="text-muted-foreground">
                 No upcoming events scheduled
               </p>
-              {isOwner && (
+              {isAdmin && (
                 <Link href={`/business/${slug}/events/new`}>
                   <Button className="mt-4">
                     <Plus className="h-4 w-4 mr-2" />

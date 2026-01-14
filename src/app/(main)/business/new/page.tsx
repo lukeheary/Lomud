@@ -15,9 +15,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Loader2 } from "lucide-react";
+import { Building2, Loader2, ImageIcon, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { generateSlug, US_STATES } from "@/lib/utils";
+import { UploadButton } from "@/lib/uploadthing";
+import Image from "next/image";
 
 export default function NewBusinessPage() {
   const router = useRouter();
@@ -27,6 +29,7 @@ export default function NewBusinessPage() {
     name: "",
     slug: "",
     description: "",
+    imageUrl: "",
     address: "",
     city: "",
     state: "",
@@ -75,6 +78,7 @@ export default function NewBusinessPage() {
       name: formData.name,
       slug: formData.slug,
       description: formData.description || undefined,
+      imageUrl: formData.imageUrl || undefined,
       address: formData.address || undefined,
       city: formData.city,
       state: formData.state,
@@ -142,6 +146,58 @@ export default function NewBusinessPage() {
                 placeholder="Tell people about your business..."
                 rows={4}
               />
+            </div>
+
+            {/* Business Image */}
+            <div className="space-y-2">
+              <Label>Business Image</Label>
+              {formData.imageUrl ? (
+                <div className="relative w-full h-48 rounded-lg overflow-hidden border">
+                  <Image
+                    src={formData.imageUrl}
+                    alt="Business image"
+                    fill
+                    className="object-cover"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2"
+                    onClick={() => setFormData({ ...formData, imageUrl: "" })}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed rounded-lg p-6">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground text-center">
+                      Upload an image for your business
+                    </p>
+                    <UploadButton
+                      endpoint="businessImage"
+                      onClientUploadComplete={(res) => {
+                        if (res?.[0]?.url) {
+                          setFormData({ ...formData, imageUrl: res[0].url });
+                          toast({
+                            title: "Success",
+                            description: "Image uploaded successfully",
+                          });
+                        }
+                      }}
+                      onUploadError={(error: Error) => {
+                        toast({
+                          title: "Upload failed",
+                          description: error.message,
+                          variant: "destructive",
+                        });
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Address */}

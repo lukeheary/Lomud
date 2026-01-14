@@ -2,9 +2,10 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -12,15 +13,14 @@ import {
   Calendar,
   MapPin,
   Building2,
-  User,
-  Clock,
   Loader2,
-  CheckCircle2,
-  Star,
-  XCircle,
+  Heart,
+  Share2,
+  Clock,
+  User,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { formatDateTime } from "@/lib/utils";
+import { format } from "date-fns";
 
 type RsvpStatus = "going" | "interested" | "not_going";
 
@@ -90,195 +90,254 @@ export default function EventPage() {
   const interestedCount =
     attendees?.filter((a) => a.status === "interested").length || 0;
 
+  const eventDate = new Date(event.startAt);
+  const dayOfWeek = format(eventDate, "EEEE");
+  const monthDay = format(eventDate, "MMMM d, yyyy");
+  const time = format(eventDate, "h:mm a zzz");
+
   return (
-    <div className="container mx-auto py-8 space-y-6">
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Main Event Details */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Event Header */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="space-y-2 flex-1">
-                  <Badge variant="outline" className="capitalize">
-                    {event.category}
-                  </Badge>
-                  <CardTitle className="text-3xl">{event.title}</CardTitle>
-                  {event.business && (
-                    <Link
-                      href={`/business/${event.business.slug}`}
-                      className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      <Building2 className="h-4 w-4" />
-                      <span>{event.business.name}</span>
-                    </Link>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Time */}
-              <div className="flex items-start gap-3">
-                <Clock className="h-5 w-5 mt-0.5 text-muted-foreground" />
-                <div>
-                  <p className="font-medium">
-                    {formatDateTime(new Date(event.startAt))}
-                  </p>
-                  {event.endAt && (
-                    <p className="text-sm text-muted-foreground">
-                      Until {formatDateTime(new Date(event.endAt))}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Location */}
-              <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 mt-0.5 text-muted-foreground" />
-                <div>
-                  {event.venueName && (
-                    <p className="font-medium">{event.venueName}</p>
-                  )}
-                  {event.address && (
-                    <p className="text-sm text-muted-foreground">{event.address}</p>
-                  )}
-                  <p className="text-sm text-muted-foreground">
-                    {event.city}, {event.state}
-                  </p>
-                </div>
-              </div>
-
-              {/* Organizer */}
-              {event.createdBy && (
-                <div className="flex items-center gap-3">
-                  <User className="h-5 w-5 text-muted-foreground" />
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-6 w-6">
-                      <AvatarImage src={event.createdBy.imageUrl || undefined} />
-                      <AvatarFallback>
-                        {event.createdBy.firstName?.[0]}
-                        {event.createdBy.lastName?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm">
-                      Organized by {event.createdBy.firstName}{" "}
-                      {event.createdBy.lastName}
-                    </span>
-                  </div>
+    <div className="min-h-screen bg-background">
+      {/* Content */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid gap-8 lg:grid-cols-3">
+          {/* Left Column - Image and Main Content */}
+          <div className="space-y-6 lg:col-span-2">
+            {/* Event Image */}
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-muted">
+              {event.imageUrl ? (
+                <Image
+                  src={event.imageUrl}
+                  alt={event.title}
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
+                  <Calendar className="h-24 w-24 text-muted-foreground/40" />
                 </div>
               )}
+            </div>
+
+            {/* Title & Basic Info */}
+            <div>
+              <div className="mb-4 flex items-start justify-between">
+                <h1 className="text-4xl font-bold">{event.title}</h1>
+                <div className="flex gap-2">
+                  <Button size="icon" variant="outline">
+                    <Heart className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="outline">
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {event.venueName && (
+                <div className="mb-2 flex items-center gap-2 text-lg">
+                  <MapPin className="h-5 w-5 text-muted-foreground" />
+                  <span className="font-medium">{event.venueName}</span>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                <span>
+                  {dayOfWeek}, {monthDay}, {time}
+                </span>
+              </div>
+
+              {event.business && (
+                <Link
+                  href={`/business/${event.business.slug}`}
+                  className="mt-3 flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary"
+                >
+                  <Building2 className="h-4 w-4" />
+                  <span>Presented by {event.business.name}</span>
+                </Link>
+              )}
+            </div>
+
+            <Separator />
+
+            {/* About Section */}
+            <div>
+              <h2 className="mb-4 text-2xl font-bold">About</h2>
+
+              {/* Event Date */}
+              <div className="mb-6">
+                <h3 className="mb-2 font-semibold">
+                  {dayOfWeek}, {monthDay}
+                </h3>
+                <p className="text-muted-foreground">{event.title}</p>
+              </div>
 
               {/* Description */}
               {event.description && (
-                <>
-                  <Separator />
-                  <div>
-                    <h3 className="font-semibold mb-2">About this event</h3>
-                    <p className="text-muted-foreground whitespace-pre-wrap">
-                      {event.description}
-                    </p>
-                  </div>
-                </>
+                <div className="mb-6">
+                  <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">
+                    {event.description}
+                  </p>
+                </div>
               )}
-            </CardContent>
-          </Card>
-        </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* RSVP Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Your RSVP</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button
-                variant={event.userRsvp?.status === "going" ? "default" : "outline"}
-                className="w-full justify-start"
-                onClick={() => handleRsvp("going")}
-                disabled={rsvpMutation.isPending}
-              >
-                <CheckCircle2 className="h-4 w-4 mr-2" />
-                Going
-              </Button>
-              <Button
-                variant={
-                  event.userRsvp?.status === "interested" ? "default" : "outline"
-                }
-                className="w-full justify-start"
-                onClick={() => handleRsvp("interested")}
-                disabled={rsvpMutation.isPending}
-              >
-                <Star className="h-4 w-4 mr-2" />
-                Interested
-              </Button>
-              <Button
-                variant={
-                  event.userRsvp?.status === "not_going" ? "default" : "outline"
-                }
-                className="w-full justify-start"
-                onClick={() => handleRsvp("not_going")}
-                disabled={rsvpMutation.isPending}
-              >
-                <XCircle className="h-4 w-4 mr-2" />
-                Not Going
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Attendees Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Attendees</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              {/* Location Details */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Going</span>
-                  <Badge variant="default">{goingCount}</Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Interested</span>
-                  <Badge variant="secondary">{interestedCount}</Badge>
-                </div>
+                {event.address && (
+                  <p className="text-muted-foreground">{event.address}</p>
+                )}
+                <p className="text-muted-foreground">
+                  {event.city}, {event.state}
+                </p>
               </div>
 
-              {attendees && attendees.length > 0 && (
-                <>
-                  <Separator />
-                  <div className="space-y-3">
-                    {attendees
-                      .filter((a) => a.status === "going")
-                      .slice(0, 5)
-                      .map((attendee) => (
-                        <div
-                          key={attendee.user.id}
-                          className="flex items-center gap-2"
-                        >
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage
-                              src={attendee.user.imageUrl || undefined}
-                            />
-                            <AvatarFallback>
-                              {attendee.user.firstName?.[0]}
-                              {attendee.user.lastName?.[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-sm">
-                            {attendee.user.firstName} {attendee.user.lastName}
-                          </span>
-                        </div>
-                      ))}
-                    {goingCount > 5 && (
-                      <p className="text-xs text-muted-foreground">
-                        And {goingCount - 5} more...
+              {/* Additional Info */}
+              <div className="mt-6 rounded-lg bg-muted p-4">
+                <div className="flex items-start gap-2">
+                  <span className="text-sm">ℹ️</span>
+                  <div className="text-sm text-muted-foreground">
+                    <p className="mb-1 font-medium">
+                      This is a {event.category} event
+                    </p>
+                    {event.createdBy && (
+                      <p>
+                        Organized by {event.createdBy.firstName}{" "}
+                        {event.createdBy.lastName}
                       </p>
                     )}
                   </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
+                </div>
+              </div>
+            </div>
+
+            {/* Lineup / Attendees Section */}
+            {attendees && attendees.length > 0 && (
+              <div>
+                <h2 className="mb-4 text-2xl font-bold">Who&apos;s Going</h2>
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+                  {attendees
+                    .filter((a) => a.status === "going")
+                    .slice(0, 9)
+                    .map((attendee) => (
+                      <div
+                        key={attendee.user.id}
+                        className="flex items-center gap-3 rounded-lg border bg-card p-3"
+                      >
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage
+                            src={attendee.user.imageUrl || undefined}
+                          />
+                          <AvatarFallback>
+                            {attendee.user.firstName?.[0]}
+                            {attendee.user.lastName?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="text-sm">
+                          <p className="font-medium">
+                            {attendee.user.firstName} {attendee.user.lastName}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+                {goingCount > 9 && (
+                  <p className="mt-4 text-sm text-muted-foreground">
+                    And {goingCount - 9} others are going
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Sidebar - Sticky RSVP Card */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-4">
+              <Card>
+                <CardContent className="space-y-4 p-6">
+                  {/* RSVP Status */}
+                  <div>
+                    <div
+                      className={"flex flex-row items-center justify-between"}
+                    >
+                      <p className="text-base text-muted-foreground">
+                        Your RSVP
+                      </p>
+                      {event.userRsvp?.status === "going" && (
+                        <Badge
+                          variant="default"
+                          className="px-4 py-2 text-base"
+                        >
+                          You're going!
+                        </Badge>
+                      )}
+                      {event.userRsvp?.status === "interested" && (
+                        <Badge
+                          variant="secondary"
+                          className="px-4 py-2 text-base"
+                        >
+                          Interested
+                        </Badge>
+                      )}
+                    </div>
+                    {!event.userRsvp && (
+                      <p className="text-sm text-muted-foreground">
+                        RSVP to let others know you're attending
+                      </p>
+                    )}
+                  </div>
+
+                  {/* RSVP Buttons */}
+                  <div className="space-y-2">
+                    <Button
+                      variant={
+                        event.userRsvp?.status === "going"
+                          ? "default"
+                          : "outline"
+                      }
+                      className="w-full"
+                      size="lg"
+                      onClick={() => handleRsvp("going")}
+                      disabled={rsvpMutation.isPending}
+                    >
+                      {event.userRsvp?.status === "going"
+                        ? "Going"
+                        : "I'm Going"}
+                    </Button>
+                    <Button
+                      variant={
+                        event.userRsvp?.status === "interested"
+                          ? "secondary"
+                          : "outline"
+                      }
+                      className="w-full"
+                      onClick={() => handleRsvp("interested")}
+                      disabled={rsvpMutation.isPending}
+                    >
+                      Interested
+                    </Button>
+                  </div>
+
+                  <Separator />
+
+                  {/* Attendee Count */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">
+                        Going
+                      </span>
+                      <span className="font-semibold">{goingCount}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">
+                        Interested
+                      </span>
+                      <span className="font-semibold">{interestedCount}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>
