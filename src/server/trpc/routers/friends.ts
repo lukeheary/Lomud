@@ -258,4 +258,20 @@ export const friendsRouter = router({
         return { status: "pending_received" as const };
       }
     }),
+
+  getPendingRequests: protectedProcedure.query(async ({ ctx }) => {
+    // Get pending friend requests sent TO the current user
+    const pendingRequests = await ctx.db.query.friends.findMany({
+      where: and(
+        eq(friends.friendUserId, ctx.auth.userId),
+        eq(friends.status, "pending")
+      ),
+      orderBy: [friends.createdAt],
+      with: {
+        user: true, // The user who sent the request
+      },
+    });
+
+    return pendingRequests;
+  }),
 });

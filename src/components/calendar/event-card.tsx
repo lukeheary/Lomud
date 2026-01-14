@@ -81,7 +81,7 @@ export function EventCard({ event }: EventCardProps) {
                 {displayedFriends.map((rsvp) => (
                   <Avatar
                     key={rsvp.user.id}
-                    className="h-8 w-8 border-2 border-background"
+                    className="h-8 w-8 border border-background"
                   >
                     <AvatarImage src={rsvp.user.imageUrl || undefined} />
                     <AvatarFallback className="text-xs">

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { router, publicProcedure, protectedProcedure, adminProcedure } from "../init";
 import { events, businesses, rsvps, follows, friends, users } from "../../db/schema";
-import { eq, and, desc, gte, lte, inArray, sql } from "drizzle-orm";
+import { eq, and, or, desc, gte, lte, inArray, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 export const eventRouter = router({
@@ -208,15 +208,20 @@ export const eventRouter = router({
         where: eq(users.id, ctx.auth.userId),
       });
 
-      // Fetch user's friends
+      // Fetch user's friends (bidirectional - where user is either sender or receiver)
       const userFriends = await ctx.db.query.friends.findMany({
         where: and(
-          eq(friends.userId, ctx.auth.userId),
+          or(
+            eq(friends.userId, ctx.auth.userId),
+            eq(friends.friendUserId, ctx.auth.userId)
+          ),
           eq(friends.status, "accepted")
         ),
       });
 
-      const friendIds = userFriends.map((f) => f.friendUserId);
+      const friendIds = userFriends.map((f) =>
+        f.userId === ctx.auth.userId ? f.friendUserId : f.userId
+      );
 
       // Fetch friends' RSVPs (going status only)
       const friendsRsvps =
@@ -233,16 +238,8 @@ export const eventRouter = router({
             })
           : [];
 
-      // Create a map of event IDs to attendees (friends + current user if going)
+      // Create a map of event IDs to attendees (current user + friends)
       const attendeesMap = new Map<string, typeof friendsRsvps>();
-
-      // Add friends first
-      for (const rsvp of friendsRsvps) {
-        if (!attendeesMap.has(rsvp.eventId)) {
-          attendeesMap.set(rsvp.eventId, []);
-        }
-        attendeesMap.get(rsvp.eventId)!.push(rsvp);
-      }
 
       // Add current user if they're going to any events
       for (const userRsvp of userRsvps) {
@@ -251,11 +248,19 @@ export const eventRouter = router({
             attendeesMap.set(userRsvp.eventId, []);
           }
           // Add current user to the beginning of the array
-          attendeesMap.get(userRsvp.eventId)!.unshift({
+          attendeesMap.get(userRsvp.eventId)!.push({
             ...userRsvp,
             user: currentUser,
           } as any);
         }
+      }
+
+      // Add friends to the map
+      for (const rsvp of friendsRsvps) {
+        if (!attendeesMap.has(rsvp.eventId)) {
+          attendeesMap.set(rsvp.eventId, []);
+        }
+        attendeesMap.get(rsvp.eventId)!.push(rsvp);
       }
 
       // Attach user RSVP and friends going to each event
@@ -380,4 +385,15 @@ export const eventRouter = router({
 
       return rsvp;
     }),
+
+  getAvailableCities: publicProcedure.query(async ({ ctx }) => {
+    // Get unique cities that have public events
+    const result = await ctx.db
+      .selectDistinct({ city: events.city, state: events.state })
+      .from(events)
+      .where(eq(events.visibility, "public"))
+      .orderBy(events.city);
+
+    return result;
+  }),
 });
