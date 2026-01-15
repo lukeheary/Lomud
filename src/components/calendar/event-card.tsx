@@ -51,7 +51,7 @@ export function EventCard({ event }: EventCardProps) {
 
   return (
     <Link href={`/event/${event.id}`} className="group">
-      <Card className="cursor-pointer overflow-hidden bg-card transition-all duration-300 !border-none">
+      <Card className="cursor-pointer overflow-hidden !border-none bg-card transition-all duration-300">
         {/* Square Image */}
         <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-muted lg:max-w-[274px]">
           {event.imageUrl ? (
@@ -113,7 +113,7 @@ export function EventCard({ event }: EventCardProps) {
           </div>
 
           <div className="text-sm text-primary/70">
-            {event.venueName && `${event.venueName}`}
+            {event.business && `${event.business.name}`}
           </div>
 
           {/* Location */}

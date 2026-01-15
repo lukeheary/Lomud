@@ -61,7 +61,7 @@ export default function MainLayout({
           </div>
 
           {/* Center - Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-4 absolute left-1/2 -translate-x-1/2">
+          <nav className="hidden md:flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
             <Link href="/home">
               <Button variant="ghost" size="sm">
                 Events

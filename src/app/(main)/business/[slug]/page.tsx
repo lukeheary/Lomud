@@ -114,7 +114,7 @@ export default function BusinessPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto py-8 space-y-4">
       {/* Business Header */}
       <Card>
         <CardContent className="pt-6">

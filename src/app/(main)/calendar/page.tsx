@@ -28,9 +28,6 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import {
-  Calendar as CalendarIcon,
-  Users,
-  Building2,
   Loader2,
   ChevronLeft,
   ChevronRight,
@@ -39,13 +36,14 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn, formatTime } from "@/lib/utils";
+import { EventFilterTabs } from "@/components/events/event-filter-tabs";
+import { EventFilterTab } from "@/types/events";
 
-type FilterTab = "all" | "followed" | "friends";
 type ViewMode = "week" | "month";
 
 export default function CalendarPage() {
   const { toast } = useToast();
-  const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
+  const [activeFilter, setActiveFilter] = useState<EventFilterTab>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -121,7 +119,7 @@ export default function CalendarPage() {
   }, [viewMode, currentDate]);
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto py-8 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -163,25 +161,10 @@ export default function CalendarPage() {
 
       {/* View Mode Toggle */}
       <div className="flex items-center justify-between">
-        <Tabs
+        <EventFilterTabs
           value={activeFilter}
-          onValueChange={(value) => setActiveFilter(value as FilterTab)}
-        >
-          <TabsList>
-            <TabsTrigger value="all" className="flex items-center gap-2">
-              <CalendarIcon className="h-4 w-4" />
-              All Events
-            </TabsTrigger>
-            <TabsTrigger value="followed" className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
-              Following
-            </TabsTrigger>
-            <TabsTrigger value="friends" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Friends Going
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+          onValueChange={setActiveFilter}
+        />
 
         <Tabs
           value={viewMode}

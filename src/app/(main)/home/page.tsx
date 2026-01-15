@@ -4,8 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { addDays, startOfDay, startOfWeek, endOfWeek, format } from "date-fns";
 import { trpc } from "@/lib/trpc";
 import { EventCard } from "@/components/calendar/event-card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Users, Building2, Loader2, Search, CalendarIcon } from "lucide-react";
+import { Loader2, Search, CalendarIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import {
@@ -23,13 +22,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { EventFilterTabs } from "@/components/events/event-filter-tabs";
+import { EventFilterTab } from "@/types/events";
 
-type FilterTab = "all" | "followed" | "friends";
 type DateRange = "all" | "today" | "week" | "custom";
 
 export default function HomePage() {
   const { toast } = useToast();
-  const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
+  const [activeFilter, setActiveFilter] = useState<EventFilterTab>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [dateRangeType, setDateRangeType] = useState<DateRange>("all");
@@ -103,7 +103,7 @@ export default function HomePage() {
   }, [error, toast]);
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto py-8 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -120,7 +120,7 @@ export default function HomePage() {
       </div>
 
       {/* Search and Filters */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         {/* Search Input */}
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -134,7 +134,7 @@ export default function HomePage() {
 
         {/* City Filter */}
         <Select value={selectedCity} onValueChange={setSelectedCity}>
-          <SelectTrigger className="w-full sm:w-[200px]">
+          <SelectTrigger className="w-fit">
             <SelectValue placeholder="Select city" />
           </SelectTrigger>
           <SelectContent>
@@ -190,26 +190,12 @@ export default function HomePage() {
       </div>
 
       {/* Filter Tabs */}
-      <Tabs
+      <EventFilterTabs
         value={activeFilter}
-        onValueChange={(value) => setActiveFilter(value as FilterTab)}
+        onValueChange={setActiveFilter}
+        gridLayout
         className="w-full"
-      >
-        <TabsList className="grid w-full max-w-md grid-cols-3">
-          <TabsTrigger value="all" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            All Events
-          </TabsTrigger>
-          <TabsTrigger value="followed" className="flex items-center gap-2">
-            <Building2 className="h-4 w-4" />
-            Following
-          </TabsTrigger>
-          <TabsTrigger value="friends" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Friends Going
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      />
 
       {/* Loading State */}
       {isLoading && (

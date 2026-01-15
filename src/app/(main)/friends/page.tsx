@@ -101,7 +101,7 @@ export default function FriendsPage() {
     pendingRequests?.filter((f) => f.isSender === false) || [];
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto py-8 space-y-4">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Friends</h1>
