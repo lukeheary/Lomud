@@ -83,9 +83,9 @@ export default function EventPage() {
   if (!event) {
     return (
       <div className="container mx-auto py-12 text-center">
-        <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-        <h2 className="text-2xl font-bold mb-2">Event not found</h2>
-        <p className="text-muted-foreground mb-4">
+        <Calendar className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+        <h2 className="mb-2 text-2xl font-bold">Event not found</h2>
+        <p className="mb-4 text-muted-foreground">
           The event you&apos;re looking for doesn&apos;t exist
         </p>
         <Link href="/">
@@ -105,7 +105,8 @@ export default function EventPage() {
   const time = format(eventDate, "h:mm a zzz");
 
   // Check if user can edit this event
-  const canEdit = isAdmin || (currentUser && event.createdByUserId === currentUser.id);
+  const canEdit =
+    isAdmin || (currentUser && event.createdByUserId === currentUser.id);
 
   return (
     <div className="min-h-screen bg-background">
@@ -148,8 +149,6 @@ export default function EventPage() {
                   {dayOfWeek}, {monthDay}, {time}
                 </span>
               </div>
-
-
 
               {/*{event.venue && (*/}
               {/*  <Link*/}

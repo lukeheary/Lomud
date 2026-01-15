@@ -13,11 +13,11 @@ export default async function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex min-h-screen flex-col">
       {/* Navigation */}
-      <header className="border-b bg-background sticky top-0 z-50">
+      <header className="sticky top-0 z-50 border-b bg-background">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-2 font-bold text-xl">
+          <div className="flex items-center gap-2 text-xl font-bold">
             <span>Lomud</span>
           </div>
           <div className="flex items-center gap-2">
@@ -34,26 +34,27 @@ export default async function LandingPage() {
       {/* Hero Section */}
       <main className="flex-1">
         <section className="container mx-auto px-4 py-20 md:py-32">
-          <div className="max-w-4xl mx-auto text-center space-y-8">
+          <div className="mx-auto max-w-4xl space-y-8 text-center">
             <div className="space-y-4">
-              <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
+              <h1 className="text-4xl font-bold tracking-tight md:text-6xl">
                 Discover Local Events
                 <br />
                 <span className="text-primary">Connect with Friends</span>
               </h1>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Find and attend amazing events in your area. See what your friends are going to and never miss out on the fun.
+              <p className="mx-auto max-w-2xl text-xl text-muted-foreground">
+                Find and attend amazing events in your area. See what your
+                friends are going to and never miss out on the fun.
               </p>
             </div>
 
-            <div className="flex items-center justify-center gap-4 flex-wrap">
+            <div className="flex flex-wrap items-center justify-center gap-4">
               <Link href="/sign-up">
-                <Button size="lg" className="text-lg px-8">
+                <Button size="lg" className="px-8 text-lg">
                   Get Started
                 </Button>
               </Link>
               <Link href="/sign-in">
-                <Button size="lg" variant="outline" className="text-lg px-8">
+                <Button size="lg" variant="outline" className="px-8 text-lg">
                   Sign In
                 </Button>
               </Link>
@@ -62,26 +63,27 @@ export default async function LandingPage() {
         </section>
 
         {/* Features Section */}
-        <section className="container mx-auto px-4 py-20 border-t">
-          <div className="max-w-5xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-12">
+        <section className="container mx-auto border-t px-4 py-20">
+          <div className="mx-auto max-w-5xl">
+            <h2 className="mb-12 text-center text-3xl font-bold">
               Everything you need to stay connected
             </h2>
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid gap-8 md:grid-cols-3">
               {/* Feature 1 */}
-              <div className="text-center space-y-4">
-                <div className="mx-auto w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+              <div className="space-y-4 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
                   <Calendar className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="text-xl font-semibold">Event Discovery</h3>
                 <p className="text-muted-foreground">
-                  Browse local events by category, date, or venue. Find exactly what you're looking for.
+                  Browse local events by category, date, or venue. Find exactly
+                  what you're looking for.
                 </p>
               </div>
 
               {/* Feature 2 */}
-              <div className="text-center space-y-4">
-                <div className="mx-auto w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+              <div className="space-y-4 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
                   <Users className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="text-xl font-semibold">Friend Network</h3>
@@ -91,13 +93,14 @@ export default async function LandingPage() {
               </div>
 
               {/* Feature 3 */}
-              <div className="text-center space-y-4">
-                <div className="mx-auto w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+              <div className="space-y-4 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
                   <MapPin className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="text-xl font-semibold">Local First</h3>
                 <p className="text-muted-foreground">
-                  Discover what's happening in your neighborhood and support local businesses.
+                  Discover what's happening in your neighborhood and support
+                  local businesses.
                 </p>
               </div>
             </div>
@@ -105,19 +108,19 @@ export default async function LandingPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="container mx-auto px-4 py-20 border-t">
-          <div className="max-w-3xl mx-auto text-center space-y-6">
-            <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+        <section className="container mx-auto border-t px-4 py-20">
+          <div className="mx-auto max-w-3xl space-y-6 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
               <Sparkles className="h-8 w-8 text-primary" />
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold">
+            <h2 className="text-3xl font-bold md:text-4xl">
               Ready to get started?
             </h2>
             <p className="text-xl text-muted-foreground">
               Join thousands of people discovering and attending local events.
             </p>
             <Link href="/sign-up">
-              <Button size="lg" className="text-lg px-8">
+              <Button size="lg" className="px-8 text-lg">
                 Create Your Account
               </Button>
             </Link>
