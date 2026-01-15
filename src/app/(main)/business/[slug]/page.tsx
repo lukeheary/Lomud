@@ -6,7 +6,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { EventCard } from "@/components/calendar/event-card";
+import { EventCardGrid } from "@/components/events/event-card-grid";
 import {
   Building2,
   MapPin,
@@ -207,11 +207,11 @@ export default function BusinessPage() {
         </CardHeader>
         <CardContent>
           {(business as any).events && (business as any).events.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {(business as any).events.map((event: any) => (
-                <EventCard key={event.id} event={event} />
-              ))}
-            </div>
+            <EventCardGrid
+              events={(business as any).events}
+              columns={{ mobile: 2, desktop: 4 }}
+              gap="md"
+            />
           ) : (
             <div className="text-center py-8">
               <p className="text-muted-foreground">

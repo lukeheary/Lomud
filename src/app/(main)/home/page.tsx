@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { addDays, startOfDay, startOfWeek, endOfWeek, format } from "date-fns";
 import { trpc } from "@/lib/trpc";
-import { EventCard } from "@/components/calendar/event-card";
+import { EventCardGrid } from "@/components/events/event-card-grid";
 import { Loader2, Search, CalendarIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,10 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import {
+  Calendar,
+  Calendar as CalendarComponent,
+} from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { EventFilterTabs } from "@/components/events/event-filter-tabs";
 import { EventFilterTab } from "@/types/events";
@@ -103,15 +106,16 @@ export default function HomePage() {
   }, [error, toast]);
 
   return (
-    <div className="container mx-auto py-8 space-y-4">
+    <div className="container mx-auto space-y-4 py-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
             Upcoming Events
-            {currentUser?.city && selectedCity === currentUser.city && (
-              <span className="text-muted-foreground"> in {currentUser.city}</span>
-            )}
+              <span className="text-muted-foreground">
+                {" "}
+                in {selectedCity}
+              </span>
           </h1>
           {/*<p className="text-muted-foreground">*/}
           {/*  Discover local events happening in your area*/}
@@ -134,7 +138,7 @@ export default function HomePage() {
 
         {/* City Filter */}
         <Select value={selectedCity} onValueChange={setSelectedCity}>
-          <SelectTrigger className="w-fit">
+          <SelectTrigger className="md:w-fit w-full">
             <SelectValue placeholder="Select city" />
           </SelectTrigger>
           <SelectContent>
@@ -149,7 +153,10 @@ export default function HomePage() {
 
         {/* Date Range Filter */}
         <div className="flex gap-2">
-          <Select value={dateRangeType} onValueChange={(value) => setDateRangeType(value as DateRange)}>
+          <Select
+            value={dateRangeType}
+            onValueChange={(value) => setDateRangeType(value as DateRange)}
+          >
             <SelectTrigger className="w-full sm:w-[160px]">
               <SelectValue placeholder="Date range" />
             </SelectTrigger>
@@ -206,25 +213,28 @@ export default function HomePage() {
 
       {/* Event List */}
       {!isLoading && filteredEvents && filteredEvents.length > 0 && (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {filteredEvents.map((event) => (
-            <EventCard key={event.id} event={event} />
-          ))}
-        </div>
+        <EventCardGrid
+          events={filteredEvents}
+          columns={{ mobile: 2, desktop: 4 }}
+          gap="lg"
+        />
       )}
 
       {/* Empty State */}
       {!isLoading && filteredEvents && filteredEvents.length === 0 && (
         <div className="py-12 text-center">
-          <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-lg font-semibold mb-2">No events found</h3>
-          <p className="text-muted-foreground mb-4">
+          {/*<Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />*/}
+          <h3 className="mb-2 text-lg font-semibold">No events found</h3>
+          <p className="mb-4 text-muted-foreground">
             {searchQuery && "Try adjusting your search or filters"}
-            {!searchQuery && activeFilter === "followed" &&
+            {!searchQuery &&
+              activeFilter === "followed" &&
               "Start following businesses to see their events here"}
-            {!searchQuery && activeFilter === "friends" &&
+            {!searchQuery &&
+              activeFilter === "friends" &&
               "Add friends and see what events they're attending"}
-            {!searchQuery && activeFilter === "all" &&
+            {!searchQuery &&
+              activeFilter === "all" &&
               "Check back later for upcoming events"}
           </p>
         </div>

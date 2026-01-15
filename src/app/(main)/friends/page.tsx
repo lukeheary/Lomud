@@ -104,7 +104,7 @@ export default function FriendsPage() {
     <div className="container mx-auto py-8 space-y-4">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Friends</h1>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Friends</h1>
         <p className="text-muted-foreground">
           Manage your friends and see what events they&apos;re attending
         </p>

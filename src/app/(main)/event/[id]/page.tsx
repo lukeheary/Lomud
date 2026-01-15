@@ -100,28 +100,11 @@ export default function EventPage() {
       {/* Content */}
       <div className="container mx-auto px-4 py-8">
         <div className="grid gap-8 lg:grid-cols-3">
-          {/* Left Column - Image and Main Content */}
+          {/* Left Column - Main Content */}
           <div className="space-y-6 lg:col-span-2">
-            {/* Event Image */}
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-muted">
-              {event.imageUrl ? (
-                <Image
-                  src={event.imageUrl}
-                  alt={event.title}
-                  fill
-                  className="object-cover"
-                  priority
-                />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
-                  <Calendar className="h-24 w-24 text-muted-foreground/40" />
-                </div>
-              )}
-            </div>
-
             {/* Title & Basic Info */}
             <div>
-              <div className="mb-4 flex items-start justify-between">
+              <div className="mb-2 flex items-start justify-between">
                 <h1 className="text-4xl font-bold">{event.title}</h1>
                 <div className="flex gap-2">
                   <Button size="icon" variant="outline">
@@ -134,7 +117,7 @@ export default function EventPage() {
               </div>
 
               {event.venueName && (
-                <div className="mb-2 flex items-center gap-2 text-lg">
+                <div className="flex items-center gap-2 text-lg">
                   <MapPin className="h-5 w-5 text-muted-foreground" />
                   <span className="font-medium">{event.venueName}</span>
                 </div>
@@ -150,7 +133,7 @@ export default function EventPage() {
               {event.business && (
                 <Link
                   href={`/business/${event.business.slug}`}
-                  className="mt-3 flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary"
+                  className="mt-1 flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary"
                 >
                   <Building2 className="h-4 w-4" />
                   <span>Presented by {event.business.name}</span>
@@ -249,10 +232,28 @@ export default function EventPage() {
             )}
           </div>
 
-          {/* Sidebar - Sticky RSVP Card */}
+          {/* Sidebar - Sticky Card with Image and RSVP */}
           <div className="lg:col-span-1">
             <div className="sticky top-4">
-              <Card>
+              <Card className="overflow-hidden">
+                {/* Event Image - Square on Top */}
+                <div className="relative aspect-square w-full overflow-hidden bg-muted">
+                  {event.imageUrl ? (
+                    <Image
+                      src={event.imageUrl}
+                      alt={event.title}
+                      fill
+                      className="object-cover"
+                      priority
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
+                      <Calendar className="h-24 w-24 text-muted-foreground/40" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Card Content Below Image */}
                 <CardContent className="space-y-4 p-6">
                   {/* RSVP Status */}
                   <div>
@@ -265,15 +266,15 @@ export default function EventPage() {
                       {event.userRsvp?.status === "going" && (
                         <Badge
                           variant="default"
-                          className="px-4 py-2 text-base"
+                          className="bg-green-500 px-4 py-2 text-base"
                         >
                           You're going!
                         </Badge>
                       )}
                       {event.userRsvp?.status === "interested" && (
                         <Badge
-                          variant="secondary"
-                          className="px-4 py-2 text-base"
+                          variant="default"
+                          className="bg-yellow-500 px-4 py-2 text-base"
                         >
                           Interested
                         </Badge>

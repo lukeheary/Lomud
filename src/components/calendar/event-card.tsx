@@ -8,34 +8,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatTime } from "@/lib/utils";
 import { Calendar } from "lucide-react";
 import { format } from "date-fns";
+import { type EventListItem } from "@/types/trpc";
 
 interface EventCardProps {
-  event: {
-    id: string;
-    title: string;
-    imageUrl: string | null;
-    startAt: Date;
-    endAt: Date | null;
-    venueName: string | null;
-    city: string;
-    state: string;
-    category: string;
-    business: {
-      name: string;
-      slug: string;
-    } | null;
-    userRsvp: {
-      status: string;
-    } | null;
-    friendsGoing?: Array<{
-      user: {
-        id: string;
-        firstName: string | null;
-        lastName: string | null;
-        imageUrl: string | null;
-      };
-    }>;
-  };
+  event: EventListItem;
 }
 
 export function EventCard({ event }: EventCardProps) {
@@ -51,7 +27,7 @@ export function EventCard({ event }: EventCardProps) {
 
   return (
     <Link href={`/event/${event.id}`} className="group">
-      <Card className="cursor-pointer overflow-hidden !border-none bg-card transition-all duration-300">
+      <Card className="cursor-pointer overflow-hidden !border-none bg-card transition-all duration-300 p-2 h-full">
         {/* Square Image */}
         <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-muted lg:max-w-[274px]">
           {event.imageUrl ? (
@@ -101,7 +77,7 @@ export function EventCard({ event }: EventCardProps) {
         </div>
 
         {/* Event Information */}
-        <div className="space-y-0.5 p-2">
+        <div className="space-y-0.5 px-3 py-3">
           {/* Title */}
           <h3 className="line-clamp-2 text-base font-bold leading-tight transition-colors group-hover:text-primary">
             {event.title}

@@ -92,7 +92,7 @@ export default function MainLayout({
             {isAdmin && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="default" size="sm">
+                  <Button variant="default" size="sm" className={'bg-green-500'}>
                     <Plus className="h-4 w-4 mr-2" />
                     Create
                   </Button>

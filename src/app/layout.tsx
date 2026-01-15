@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Lato } from "next/font/google";
+import { Urbanist } from "next/font/google";
+import { Lexend } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { TRPCProvider } from "@/components/providers/trpc-provider";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
+const lato = Lato({ subsets: ["latin"], weight: ["400", "700"] });
+const urbanist = Urbanist({ subsets: ["latin"], weight: ["400", "700"] });
+const lexend = Lexend({ subsets: ["latin"], weight: ["400", "700"] });
 
 export const metadata: Metadata = {
   title: "LocalSocialCalendar",
@@ -20,7 +26,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className={inter.className}>
+        <body className={urbanist.className}>
           <TRPCProvider>
             {children}
             <Toaster />
