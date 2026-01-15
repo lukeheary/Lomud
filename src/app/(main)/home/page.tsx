@@ -35,8 +35,18 @@ export default function HomePage() {
   const [dateRangeType, setDateRangeType] = useState<DateRange>("all");
   const [customDate, setCustomDate] = useState<Date | undefined>(undefined);
 
+  // Get current user to show their city
+  const { data: currentUser } = trpc.user.getCurrentUser.useQuery();
+
   // Get available cities
   const { data: cities } = trpc.event.getAvailableCities.useQuery();
+
+  // Set default city to user's city on load
+  useEffect(() => {
+    if (currentUser?.city && selectedCity === "all") {
+      setSelectedCity(currentUser.city);
+    }
+  }, [currentUser, selectedCity]);
 
   // Calculate date range based on selection
   const dateRange = useMemo(() => {
@@ -97,10 +107,15 @@ export default function HomePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Upcoming Events</h1>
-          <p className="text-muted-foreground">
-            Discover local events happening in your area
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Upcoming Events
+            {currentUser?.city && selectedCity === currentUser.city && (
+              <span className="text-muted-foreground"> in {currentUser.city}</span>
+            )}
+          </h1>
+          {/*<p className="text-muted-foreground">*/}
+          {/*  Discover local events happening in your area*/}
+          {/*</p>*/}
         </div>
       </div>
 

@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, UserCircle } from "lucide-react";
+import { Loader2, UserCircle, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { GooglePlacesAutocomplete } from "@/components/google-places-autocomplete";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -18,7 +19,10 @@ export default function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
     username: "",
+    city: "",
+    state: "",
   });
+  const [searchCity, setSearchCity] = useState("");
 
   const updateUserMutation = trpc.user.updateUsername.useMutation({
     onSuccess: () => {
@@ -40,26 +44,62 @@ export default function OnboardingPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.username) {
-      toast({
-        title: "Validation Error",
-        description: "Please enter a username",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (currentStep === 0) {
+      // Username step
+      if (!formData.username) {
+        toast({
+          title: "Validation Error",
+          description: "Please enter a username",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    // Validate username format
-    if (!/^[a-zA-Z0-9_]{3,20}$/.test(formData.username)) {
-      toast({
-        title: "Invalid Username",
-        description: "Username must be 3-20 characters and contain only letters, numbers, and underscores",
-        variant: "destructive",
-      });
-      return;
-    }
+      // Validate username format
+      if (!/^[a-zA-Z0-9_]{3,20}$/.test(formData.username)) {
+        toast({
+          title: "Invalid Username",
+          description: "Username must be 3-20 characters and contain only letters, numbers, and underscores",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    updateUserMutation.mutate({ username: formData.username });
+      // Move to next step
+      setCurrentStep(1);
+    } else if (currentStep === 1) {
+      // City step
+      if (!formData.city || !formData.state) {
+        toast({
+          title: "Validation Error",
+          description: "Please select your city",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Submit both username and location
+      updateUserMutation.mutate({
+        username: formData.username,
+        city: formData.city,
+        state: formData.state,
+      });
+    }
+  };
+
+  const handleCitySelect = (place: {
+    name: string;
+    address: string;
+    city: string;
+    state: string;
+    formattedAddress: string;
+  }) => {
+    setFormData({
+      ...formData,
+      city: place.city,
+      state: place.state,
+    });
+    setSearchCity(place.city);
   };
 
   if (!isLoaded) {
@@ -99,19 +139,37 @@ export default function OnboardingPage() {
         </div>
       ),
     },
-    // Future steps can be easily added here:
-    // {
-    //   title: "Set Your Location",
-    //   description: "Help us show you local events",
-    //   icon: MapPin,
-    //   content: <LocationStep />,
-    // },
-    // {
-    //   title: "Choose Your Interests",
-    //   description: "We'll recommend events you'll love",
-    //   icon: Heart,
-    //   content: <InterestsStep />,
-    // },
+    {
+      title: "What City Are You In?",
+      description: "Help us show you local events in your area",
+      icon: MapPin,
+      content: (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="city">
+              City <span className="text-destructive">*</span>
+            </Label>
+            <GooglePlacesAutocomplete
+              value={searchCity}
+              onChange={setSearchCity}
+              onPlaceSelect={handleCitySelect}
+              placeholder="Search for your city..."
+              searchType="cities"
+            />
+            <p className="text-xs text-muted-foreground">
+              Start typing your city name
+            </p>
+          </div>
+          {formData.city && formData.state && (
+            <div className="rounded-lg bg-muted p-3">
+              <p className="text-sm font-medium">
+                Selected: {formData.city}, {formData.state}
+              </p>
+            </div>
+          )}
+        </div>
+      ),
+    },
   ];
 
   const currentStepData = steps[currentStep];

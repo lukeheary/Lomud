@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { generateSlug, US_STATES } from "@/lib/utils";
 import { UploadButton } from "@/lib/uploadthing";
 import Image from "next/image";
+import { GooglePlacesAutocomplete } from "@/components/google-places-autocomplete";
 
 export default function NewBusinessPage() {
   const router = useRouter();
@@ -36,6 +37,8 @@ export default function NewBusinessPage() {
     website: "",
     instagram: "",
   });
+
+  const [searchAddress, setSearchAddress] = useState("");
 
   const createMutation = trpc.business.createBusiness.useMutation({
     onSuccess: (data) => {
@@ -60,6 +63,26 @@ export default function NewBusinessPage() {
       name,
       slug: generateSlug(name),
     });
+  };
+
+  const handlePlaceSelect = (place: {
+    name: string;
+    address: string;
+    city: string;
+    state: string;
+    formattedAddress: string;
+  }) => {
+    console.log("handlePlaceSelect called with:", place);
+    setFormData({
+      ...formData,
+      name: place.name,
+      slug: generateSlug(place.name),
+      address: place.address,
+      city: place.city,
+      state: place.state,
+    });
+    setSearchAddress(place.name);
+    console.log("Form data updated");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -101,7 +124,23 @@ export default function NewBusinessPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Business Name */}
+            {/* Google Places Search for Business */}
+            <div className="space-y-2">
+              <Label htmlFor="search-business">
+                Search for Business <span className="text-destructive">*</span>
+              </Label>
+              <GooglePlacesAutocomplete
+                value={searchAddress}
+                onChange={setSearchAddress}
+                onPlaceSelect={handlePlaceSelect}
+                placeholder="Type business name (e.g., Royale Boston)"
+              />
+              <p className="text-xs text-muted-foreground">
+                Start typing to search for your business and auto-fill details
+              </p>
+            </div>
+
+            {/* Business Name (Auto-filled, editable) */}
             <div className="space-y-2">
               <Label htmlFor="name">
                 Business Name <span className="text-destructive">*</span>
@@ -200,9 +239,9 @@ export default function NewBusinessPage() {
               )}
             </div>
 
-            {/* Address */}
+            {/* Address (Auto-filled) */}
             <div className="space-y-2">
-              <Label htmlFor="address">Address</Label>
+              <Label htmlFor="address">Street Address</Label>
               <Input
                 id="address"
                 value={formData.address}
@@ -213,7 +252,7 @@ export default function NewBusinessPage() {
               />
             </div>
 
-            {/* City & State */}
+            {/* City & State (Auto-filled) */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="city">

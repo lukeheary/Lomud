@@ -1,0 +1,163 @@
+"use client";
+
+import { useRef, useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { useLoadScript } from "@react-google-maps/api";
+
+const libraries: ("places")[] = ["places"];
+
+interface PlaceResult {
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  formattedAddress: string;
+}
+
+interface GooglePlacesAutocompleteProps {
+  value: string;
+  onChange: (value: string) => void;
+  onPlaceSelect: (place: PlaceResult) => void;
+  placeholder?: string;
+  className?: string;
+  searchType?: "establishment" | "cities";
+}
+
+function AutocompleteInput({
+  value,
+  onChange,
+  onPlaceSelect,
+  placeholder,
+  className,
+  searchType = "establishment",
+}: GooglePlacesAutocompleteProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+
+  useEffect(() => {
+    if (!inputRef.current || !window.google) return;
+
+    // Initialize autocomplete with different types based on searchType
+    const types = searchType === "cities" ? ["(cities)"] : ["establishment"];
+
+    autocompleteRef.current = new window.google.maps.places.Autocomplete(
+      inputRef.current,
+      {
+        types,
+        componentRestrictions: { country: "us" },
+      }
+    );
+
+    // Add place changed listener
+    const listener = autocompleteRef.current.addListener("place_changed", () => {
+      const place = autocompleteRef.current?.getPlace();
+
+      console.log("Place selected:", place);
+
+      if (!place || !place.address_components) {
+        console.log("No place or address components found");
+        return;
+      }
+
+      // Extract address components
+      let streetNumber = "";
+      let route = "";
+      let city = "";
+      let state = "";
+
+      place.address_components.forEach((component) => {
+        const types = component.types;
+
+        if (types.includes("street_number")) {
+          streetNumber = component.long_name;
+        }
+        if (types.includes("route")) {
+          route = component.long_name;
+        }
+        if (types.includes("locality")) {
+          city = component.long_name;
+        }
+        if (types.includes("administrative_area_level_1")) {
+          state = component.short_name;
+        }
+      });
+
+      const address = `${streetNumber} ${route}`.trim();
+      const formattedAddress = place.formatted_address || "";
+      const name = place.name || "";
+
+      console.log("Extracted data:", { name, address, city, state, formattedAddress });
+
+      onPlaceSelect({
+        name,
+        address,
+        city,
+        state,
+        formattedAddress,
+      });
+    });
+
+    return () => {
+      if (listener) {
+        google.maps.event.removeListener(listener);
+      }
+    };
+  }, [onPlaceSelect]);
+
+  return (
+    <Input
+      ref={inputRef}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className={className}
+    />
+  );
+}
+
+export function GooglePlacesAutocomplete(props: GooglePlacesAutocompleteProps) {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: apiKey || "",
+    libraries,
+  });
+
+  if (loadError) {
+    console.error("Error loading Google Maps:", loadError);
+    return (
+      <Input
+        value={props.value}
+        onChange={(e) => props.onChange(e.target.value)}
+        placeholder={props.placeholder}
+        className={props.className}
+      />
+    );
+  }
+
+  if (!apiKey) {
+    console.error("Google Maps API key is not set");
+    return (
+      <Input
+        value={props.value}
+        onChange={(e) => props.onChange(e.target.value)}
+        placeholder={props.placeholder}
+        className={props.className}
+      />
+    );
+  }
+
+  if (!isLoaded) {
+    return (
+      <Input
+        value={props.value}
+        onChange={(e) => props.onChange(e.target.value)}
+        placeholder="Loading..."
+        className={props.className}
+        disabled
+      />
+    );
+  }
+
+  return <AutocompleteInput {...props} />;
+}

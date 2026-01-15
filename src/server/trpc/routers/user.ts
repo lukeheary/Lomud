@@ -24,6 +24,8 @@ export const userRouter = router({
           .min(3, "Username must be at least 3 characters")
           .max(20, "Username must be at most 20 characters")
           .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
+        city: z.string().optional(),
+        state: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -44,13 +46,23 @@ export const userRouter = router({
         });
       }
 
-      // Update the user's username
+      // Build update object
+      const updateData: Record<string, any> = {
+        username: input.username.toLowerCase(),
+        updatedAt: new Date(),
+      };
+
+      if (input.city) {
+        updateData.city = input.city;
+      }
+      if (input.state) {
+        updateData.state = input.state;
+      }
+
+      // Update the user's username and location
       const [updatedUser] = await ctx.db
         .update(users)
-        .set({
-          username: input.username.toLowerCase(),
-          updatedAt: new Date(),
-        })
+        .set(updateData)
         .where(eq(users.id, userId))
         .returning();
 
@@ -87,6 +99,8 @@ export const userRouter = router({
         firstName: z.string().min(1).max(100).optional(),
         lastName: z.string().min(1).max(100).optional(),
         imageUrl: z.string().url().optional(),
+        city: z.string().optional(),
+        state: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -108,6 +122,12 @@ export const userRouter = router({
       }
       if (input.imageUrl !== undefined) {
         updateData.imageUrl = input.imageUrl;
+      }
+      if (input.city !== undefined) {
+        updateData.city = input.city;
+      }
+      if (input.state !== undefined) {
+        updateData.state = input.state;
       }
 
       console.log("Updating database with:", updateData);
@@ -131,6 +151,8 @@ export const userRouter = router({
         imageUrl: updatedUser.imageUrl,
         firstName: updatedUser.firstName,
         lastName: updatedUser.lastName,
+        city: updatedUser.city,
+        state: updatedUser.state,
       });
 
       // Sync with Clerk

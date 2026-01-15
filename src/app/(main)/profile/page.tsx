@@ -12,6 +12,7 @@ import { UserButton } from "@clerk/nextjs";
 import { Loader2, Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { UploadButton } from "@/lib/uploadthing";
+import { GooglePlacesAutocomplete } from "@/components/google-places-autocomplete";
 
 export default function ProfilePage() {
   const { toast } = useToast();
@@ -22,6 +23,9 @@ export default function ProfilePage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [searchCity, setSearchCity] = useState("");
   // const [isEditing, setIsEditing] = useState(false);
 
   // Initialize form when user data loads
@@ -30,6 +34,9 @@ export default function ProfilePage() {
       setFirstName(user.firstName || "");
       setLastName(user.lastName || "");
       setImageUrl(user.imageUrl || "");
+      setCity(user.city || "");
+      setState(user.state || "");
+      setSearchCity(user.city || "");
     }
   }, [user]);
 
@@ -113,11 +120,25 @@ export default function ProfilePage() {
     reader.readAsDataURL(file);
   };
 
+  const handleCitySelect = (place: {
+    name: string;
+    address: string;
+    city: string;
+    state: string;
+    formattedAddress: string;
+  }) => {
+    setCity(place.city);
+    setState(place.state);
+    setSearchCity(place.city);
+  };
+
   const handleSave = () => {
     updateProfileMutation.mutate({
       firstName: firstName || undefined,
       lastName: lastName || undefined,
       imageUrl: imageUrl || undefined,
+      city: city || undefined,
+      state: state || undefined,
     });
   };
 
@@ -126,6 +147,9 @@ export default function ProfilePage() {
       setFirstName(user.firstName || "");
       setLastName(user.lastName || "");
       setImageUrl(user.imageUrl || "");
+      setCity(user.city || "");
+      setState(user.state || "");
+      setSearchCity(user.city || "");
     }
     // setIsEditing(false);
   };
@@ -260,6 +284,22 @@ export default function ProfilePage() {
                 Username cannot be changed after initial setup
               </p>
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="city">City</Label>
+              <GooglePlacesAutocomplete
+                value={searchCity}
+                onChange={setSearchCity}
+                onPlaceSelect={handleCitySelect}
+                placeholder="Search for your city..."
+                searchType="cities"
+              />
+              {city && state && (
+                <p className="text-xs text-muted-foreground">
+                  Selected: {city}, {state}
+                </p>
+              )}
+            </div>
           </div>
 
           <Separator />
@@ -273,7 +313,10 @@ export default function ProfilePage() {
                 <Button
                   onClick={handleSave}
                   disabled={updateProfileMutation.isPending ||
-                    (firstName === (user.firstName || "") && lastName === (user.lastName || ""))
+                    (firstName === (user.firstName || "") &&
+                     lastName === (user.lastName || "") &&
+                     city === (user.city || "") &&
+                     state === (user.state || ""))
                   }
                 >
                   {updateProfileMutation.isPending && (

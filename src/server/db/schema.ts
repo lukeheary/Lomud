@@ -58,6 +58,8 @@ export const users = pgTable(
     firstName: varchar("first_name", { length: 100 }),
     lastName: varchar("last_name", { length: 100 }),
     imageUrl: text("image_url"),
+    city: varchar("city", { length: 100 }),
+    state: varchar("state", { length: 2 }),
     role: userRoleEnum("role").notNull().default("user"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
