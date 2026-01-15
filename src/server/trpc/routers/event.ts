@@ -386,6 +386,107 @@ export const eventRouter = router({
       return rsvp;
     }),
 
+  updateEvent: protectedProcedure
+    .input(
+      z.object({
+        eventId: z.string().uuid(),
+        title: z.string().min(1).max(255).optional(),
+        description: z.string().optional(),
+        imageUrl: z.string().url().optional(),
+        startAt: z.date().optional(),
+        endAt: z.date().optional(),
+        venueName: z.string().max(255).optional(),
+        address: z.string().optional(),
+        city: z.string().min(1).max(100).optional(),
+        state: z.string().length(2).optional(),
+        category: z.enum([
+          "music",
+          "food",
+          "art",
+          "sports",
+          "community",
+          "nightlife",
+          "other",
+        ]).optional(),
+        visibility: z.enum(["public", "private"]).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { eventId, ...updates } = input;
+
+      // Fetch the event to check permissions
+      const event = await ctx.db.query.events.findFirst({
+        where: eq(events.id, eventId),
+      });
+
+      if (!event) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Event not found",
+        });
+      }
+
+      // Check if user is admin
+      const user = await ctx.db.query.users.findFirst({
+        where: eq(users.id, ctx.auth.userId),
+      });
+
+      const isAdmin = user?.role === "admin";
+      const isCreator = event.createdByUserId === ctx.auth.userId;
+
+      // Only admins or the event creator can edit
+      if (!isAdmin && !isCreator) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have permission to edit this event",
+        });
+      }
+
+      // Validate startAt < endAt if both are provided
+      const startAt = updates.startAt || event.startAt;
+      const endAt = updates.endAt || event.endAt;
+
+      if (endAt && startAt >= endAt) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "End time must be after start time",
+        });
+      }
+
+      // Build update object
+      const updateData: Record<string, any> = {
+        updatedAt: new Date(),
+      };
+
+      if (updates.title !== undefined) updateData.title = updates.title;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.imageUrl !== undefined) updateData.imageUrl = updates.imageUrl;
+      if (updates.startAt !== undefined) updateData.startAt = updates.startAt;
+      if (updates.endAt !== undefined) updateData.endAt = updates.endAt;
+      if (updates.venueName !== undefined) updateData.venueName = updates.venueName;
+      if (updates.address !== undefined) updateData.address = updates.address;
+      if (updates.city !== undefined) updateData.city = updates.city;
+      if (updates.state !== undefined) updateData.state = updates.state;
+      if (updates.category !== undefined) updateData.category = updates.category;
+      if (updates.visibility !== undefined) updateData.visibility = updates.visibility;
+
+      // Update the event
+      const [updatedEvent] = await ctx.db
+        .update(events)
+        .set(updateData)
+        .where(eq(events.id, eventId))
+        .returning();
+
+      if (!updatedEvent) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update event",
+        });
+      }
+
+      return updatedEvent;
+    }),
+
   getAvailableCities: publicProcedure.query(async ({ ctx }) => {
     // Get unique cities that have public events
     const result = await ctx.db

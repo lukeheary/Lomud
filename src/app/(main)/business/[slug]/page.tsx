@@ -201,7 +201,7 @@ export default function BusinessPage() {
       </Card>
 
       {/* Upcoming Events */}
-      <Card>
+      <Card className={'bg-background border-none'}>
         <CardHeader>
           <CardTitle>Upcoming Events</CardTitle>
         </CardHeader>

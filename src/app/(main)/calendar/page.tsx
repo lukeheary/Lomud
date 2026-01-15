@@ -201,15 +201,13 @@ export default function CalendarPage() {
 
       {/* Week View */}
       {!isLoading && viewMode === "week" && (
-        <div className="space-y-4">
+        <div className="space-y-8">
           {daysToDisplay.map((date) => {
             const dateKey = format(date, "yyyy-MM-dd");
             const dayEvents = eventsByDay[dateKey] || [];
             const isToday = isSameDay(date, new Date());
 
             return (
-              <Card key={dateKey} className={"border-muted bg-background"}>
-                <CardContent className="pt-6">
                   <div className="flex flex-col items-start">
                     <div className="min-w-[100px]">
                       <div
@@ -254,8 +252,6 @@ export default function CalendarPage() {
                       )}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
             );
           })}
         </div>

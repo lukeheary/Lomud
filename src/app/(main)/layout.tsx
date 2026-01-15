@@ -67,11 +67,11 @@ export default function MainLayout({
                 Events
               </Button>
             </Link>
-            <Link href="/calendar">
-              <Button variant="ghost" size="sm">
-                Calendar
-              </Button>
-            </Link>
+            {/*<Link href="/calendar">*/}
+            {/*  <Button variant="ghost" size="sm">*/}
+            {/*    Calendar*/}
+            {/*  </Button>*/}
+            {/*</Link>*/}
             <Link href="/businesses">
               <Button variant="ghost" size="sm">
                 Businesses
@@ -176,7 +176,6 @@ export default function MainLayout({
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                 <SheetHeader>
-                  <SheetTitle>Menu</SheetTitle>
                 </SheetHeader>
                 <nav className="flex flex-col gap-4 mt-8">
                   <Link href="/home" onClick={closeMobileMenu}>
@@ -185,12 +184,12 @@ export default function MainLayout({
                       Events
                     </Button>
                   </Link>
-                  <Link href="/calendar" onClick={closeMobileMenu}>
-                    <Button variant="ghost" className="w-full justify-start" size="lg">
-                      <Calendar className="h-5 w-5 mr-3" />
-                      Calendar
-                    </Button>
-                  </Link>
+                  {/*<Link href="/calendar" onClick={closeMobileMenu}>*/}
+                  {/*  <Button variant="ghost" className="w-full justify-start" size="lg">*/}
+                  {/*    <Calendar className="h-5 w-5 mr-3" />*/}
+                  {/*    Calendar*/}
+                  {/*  </Button>*/}
+                  {/*</Link>*/}
                   <Link href="/businesses" onClick={closeMobileMenu}>
                     <Button variant="ghost" className="w-full justify-start" size="lg">
                       <Building2 className="h-5 w-5 mr-3" />

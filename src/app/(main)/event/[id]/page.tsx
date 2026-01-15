@@ -18,6 +18,7 @@ import {
   Share2,
   Clock,
   User,
+  Edit,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -39,6 +40,13 @@ export default function EventPage() {
   const { data: attendees } = trpc.event.listEventAttendees.useQuery({
     eventId,
   });
+
+  // Check if user is admin
+  const { data: adminCheck } = trpc.user.isAdmin.useQuery();
+  const isAdmin = adminCheck?.isAdmin ?? false;
+
+  // Get current user
+  const { data: currentUser } = trpc.user.getCurrentUser.useQuery();
 
   // RSVP mutation
   const rsvpMutation = trpc.event.setRsvpStatus.useMutation({
@@ -95,6 +103,9 @@ export default function EventPage() {
   const monthDay = format(eventDate, "MMMM d, yyyy");
   const time = format(eventDate, "h:mm a zzz");
 
+  // Check if user can edit this event
+  const canEdit = isAdmin || (currentUser && event.createdByUserId === currentUser.id);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Content */}
@@ -107,6 +118,13 @@ export default function EventPage() {
               <div className="mb-2 flex items-start justify-between">
                 <h1 className="text-4xl font-bold">{event.title}</h1>
                 <div className="flex gap-2">
+                  {canEdit && (
+                    <Link href={`/event/${eventId}/edit`}>
+                      <Button size="icon" variant="outline">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  )}
                   <Button size="icon" variant="outline">
                     <Heart className="h-4 w-4" />
                   </Button>
