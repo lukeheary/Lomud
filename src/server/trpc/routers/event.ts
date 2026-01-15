@@ -25,7 +25,6 @@ export const eventRouter = router({
   createEvent: protectedProcedure
     .input(
       z.object({
-        businessId: z.string().uuid().optional(),
         venueId: z.string().uuid().optional(),
         organizerId: z.string().uuid().optional(),
         title: z.string().min(1).max(255),
@@ -112,7 +111,6 @@ export const eventRouter = router({
           description: input.description ?? null,
           address: input.address ?? null,
           endAt: input.endAt ?? null,
-          businessId: input.businessId ?? null,
           venueId: input.venueId ?? null,
           organizerId: input.organizerId ?? null,
           imageUrl: input.imageUrl ?? null,

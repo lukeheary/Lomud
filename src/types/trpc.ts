@@ -18,13 +18,6 @@ export type EventDetail = RouterOutputs["event"]["getEventById"];
 /** Current authenticated user data */
 export type CurrentUser = RouterOutputs["user"]["getCurrentUser"];
 
-// ===== Business Types =====
-/** Business detail including events and follower count */
-export type BusinessDetail = RouterOutputs["business"]["getBusinessBySlug"];
-
-/** Business list item from businesses query */
-export type BusinessListItem = RouterOutputs["business"]["listBusinesses"][number];
-
 // ===== Venue Types =====
 /** Venue detail including events, members, and follower count */
 export type VenueDetail = RouterOutputs["venue"]["getVenueBySlug"];
@@ -37,4 +30,5 @@ export type VenueListItem = RouterOutputs["venue"]["listVenues"][number];
 export type OrganizerDetail = RouterOutputs["organizer"]["getOrganizerBySlug"];
 
 /** Organizer list item from organizers query */
-export type OrganizerListItem = RouterOutputs["organizer"]["listOrganizers"][number];
+export type OrganizerListItem =
+  RouterOutputs["organizer"]["listOrganizers"][number];

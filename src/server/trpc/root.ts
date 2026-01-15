@@ -1,5 +1,4 @@
 import { router } from "./init";
-import { businessRouter } from "./routers/business";
 import { venueRouter } from "./routers/venue";
 import { organizerRouter } from "./routers/organizer";
 import { adminRouter } from "./routers/admin";
@@ -8,7 +7,6 @@ import { friendsRouter } from "./routers/friends";
 import { userRouter } from "./routers/user";
 
 export const appRouter = router({
-  business: businessRouter,
   venue: venueRouter,
   organizer: organizerRouter,
   admin: adminRouter,
