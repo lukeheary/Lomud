@@ -208,50 +208,50 @@ export default function CalendarPage() {
             const isToday = isSameDay(date, new Date());
 
             return (
-                  <div className="flex flex-col items-start">
-                    <div className="min-w-[100px]">
-                      <div
-                        className={cn(
-                          "mb-2 text-xl font-semibold",
-                          isToday && "text-primary"
-                        )}
-                      >
-                        {format(date, "EEEE, MMMM d")}
-                      </div>
-                      {/*<div*/}
-                      {/*  className={cn(*/}
-                      {/*    "text-sm font-medium",*/}
-                      {/*    isToday && "text-primary"*/}
-                      {/*  )}*/}
-                      {/*>*/}
-                      {/*  {format(date, "EEEE")}*/}
-                      {/*</div>*/}
-                      {/*<div*/}
-                      {/*  className={cn(*/}
-                      {/*    "text-2xl font-bold",*/}
-                      {/*    isToday && "text-primary"*/}
-                      {/*  )}*/}
-                      {/*>*/}
-                      {/*  {format(date, "d")}*/}
-                      {/*</div>*/}
-                      {/*<div className="text-sm text-muted-foreground">*/}
-                      {/*  {format(date, "MMM")}*/}
-                      {/*</div>*/}
-                    </div>
-                    <div className="flex-1">
-                      {dayEvents.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">
-                          No events scheduled
-                        </p>
-                      ) : (
-                        <EventCardGrid
-                          events={dayEvents}
-                          columns={{ mobile: 2, desktop: 4 }}
-                          gap="md"
-                        />
-                      )}
-                    </div>
+              <div key={dateKey} className="flex flex-col items-start">
+                <div className="min-w-[100px]">
+                  <div
+                    className={cn(
+                      "mb-2 text-xl font-semibold",
+                      isToday && "text-primary"
+                    )}
+                  >
+                    {format(date, "EEEE, MMMM d")}
                   </div>
+                  {/*<div*/}
+                  {/*  className={cn(*/}
+                  {/*    "text-sm font-medium",*/}
+                  {/*    isToday && "text-primary"*/}
+                  {/*  )}*/}
+                  {/*>*/}
+                  {/*  {format(date, "EEEE")}*/}
+                  {/*</div>*/}
+                  {/*<div*/}
+                  {/*  className={cn(*/}
+                  {/*    "text-2xl font-bold",*/}
+                  {/*    isToday && "text-primary"*/}
+                  {/*  )}*/}
+                  {/*>*/}
+                  {/*  {format(date, "d")}*/}
+                  {/*</div>*/}
+                  {/*<div className="text-sm text-muted-foreground">*/}
+                  {/*  {format(date, "MMM")}*/}
+                  {/*</div>*/}
+                </div>
+                <div className="flex-1">
+                  {dayEvents.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No events scheduled
+                    </p>
+                  ) : (
+                    <EventCardGrid
+                      events={dayEvents}
+                      columns={{ mobile: 2, desktop: 4 }}
+                      gap="md"
+                    />
+                  )}
+                </div>
+              </div>
             );
           })}
         </div>

@@ -149,6 +149,8 @@ export default function EventPage() {
                 </span>
               </div>
 
+
+
               {/*{event.venue && (*/}
               {/*  <Link*/}
               {/*    href={`/venue/${event.venue.slug}`}*/}

@@ -25,7 +25,11 @@ export default function HomePage() {
   }, []);
 
   // Fetch events with current filters
-  const { data: events, isLoading, error } = trpc.event.listEventsByRange.useQuery({
+  const {
+    data: events,
+    isLoading,
+    error,
+  } = trpc.event.listEventsByRange.useQuery({
     startDate: dateRange.startDate,
     endDate: dateRange.endDate,
     followedOnly: activeFilter === "followed",

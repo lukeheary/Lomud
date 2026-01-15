@@ -1,6 +1,23 @@
 import { z } from "zod";
-import { router, publicProcedure, protectedProcedure, adminProcedure } from "../init";
-import { events, businesses, venues, organizers, venueMembers, organizerMembers, rsvps, follows, venueFollows, organizerFollows, friends, users } from "../../db/schema";
+import {
+  router,
+  publicProcedure,
+  protectedProcedure,
+  adminProcedure,
+} from "../init";
+import {
+  events,
+  venues,
+  organizers,
+  venueMembers,
+  organizerMembers,
+  rsvps,
+  follows,
+  venueFollows,
+  organizerFollows,
+  friends,
+  users,
+} from "../../db/schema";
 import { eq, and, or, desc, gte, lte, inArray, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
@@ -38,27 +55,6 @@ export const eventRouter = router({
         where: eq(users.id, ctx.auth.userId),
       });
       const isAdmin = user?.role === "admin";
-
-      // If businessId provided, verify user owns the business (legacy support)
-      if (input.businessId) {
-        const business = await ctx.db.query.businesses.findFirst({
-          where: eq(businesses.id, input.businessId),
-        });
-
-        if (!business) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Business not found",
-          });
-        }
-
-        if (!isAdmin && business.createdByUserId !== ctx.auth.userId) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "You do not own this business",
-          });
-        }
-      }
 
       // If venueId provided, verify user is venue member or admin
       if (input.venueId && !isAdmin) {
@@ -176,28 +172,28 @@ export const eventRouter = router({
         const userBusinessFollows = await ctx.db.query.follows.findMany({
           where: eq(follows.userId, ctx.auth.userId),
         });
-        const followedBusinessIds = userBusinessFollows.map((f) => f.businessId);
-
         const userVenueFollows = await ctx.db.query.venueFollows.findMany({
           where: eq(venueFollows.userId, ctx.auth.userId),
         });
         const followedVenueIds = userVenueFollows.map((f) => f.venueId);
 
-        const userOrganizerFollows = await ctx.db.query.organizerFollows.findMany({
-          where: eq(organizerFollows.userId, ctx.auth.userId),
-        });
-        const followedOrganizerIds = userOrganizerFollows.map((f) => f.organizerId);
+        const userOrganizerFollows =
+          await ctx.db.query.organizerFollows.findMany({
+            where: eq(organizerFollows.userId, ctx.auth.userId),
+          });
+        const followedOrganizerIds = userOrganizerFollows.map(
+          (f) => f.organizerId
+        );
 
-        if (followedBusinessIds.length > 0 || followedVenueIds.length > 0 || followedOrganizerIds.length > 0) {
+        if (followedVenueIds.length > 0 || followedOrganizerIds.length > 0) {
           const followConditions = [];
-          if (followedBusinessIds.length > 0) {
-            followConditions.push(inArray(events.businessId, followedBusinessIds));
-          }
           if (followedVenueIds.length > 0) {
             followConditions.push(inArray(events.venueId, followedVenueIds));
           }
           if (followedOrganizerIds.length > 0) {
-            followConditions.push(inArray(events.organizerId, followedOrganizerIds));
+            followConditions.push(
+              inArray(events.organizerId, followedOrganizerIds)
+            );
           }
           conditions.push(or(...followConditions)!);
         } else {
@@ -464,15 +460,17 @@ export const eventRouter = router({
         address: z.string().optional(),
         city: z.string().min(1).max(100).optional(),
         state: z.string().length(2).optional(),
-        category: z.enum([
-          "music",
-          "food",
-          "art",
-          "sports",
-          "community",
-          "nightlife",
-          "other",
-        ]).optional(),
+        category: z
+          .enum([
+            "music",
+            "food",
+            "art",
+            "sports",
+            "community",
+            "nightlife",
+            "other",
+          ])
+          .optional(),
         visibility: z.enum(["public", "private"]).optional(),
       })
     )
@@ -524,16 +522,21 @@ export const eventRouter = router({
       };
 
       if (updates.title !== undefined) updateData.title = updates.title;
-      if (updates.description !== undefined) updateData.description = updates.description;
-      if (updates.imageUrl !== undefined) updateData.imageUrl = updates.imageUrl;
+      if (updates.description !== undefined)
+        updateData.description = updates.description;
+      if (updates.imageUrl !== undefined)
+        updateData.imageUrl = updates.imageUrl;
       if (updates.startAt !== undefined) updateData.startAt = updates.startAt;
       if (updates.endAt !== undefined) updateData.endAt = updates.endAt;
-      if (updates.venueName !== undefined) updateData.venueName = updates.venueName;
+      if (updates.venueName !== undefined)
+        updateData.venueName = updates.venueName;
       if (updates.address !== undefined) updateData.address = updates.address;
       if (updates.city !== undefined) updateData.city = updates.city;
       if (updates.state !== undefined) updateData.state = updates.state;
-      if (updates.category !== undefined) updateData.category = updates.category;
-      if (updates.visibility !== undefined) updateData.visibility = updates.visibility;
+      if (updates.category !== undefined)
+        updateData.category = updates.category;
+      if (updates.visibility !== undefined)
+        updateData.visibility = updates.visibility;
 
       // Update the event
       const [updatedEvent] = await ctx.db

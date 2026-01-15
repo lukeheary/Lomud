@@ -86,7 +86,11 @@ export default function HomePage() {
   }, [viewMode, currentDate]);
 
   // Fetch events with current filters
-  const { data: events, isLoading, error } = trpc.event.listEventsByRange.useQuery({
+  const {
+    data: events,
+    isLoading,
+    error,
+  } = trpc.event.listEventsByRange.useQuery({
     startDate: dateRange.startDate,
     endDate: dateRange.endDate,
     followedOnly: activeFilter === "followed",
@@ -187,13 +191,13 @@ export default function HomePage() {
       {/* Header with Navigation */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
             Upcoming Events
             {selectedCity !== "all" && (
               <span className="text-muted-foreground"> in {selectedCity}</span>
             )}
           </h1>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-sm text-muted-foreground">
             {viewMode === "week"
               ? format(dateRange.startDate, "MMMM d") +
                 " - " +
@@ -243,7 +247,7 @@ export default function HomePage() {
 
         {/* City Filter */}
         <Select value={selectedCity} onValueChange={setSelectedCity}>
-          <SelectTrigger className="md:w-fit w-full">
+          <SelectTrigger className="w-full md:w-fit">
             <SelectValue placeholder="Select city" />
           </SelectTrigger>
           <SelectContent>
@@ -304,9 +308,9 @@ export default function HomePage() {
                       {format(date, "EEEE, MMMM d")}
                     </div>
                   </div>
-                  <div className="flex-1 w-full">
+                  <div className="w-full flex-1">
                     {dayEvents.length === 0 ? (
-                      <div className="min-h-[300px] flex items-center justify-center rounded-lg border border-dashed">
+                      <div className="flex min-h-[300px] items-center justify-center rounded-lg border border-dashed">
                         <p className="text-sm text-muted-foreground">
                           No events scheduled
                         </p>
