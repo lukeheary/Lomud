@@ -71,18 +71,21 @@ export const users = pgTable(
 );
 
 export const usersRelations = relations(users, ({ many }) => ({
-  businesses: many(businesses),
   follows: many(follows),
+  venueMembers: many(venueMembers),
+  organizerMembers: many(organizerMembers),
+  venueFollows: many(venueFollows),
+  organizerFollows: many(organizerFollows),
   rsvps: many(rsvps),
   sentFriendRequests: many(friends, { relationName: "sentRequests" }),
   receivedFriendRequests: many(friends, { relationName: "receivedRequests" }),
 }));
 
 // ============================================================================
-// BUSINESSES TABLE
+// VENUES TABLE
 // ============================================================================
-export const businesses = pgTable(
-  "businesses",
+export const venues = pgTable(
+  "venues",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     slug: varchar("slug", { length: 100 }).notNull().unique(),
@@ -91,30 +94,200 @@ export const businesses = pgTable(
     imageUrl: text("image_url"),
     address: text("address"),
     city: varchar("city", { length: 100 }).notNull(),
-    state: varchar("state", { length: 2 }).notNull(), // US state code
+    state: varchar("state", { length: 2 }).notNull(),
     website: text("website"),
     instagram: varchar("instagram", { length: 100 }),
-    createdByUserId: text("created_by_user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => ({
-    slugIdx: uniqueIndex("businesses_slug_idx").on(table.slug),
-    locationIdx: index("businesses_location_idx").on(table.city, table.state),
-    createdByIdx: index("businesses_created_by_idx").on(table.createdByUserId),
+    slugIdx: uniqueIndex("venues_slug_idx").on(table.slug),
+    locationIdx: index("venues_location_idx").on(table.city, table.state),
   })
 );
 
-export const businessesRelations = relations(businesses, ({ one, many }) => ({
-  createdBy: one(users, {
-    fields: [businesses.createdByUserId],
+export const venuesRelations = relations(venues, ({ many }) => ({
+  members: many(venueMembers),
+  events: many(events),
+  follows: many(venueFollows),
+}));
+
+// ============================================================================
+// ORGANIZERS TABLE
+// ============================================================================
+export const organizers = pgTable(
+  "organizers",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: varchar("slug", { length: 100 }).notNull().unique(),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description"),
+    imageUrl: text("image_url"),
+    website: text("website"),
+    instagram: varchar("instagram", { length: 100 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    slugIdx: uniqueIndex("organizers_slug_idx").on(table.slug),
+  })
+);
+
+export const organizersRelations = relations(organizers, ({ many }) => ({
+  members: many(organizerMembers),
+  events: many(events),
+  follows: many(organizerFollows),
+}));
+
+// ============================================================================
+// VENUE MEMBERS TABLE
+// ============================================================================
+export const venueMembers = pgTable(
+  "venueMembers",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    venueId: uuid("venue_id")
+      .notNull()
+      .references(() => venues.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userVenueIdx: uniqueIndex("venueMembers_user_venue_idx").on(
+      table.userId,
+      table.venueId
+    ),
+    userIdx: index("venueMembers_user_idx").on(table.userId),
+    venueIdx: index("venueMembers_venue_idx").on(table.venueId),
+  })
+);
+
+export const venueMembersRelations = relations(venueMembers, ({ one }) => ({
+  user: one(users, {
+    fields: [venueMembers.userId],
     references: [users.id],
   }),
-  events: many(events),
-  follows: many(follows),
+  venue: one(venues, {
+    fields: [venueMembers.venueId],
+    references: [venues.id],
+  }),
 }));
+
+// ============================================================================
+// ORGANIZER MEMBERS TABLE
+// ============================================================================
+export const organizerMembers = pgTable(
+  "organizerMembers",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    organizerId: uuid("organizer_id")
+      .notNull()
+      .references(() => organizers.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userOrganizerIdx: uniqueIndex("organizerMembers_user_organizer_idx").on(
+      table.userId,
+      table.organizerId
+    ),
+    userIdx: index("organizerMembers_user_idx").on(table.userId),
+    organizerIdx: index("organizerMembers_organizer_idx").on(table.organizerId),
+  })
+);
+
+export const organizerMembersRelations = relations(
+  organizerMembers,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [organizerMembers.userId],
+      references: [users.id],
+    }),
+    organizer: one(organizers, {
+      fields: [organizerMembers.organizerId],
+      references: [organizers.id],
+    }),
+  })
+);
+
+// ============================================================================
+// VENUE FOLLOWS TABLE
+// ============================================================================
+export const venueFollows = pgTable(
+  "venueFollows",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    venueId: uuid("venue_id")
+      .notNull()
+      .references(() => venues.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userVenueIdx: uniqueIndex("venueFollows_user_venue_idx").on(
+      table.userId,
+      table.venueId
+    ),
+    userIdx: index("venueFollows_user_idx").on(table.userId),
+    venueIdx: index("venueFollows_venue_idx").on(table.venueId),
+  })
+);
+
+export const venueFollowsRelations = relations(venueFollows, ({ one }) => ({
+  user: one(users, {
+    fields: [venueFollows.userId],
+    references: [users.id],
+  }),
+  venue: one(venues, {
+    fields: [venueFollows.venueId],
+    references: [venues.id],
+  }),
+}));
+
+// ============================================================================
+// ORGANIZER FOLLOWS TABLE
+// ============================================================================
+export const organizerFollows = pgTable(
+  "organizerFollows",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    organizerId: uuid("organizer_id")
+      .notNull()
+      .references(() => organizers.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userOrganizerIdx: uniqueIndex("organizerFollows_user_organizer_idx").on(
+      table.userId,
+      table.organizerId
+    ),
+    userIdx: index("organizerFollows_user_idx").on(table.userId),
+    organizerIdx: index("organizerFollows_organizer_idx").on(table.organizerId),
+  })
+);
+
+export const organizerFollowsRelations = relations(
+  organizerFollows,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [organizerFollows.userId],
+      references: [users.id],
+    }),
+    organizer: one(organizers, {
+      fields: [organizerFollows.organizerId],
+      references: [organizers.id],
+    }),
+  })
+);
 
 // ============================================================================
 // FOLLOWS TABLE
@@ -126,18 +299,10 @@ export const follows = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    businessId: uuid("business_id")
-      .notNull()
-      .references(() => businesses.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
-    userBusinessIdx: uniqueIndex("follows_user_business_idx").on(
-      table.userId,
-      table.businessId
-    ),
     userIdx: index("follows_user_idx").on(table.userId),
-    businessIdx: index("follows_business_idx").on(table.businessId),
   })
 );
 
@@ -145,10 +310,6 @@ export const followsRelations = relations(follows, ({ one }) => ({
   user: one(users, {
     fields: [follows.userId],
     references: [users.id],
-  }),
-  business: one(businesses, {
-    fields: [follows.businessId],
-    references: [businesses.id],
   }),
 }));
 
@@ -159,7 +320,10 @@ export const events = pgTable(
   "events",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    businessId: uuid("business_id").references(() => businesses.id, {
+    venueId: uuid("venue_id").references(() => venues.id, {
+      onDelete: "set null",
+    }),
+    organizerId: uuid("organizer_id").references(() => organizers.id, {
       onDelete: "set null",
     }),
     createdByUserId: text("created_by_user_id")
@@ -180,7 +344,8 @@ export const events = pgTable(
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => ({
-    businessIdx: index("events_business_idx").on(table.businessId),
+    venueIdx: index("events_venue_idx").on(table.venueId),
+    organizerIdx: index("events_organizer_idx").on(table.organizerId),
     startAtIdx: index("events_start_at_idx").on(table.startAt),
     locationIdx: index("events_location_idx").on(table.city, table.state),
     categoryIdx: index("events_category_idx").on(table.category),
@@ -194,9 +359,13 @@ export const events = pgTable(
 );
 
 export const eventsRelations = relations(events, ({ one, many }) => ({
-  business: one(businesses, {
-    fields: [events.businessId],
-    references: [businesses.id],
+  venue: one(venues, {
+    fields: [events.venueId],
+    references: [venues.id],
+  }),
+  organizer: one(organizers, {
+    fields: [events.organizerId],
+    references: [organizers.id],
   }),
   createdBy: one(users, {
     fields: [events.createdByUserId],

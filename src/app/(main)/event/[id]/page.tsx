@@ -19,6 +19,7 @@ import {
   Clock,
   User,
   Edit,
+  Users,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -148,15 +149,35 @@ export default function EventPage() {
                 </span>
               </div>
 
-              {event.business && (
+              {/*{event.venue && (*/}
+              {/*  <Link*/}
+              {/*    href={`/venue/${event.venue.slug}`}*/}
+              {/*    className="mt-1 flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary"*/}
+              {/*  >*/}
+              {/*    <Building2 className="h-4 w-4" />*/}
+              {/*    <span>At {event.venue.name}</span>*/}
+              {/*  </Link>*/}
+              {/*)}*/}
+
+              {event.organizer && (
                 <Link
-                  href={`/business/${event.business.slug}`}
+                  href={`/organizer/${event.organizer.slug}`}
                   className="mt-1 flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary"
                 >
-                  <Building2 className="h-4 w-4" />
-                  <span>Presented by {event.business.name}</span>
+                  <Users className="h-4 w-4" />
+                  <span>Hosted by {event.organizer.name}</span>
                 </Link>
               )}
+
+              {/*{event.venue && (*/}
+              {/*  <Link*/}
+              {/*    href={`/business/${event.venue.slug}`}*/}
+              {/*    className="mt-1 flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary"*/}
+              {/*  >*/}
+              {/*    <Building2 className="h-4 w-4" />*/}
+              {/*    <span>Presented by {event.venue.name}</span>*/}
+              {/*  </Link>*/}
+              {/*)}*/}
             </div>
 
             <Separator />

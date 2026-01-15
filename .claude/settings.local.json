@@ -14,7 +14,9 @@
       "Bash(rm:*)",
       "Bash(npm run dev)",
       "Bash(npm run db:push:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(printf:*)"
     ]
   }
 }

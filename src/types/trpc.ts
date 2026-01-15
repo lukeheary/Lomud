@@ -24,3 +24,17 @@ export type BusinessDetail = RouterOutputs["business"]["getBusinessBySlug"];
 
 /** Business list item from businesses query */
 export type BusinessListItem = RouterOutputs["business"]["listBusinesses"][number];
+
+// ===== Venue Types =====
+/** Venue detail including events, members, and follower count */
+export type VenueDetail = RouterOutputs["venue"]["getVenueBySlug"];
+
+/** Venue list item from venues query */
+export type VenueListItem = RouterOutputs["venue"]["listVenues"][number];
+
+// ===== Organizer Types =====
+/** Organizer detail including events, members, and follower count */
+export type OrganizerDetail = RouterOutputs["organizer"]["getOrganizerBySlug"];
+
+/** Organizer list item from organizers query */
+export type OrganizerListItem = RouterOutputs["organizer"]["listOrganizers"][number];

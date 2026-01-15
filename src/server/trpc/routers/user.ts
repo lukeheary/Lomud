@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure } from "../init";
-import { users } from "@/server/db/schema";
+import { users, venueMembers, organizerMembers } from "@/server/db/schema";
 import { eq, and, ne } from "drizzle-orm";
 import { clerkClient } from "@clerk/nextjs/server";
 
@@ -14,6 +14,24 @@ export const userRouter = router({
     return {
       isAdmin: user?.role === "admin",
     };
+  }),
+
+  hasVenues: protectedProcedure.query(async ({ ctx }) => {
+    const memberships = await ctx.db.query.venueMembers.findMany({
+      where: eq(venueMembers.userId, ctx.auth.userId),
+      limit: 1,
+    });
+
+    return memberships.length > 0;
+  }),
+
+  hasOrganizers: protectedProcedure.query(async ({ ctx }) => {
+    const memberships = await ctx.db.query.organizerMembers.findMany({
+      where: eq(organizerMembers.userId, ctx.auth.userId),
+      limit: 1,
+    });
+
+    return memberships.length > 0;
   }),
 
   updateUsername: protectedProcedure

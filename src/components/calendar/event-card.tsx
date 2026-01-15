@@ -27,7 +27,7 @@ export function EventCard({ event }: EventCardProps) {
 
   return (
     <Link href={`/event/${event.id}`} className="group">
-      <Card className="cursor-pointer overflow-hidden !border-none bg-card transition-all duration-300 p-2 h-full">
+      <Card className="h-full cursor-pointer overflow-hidden !border-none bg-card p-2 transition-all duration-300">
         {/* Square Image */}
         <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-muted lg:max-w-[274px]">
           {event.imageUrl ? (
@@ -83,25 +83,20 @@ export function EventCard({ event }: EventCardProps) {
             {event.title}
           </h3>
 
-          {/* Date & Venue */}
+          {/* Date */}
           <div className="text-sm text-primary/70">
             {dayOfWeek}, {month} {day} at {startTime}
           </div>
 
+          {/* Venue & Organizer */}
           <div className="text-sm text-primary/70">
-            {event.business && `${event.business.name}`}
+            {event.venue && `${event.venue.name}`}
+            {event.organizer &&
+              (event.venue
+                ? ` • ${event.organizer.name}`
+                : event.organizer.name)}
+            {event.venue && `${event.venue.name}`}
           </div>
-
-          {/* Location */}
-          {/*<div className="flex flex-row gap-1 text-sm text-muted-foreground">*/}
-          {/*  {event.business && (*/}
-          {/*    <div className="text-muted-foreground">{event.business.name}</div>*/}
-          {/*  )}*/}
-          {/*  {event.business && <span>•</span>}*/}
-          {/*  {event.city}, {event.state}*/}
-          {/*</div>*/}
-
-          {/* Business */}
         </div>
       </Card>
     </Link>

@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Users, Building2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { EventFilterTabs } from "@/components/events/event-filter-tabs";
 
 type FilterTab = "all" | "followed" | "friends";
 
@@ -62,7 +63,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto space-y-6 py-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -73,27 +74,12 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <Tabs
+      <EventFilterTabs
         value={activeFilter}
-        onValueChange={(value) => setActiveFilter(value as FilterTab)}
+        onValueChange={setActiveFilter}
+        gridLayout
         className="w-full"
-      >
-        <TabsList className="grid w-full max-w-md grid-cols-3">
-          <TabsTrigger value="all" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            All Events
-          </TabsTrigger>
-          <TabsTrigger value="followed" className="flex items-center gap-2">
-            <Building2 className="h-4 w-4" />
-            Following
-          </TabsTrigger>
-          <TabsTrigger value="friends" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Friends Going
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      />
 
       {/* Loading State */}
       {isLoading && (
@@ -107,8 +93,7 @@ export default function HomePage() {
         <div className="space-y-6">
           {Object.entries(eventsByDay).map(([dateKey, dayEvents]) => {
             const date = new Date(dateKey);
-            const isToday =
-              format(new Date(), "yyyy-MM-dd") === dateKey;
+            const isToday = format(new Date(), "yyyy-MM-dd") === dateKey;
 
             return (
               <Card key={dateKey}>
@@ -127,7 +112,7 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent>
                   {dayEvents.length === 0 ? (
-                    <p className="text-sm text-muted-foreground py-4">
+                    <p className="py-4 text-sm text-muted-foreground">
                       No events scheduled for this day
                     </p>
                   ) : (
@@ -148,15 +133,14 @@ export default function HomePage() {
       {!isLoading && events && events.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
-            <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">No events found</h3>
-            <p className="text-muted-foreground mb-4">
+            <Calendar className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <h3 className="mb-2 text-lg font-semibold">No events found</h3>
+            <p className="mb-4 text-muted-foreground">
               {activeFilter === "followed" &&
                 "Start following businesses to see their events here"}
               {activeFilter === "friends" &&
                 "Add friends and see what events they're attending"}
-              {activeFilter === "all" &&
-                "Check back later for upcoming events"}
+              {activeFilter === "all" && "Check back later for upcoming events"}
             </p>
           </CardContent>
         </Card>

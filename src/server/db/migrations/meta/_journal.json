@@ -43,6 +43,20 @@
       "when": 1768422349426,
       "tag": "0005_moaning_supernaut",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1768507319162,
+      "tag": "0006_last_blindfold",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1768510508949,
+      "tag": "0007_warm_franklin_storm",
+      "breakpoints": true
     }
   ]
 }

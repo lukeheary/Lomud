@@ -378,9 +378,9 @@ export default function CalendarPage() {
                               )}
 
                               {/* Business */}
-                              {event.business && (
+                              {event.venue && (
                                 <div className="border-t pt-2 text-xs text-muted-foreground">
-                                  Hosted by {event.business.name}
+                                  Hosted by {event.venue.name}
                                 </div>
                               )}
 

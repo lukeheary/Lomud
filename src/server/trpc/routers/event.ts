@@ -1,14 +1,16 @@
 import { z } from "zod";
 import { router, publicProcedure, protectedProcedure, adminProcedure } from "../init";
-import { events, businesses, rsvps, follows, friends, users } from "../../db/schema";
+import { events, businesses, venues, organizers, venueMembers, organizerMembers, rsvps, follows, venueFollows, organizerFollows, friends, users } from "../../db/schema";
 import { eq, and, or, desc, gte, lte, inArray, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 export const eventRouter = router({
-  createEvent: adminProcedure
+  createEvent: protectedProcedure
     .input(
       z.object({
         businessId: z.string().uuid().optional(),
+        venueId: z.string().uuid().optional(),
+        organizerId: z.string().uuid().optional(),
         title: z.string().min(1).max(255),
         description: z.string().optional(),
         imageUrl: z.string().url().optional(),
@@ -31,7 +33,13 @@ export const eventRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // If businessId provided, verify user owns the business
+      // Check if user is admin
+      const user = await ctx.db.query.users.findFirst({
+        where: eq(users.id, ctx.auth.userId),
+      });
+      const isAdmin = user?.role === "admin";
+
+      // If businessId provided, verify user owns the business (legacy support)
       if (input.businessId) {
         const business = await ctx.db.query.businesses.findFirst({
           where: eq(businesses.id, input.businessId),
@@ -44,10 +52,44 @@ export const eventRouter = router({
           });
         }
 
-        if (business.createdByUserId !== ctx.auth.userId) {
+        if (!isAdmin && business.createdByUserId !== ctx.auth.userId) {
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "You do not own this business",
+          });
+        }
+      }
+
+      // If venueId provided, verify user is venue member or admin
+      if (input.venueId && !isAdmin) {
+        const isMember = await ctx.db.query.venueMembers.findFirst({
+          where: and(
+            eq(venueMembers.userId, ctx.auth.userId),
+            eq(venueMembers.venueId, input.venueId)
+          ),
+        });
+
+        if (!isMember) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You are not a member of this venue",
+          });
+        }
+      }
+
+      // If organizerId provided, verify user is organizer member or admin
+      if (input.organizerId && !isAdmin) {
+        const isMember = await ctx.db.query.organizerMembers.findFirst({
+          where: and(
+            eq(organizerMembers.userId, ctx.auth.userId),
+            eq(organizerMembers.organizerId, input.organizerId)
+          ),
+        });
+
+        if (!isMember) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You are not a member of this organizer",
           });
         }
       }
@@ -75,6 +117,8 @@ export const eventRouter = router({
           address: input.address ?? null,
           endAt: input.endAt ?? null,
           businessId: input.businessId ?? null,
+          venueId: input.venueId ?? null,
+          organizerId: input.organizerId ?? null,
           imageUrl: input.imageUrl ?? null,
         } as any)
         .returning();
@@ -127,18 +171,37 @@ export const eventRouter = router({
         conditions.push(eq(events.state, input.state));
       }
 
-      // Filter by followed businesses
+      // Filter by followed businesses, venues, and organizers
       if (input.followedOnly) {
-        const userFollows = await ctx.db.query.follows.findMany({
+        const userBusinessFollows = await ctx.db.query.follows.findMany({
           where: eq(follows.userId, ctx.auth.userId),
         });
+        const followedBusinessIds = userBusinessFollows.map((f) => f.businessId);
 
-        const followedBusinessIds = userFollows.map((f) => f.businessId);
+        const userVenueFollows = await ctx.db.query.venueFollows.findMany({
+          where: eq(venueFollows.userId, ctx.auth.userId),
+        });
+        const followedVenueIds = userVenueFollows.map((f) => f.venueId);
 
-        if (followedBusinessIds.length > 0) {
-          conditions.push(inArray(events.businessId, followedBusinessIds));
+        const userOrganizerFollows = await ctx.db.query.organizerFollows.findMany({
+          where: eq(organizerFollows.userId, ctx.auth.userId),
+        });
+        const followedOrganizerIds = userOrganizerFollows.map((f) => f.organizerId);
+
+        if (followedBusinessIds.length > 0 || followedVenueIds.length > 0 || followedOrganizerIds.length > 0) {
+          const followConditions = [];
+          if (followedBusinessIds.length > 0) {
+            followConditions.push(inArray(events.businessId, followedBusinessIds));
+          }
+          if (followedVenueIds.length > 0) {
+            followConditions.push(inArray(events.venueId, followedVenueIds));
+          }
+          if (followedOrganizerIds.length > 0) {
+            followConditions.push(inArray(events.organizerId, followedOrganizerIds));
+          }
+          conditions.push(or(...followConditions)!);
         } else {
-          // User follows no businesses, return empty
+          // User follows nothing, return empty
           return [];
         }
       }
@@ -183,7 +246,8 @@ export const eventRouter = router({
         limit: input.limit,
         offset: input.offset,
         with: {
-          business: true,
+          venue: true,
+          organizer: true,
           createdBy: true,
         },
       });
@@ -279,7 +343,8 @@ export const eventRouter = router({
       const event = await ctx.db.query.events.findFirst({
         where: eq(events.id, input.eventId),
         with: {
-          business: true,
+          venue: true,
+          organizer: true,
           createdBy: true,
         },
       });

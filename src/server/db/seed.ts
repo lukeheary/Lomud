@@ -1,9 +1,19 @@
+// seed.ts
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { Pool, neonConfig } from "@neondatabase/serverless";
 import ws from "ws";
 import * as schema from "./schema";
-import { businesses, events, users } from "./schema";
+import {
+  users,
+  venues,
+  organizers,
+  events,
+  venueMembers,
+  organizerMembers,
+  venueFollows,
+  organizerFollows,
+} from "./schema";
 
 neonConfig.webSocketConstructor = ws;
 
@@ -17,11 +27,12 @@ async function main() {
 
   console.log("🌱 Seeding database...");
 
-  // Note: In a real app, users would be created via Clerk webhook
-  // For seeding, we'll create demo user records
+  // ---------------------------------------------------------------------------
+  // USERS (demo records; in prod you'd create via Clerk webhook)
+  // ---------------------------------------------------------------------------
   console.log("Creating demo users...");
 
-  const demoUsers = await db
+  const insertedUsers = await db
     .insert(users)
     .values([
       {
@@ -31,6 +42,8 @@ async function main() {
         firstName: "Alice",
         lastName: "Johnson",
         imageUrl: null,
+        city: "Boston",
+        state: "MA",
       },
       {
         id: "user_demo_2",
@@ -39,6 +52,8 @@ async function main() {
         firstName: "Bob",
         lastName: "Smith",
         imageUrl: null,
+        city: "New York",
+        state: "NY",
       },
       {
         id: "user_demo_3",
@@ -47,230 +62,479 @@ async function main() {
         firstName: "Charlie",
         lastName: "Davis",
         imageUrl: null,
+        city: "Boston",
+        state: "MA",
+      },
+      {
+        id: "user_demo_4",
+        email: "dana@example.com",
+        username: "dana_demo",
+        firstName: "Dana",
+        lastName: "Lee",
+        imageUrl: null,
+        city: "New York",
+        state: "NY",
       },
     ])
     .onConflictDoNothing()
     .returning();
 
-  console.log(`✓ Created ${demoUsers.length} demo users`);
+  // If returning() yields [] due to conflicts, fall back to known IDs
+  const demoUserIds =
+    insertedUsers.length > 0
+      ? insertedUsers.map((u) => u.id)
+      : ["user_demo_1", "user_demo_2", "user_demo_3", "user_demo_4"];
 
-  // Create businesses
-  console.log("Creating businesses...");
+  console.log(`✓ Seeded users (returned: ${insertedUsers.length})`);
 
-  const businessData = [
+  // ---------------------------------------------------------------------------
+  // VENUES
+  // ---------------------------------------------------------------------------
+  console.log("Creating venues...");
+
+  const venueData = [
+    // Boston
     {
-      slug: "blue-note-jazz",
-      name: "Blue Note Jazz Club",
+      slug: "boston-house-of-blues",
+      name: "House of Blues Boston",
       description:
-        "Premier jazz venue featuring live music every night. Intimate setting with world-class performers.",
-      city: "San Francisco",
-      state: "CA",
-      website: "https://bluenotejazz.example.com",
-      instagram: "bluenotejazz",
-      createdByUserId: demoUsers[0]?.id || "user_demo_1",
+        "Iconic live music venue at Lansdowne Street with touring acts and late-night shows.",
+      imageUrl: null,
+      address: "15 Lansdowne St, Boston, MA 02215",
+      city: "Boston",
+      state: "MA",
+      website: "https://www.houseofblues.com/boston",
+      instagram: "houseofbluesboston",
     },
     {
-      slug: "city-winery",
-      name: "City Winery",
+      slug: "royale-boston",
+      name: "Royale Boston",
       description:
-        "Urban winery, restaurant, and live music venue. Great food, wine, and entertainment.",
-      city: "San Francisco",
-      state: "CA",
-      website: "https://citywinery.example.com",
-      instagram: "citywinery",
-      createdByUserId: demoUsers[0]?.id || "user_demo_1",
+        "Downtown nightclub and concert venue hosting DJs, dance nights, and special events.",
+      imageUrl: null,
+      address: "279 Tremont St, Boston, MA 02116",
+      city: "Boston",
+      state: "MA",
+      website: "https://royaleboston.com",
+      instagram: "royaleboston",
     },
     {
-      slug: "the-fillmore",
-      name: "The Fillmore",
+      slug: "the-sinclair",
+      name: "The Sinclair",
       description:
-        "Historic music venue hosting concerts since the 1960s. Rock, indie, and alternative shows.",
-      city: "San Francisco",
-      state: "CA",
-      website: "https://thefillmore.example.com",
-      instagram: "thefillmore",
-      createdByUserId: demoUsers[1]?.id || "user_demo_2",
+        "Intimate live music venue in Harvard Square featuring indie and electronic acts.",
+      imageUrl: null,
+      address: "52 Church St, Cambridge, MA 02138",
+      city: "Cambridge",
+      state: "MA",
+      website: "https://www.sinclaircambridge.com",
+      instagram: "sinclaircambridge",
+    },
+
+    // NYC
+    {
+      slug: "brooklyn-steel",
+      name: "Brooklyn Steel",
+      description:
+        "Large-scale industrial venue in Williamsburg with top-tier production and major acts.",
+      imageUrl: null,
+      address: "319 Frost St, Brooklyn, NY 11222",
+      city: "Brooklyn",
+      state: "NY",
+      website: "https://www.bowerypresents.com",
+      instagram: "brooklynsteel",
     },
     {
-      slug: "golden-gate-brewery",
-      name: "Golden Gate Brewery",
+      slug: "elsewhere-brooklyn",
+      name: "Elsewhere",
       description:
-        "Craft brewery with tasting room and beer garden. Weekly events and live music.",
-      city: "San Francisco",
-      state: "CA",
-      website: "https://goldengatebrewery.example.com",
-      instagram: "goldengatebrewery",
-      createdByUserId: demoUsers[1]?.id || "user_demo_2",
+        "Multi-room club in Brooklyn known for electronic music, rooftop parties, and community vibes.",
+      imageUrl: null,
+      address: "599 Johnson Ave, Brooklyn, NY 11237",
+      city: "Brooklyn",
+      state: "NY",
+      website: "https://www.elsewhere.club",
+      instagram: "elsewherenyc",
     },
     {
-      slug: "mission-arts-center",
-      name: "Mission Arts Center",
+      slug: "terminal-5",
+      name: "Terminal 5",
       description:
-        "Community arts space featuring galleries, workshops, and cultural events.",
-      city: "San Francisco",
-      state: "CA",
-      website: "https://missionarts.example.com",
-      instagram: "missionarts",
-      createdByUserId: demoUsers[2]?.id || "user_demo_3",
+        "Large Manhattan venue for concerts and special events with multiple viewing levels.",
+      imageUrl: null,
+      address: "610 W 56th St, New York, NY 10019",
+      city: "New York",
+      state: "NY",
+      website: "https://www.terminal5nyc.com",
+      instagram: "terminal5nyc",
     },
   ];
 
-  const createdBusinesses = await db
-    .insert(businesses)
-    .values(businessData)
+  const createdVenues = await db
+    .insert(venues)
+    .values(venueData)
     .onConflictDoNothing()
     .returning();
 
-  console.log(`✓ Created ${createdBusinesses.length} businesses`);
+  console.log(`✓ Created ${createdVenues.length} venues`);
 
-  // Create events
+  // Helper: find venue IDs by slug from returned rows
+  const venueIdBySlug = new Map(createdVenues.map((v) => [v.slug, v.id]));
+
+  // ---------------------------------------------------------------------------
+  // ORGANIZERS
+  // ---------------------------------------------------------------------------
+  console.log("Creating organizers...");
+
+  const organizerData = [
+    {
+      slug: "midnight-moves",
+      name: "Midnight Moves",
+      description:
+        "Dance-forward parties featuring house, disco, and tasteful late-night energy.",
+      imageUrl: null,
+      website: "https://midnightmoves.example.com",
+      instagram: "midnightmoves",
+    },
+    {
+      slug: "neon-nights-collective",
+      name: "Neon Nights Collective",
+      description:
+        "Electronic events, DJ showcases, and themed club nights across Boston and NYC.",
+      imageUrl: null,
+      website: "https://neonnights.example.com",
+      instagram: "neonnightscollective",
+    },
+    {
+      slug: "taste-of-the-city",
+      name: "Taste of the City",
+      description:
+        "Food + culture pop-ups with tastings, chef collabs, and community hangouts.",
+      imageUrl: null,
+      website: "https://tasteofthecity.example.com",
+      instagram: "tasteofthecity",
+    },
+    {
+      slug: "run-club-social",
+      name: "Run Club Social",
+      description:
+        "Weekly social runs + post-run meetups (coffee, bars, and seasonal specials).",
+      imageUrl: null,
+      website: "https://runclubsocial.example.com",
+      instagram: "runclubsocial",
+    },
+  ];
+
+  const createdOrganizers = await db
+    .insert(organizers)
+    .values(organizerData)
+    .onConflictDoNothing()
+    .returning();
+
+  console.log(`✓ Created ${createdOrganizers.length} organizers`);
+
+  const organizerIdBySlug = new Map(
+    createdOrganizers.map((o) => [o.slug, o.id])
+  );
+
+  // ---------------------------------------------------------------------------
+  // MEMBERSHIPS (optional, but useful for demo data)
+  // ---------------------------------------------------------------------------
+  console.log("Creating venue & organizer memberships...");
+
+  const u1 = demoUserIds[0] ?? "user_demo_1";
+  const u2 = demoUserIds[1] ?? "user_demo_2";
+  const u3 = demoUserIds[2] ?? "user_demo_3";
+  const u4 = demoUserIds[3] ?? "user_demo_4";
+
+  const membershipVenueRows = [
+    // Alice helps run a Boston venue
+    {
+      userId: u1,
+      venueId: venueIdBySlug.get("boston-house-of-blues")!,
+    },
+    // Charlie helps run Royale
+    {
+      userId: u3,
+      venueId: venueIdBySlug.get("royale-boston")!,
+    },
+    // Bob helps run Elsewhere
+    {
+      userId: u2,
+      venueId: venueIdBySlug.get("elsewhere-brooklyn")!,
+    },
+    // Dana helps run Brooklyn Steel
+    {
+      userId: u4,
+      venueId: venueIdBySlug.get("brooklyn-steel")!,
+    },
+  ].filter((r) => Boolean(r.venueId));
+
+  if (membershipVenueRows.length > 0) {
+    await db
+      .insert(venueMembers)
+      .values(membershipVenueRows)
+      .onConflictDoNothing();
+  }
+
+  const membershipOrganizerRows = [
+    {
+      userId: u1,
+      organizerId: organizerIdBySlug.get("neon-nights-collective")!,
+    },
+    { userId: u2, organizerId: organizerIdBySlug.get("midnight-moves")! },
+    { userId: u3, organizerId: organizerIdBySlug.get("taste-of-the-city")! },
+    { userId: u4, organizerId: organizerIdBySlug.get("run-club-social")! },
+  ].filter((r) => Boolean(r.organizerId));
+
+  if (membershipOrganizerRows.length > 0) {
+    await db
+      .insert(organizerMembers)
+      .values(membershipOrganizerRows)
+      .onConflictDoNothing();
+  }
+
+  // Optional: some follows
+  await db
+    .insert(venueFollows)
+    .values(
+      [
+        { userId: u1, venueId: venueIdBySlug.get("elsewhere-brooklyn")! },
+        { userId: u2, venueId: venueIdBySlug.get("royale-boston")! },
+        { userId: u3, venueId: venueIdBySlug.get("terminal-5")! },
+        { userId: u4, venueId: venueIdBySlug.get("the-sinclair")! },
+      ].filter((r) => Boolean(r.venueId))
+    )
+    .onConflictDoNothing();
+
+  await db
+    .insert(organizerFollows)
+    .values(
+      [
+        { userId: u1, organizerId: organizerIdBySlug.get("midnight-moves")! },
+        {
+          userId: u2,
+          organizerId: organizerIdBySlug.get("taste-of-the-city")!,
+        },
+        { userId: u3, organizerId: organizerIdBySlug.get("run-club-social")! },
+      ].filter((r) => Boolean(r.organizerId))
+    )
+    .onConflictDoNothing();
+
+  console.log("✓ Created memberships & follows");
+
+  // ---------------------------------------------------------------------------
+  // EVENTS (Boston + NYC)
+  // ---------------------------------------------------------------------------
   console.log("Creating events...");
 
   const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(19, 0, 0, 0);
 
-  const dayAfter = new Date(now);
-  dayAfter.setDate(dayAfter.getDate() + 2);
-  dayAfter.setHours(20, 0, 0, 0);
+  // helper to build start/end
+  const daysFromNowAt = (days: number, hour: number, minute = 0) => {
+    const d = new Date(now);
+    d.setDate(d.getDate() + days);
+    d.setHours(hour, minute, 0, 0);
+    return d;
+  };
 
-  const threeDays = new Date(now);
-  threeDays.setDate(threeDays.getDate() + 3);
-  threeDays.setHours(18, 30, 0, 0);
-
-  const fourDays = new Date(now);
-  fourDays.setDate(fourDays.getDate() + 4);
-  fourDays.setHours(21, 0, 0, 0);
-
-  const fiveDays = new Date(now);
-  fiveDays.setDate(fiveDays.getDate() + 5);
-  fiveDays.setHours(17, 0, 0, 0);
-
-  const sixDays = new Date(now);
-  sixDays.setDate(sixDays.getDate() + 6);
-  sixDays.setHours(19, 30, 0, 0);
+  const hoursAfter = (start: Date, hours: number) =>
+    new Date(start.getTime() + hours * 60 * 60 * 1000);
 
   const eventData = [
+    // -------------------
+    // Boston / Cambridge
+    // -------------------
     {
-      businessId: createdBusinesses[0]?.id,
-      title: "Friday Night Jazz Sessions",
+      venueId: venueIdBySlug.get("boston-house-of-blues") ?? null,
+      organizerId: organizerIdBySlug.get("neon-nights-collective") ?? null,
+      createdByUserId: u1,
+      title: "Neon Nights: House & Disco Showcase",
       description:
-        "Join us for an evening of smooth jazz featuring the Sarah Chen Quartet. Enjoy craft cocktails and small plates while experiencing world-class musicianship.",
-      startAt: tomorrow,
-      endAt: new Date(tomorrow.getTime() + 3 * 60 * 60 * 1000),
-      venueName: "Blue Note Main Stage",
-      address: "2350 Market Street",
-      city: "San Francisco",
-      state: "CA",
-      category: "music" as const,
-      visibility: "public" as const,
-      createdByUserId: demoUsers[0]?.id || "user_demo_1",
-    },
-    {
-      businessId: createdBusinesses[1]?.id,
-      title: "Wine Tasting & Live Acoustic",
-      description:
-        "Sample our new winter wine collection paired with acoustic performances by local artists. Limited seating available.",
-      startAt: dayAfter,
-      endAt: new Date(dayAfter.getTime() + 2 * 60 * 60 * 1000),
-      venueName: "City Winery Tasting Room",
-      address: "650 Delancey Street",
-      city: "San Francisco",
-      state: "CA",
-      category: "food" as const,
-      visibility: "public" as const,
-      createdByUserId: demoUsers[0]?.id || "user_demo_1",
-    },
-    {
-      businessId: createdBusinesses[2]?.id,
-      title: "The Midnight Revival - Live in Concert",
-      description:
-        "Indie rock sensation The Midnight Revival brings their electrifying show to The Fillmore. Special opening act TBA.",
-      startAt: threeDays,
-      endAt: new Date(threeDays.getTime() + 4 * 60 * 60 * 1000),
-      venueName: "The Fillmore",
-      address: "1805 Geary Boulevard",
-      city: "San Francisco",
-      state: "CA",
-      category: "music" as const,
-      visibility: "public" as const,
-      createdByUserId: demoUsers[1]?.id || "user_demo_2",
-    },
-    {
-      businessId: createdBusinesses[3]?.id,
-      title: "IPA Release Party",
-      description:
-        "Be the first to try our new West Coast IPA! Food trucks, live music, and brewery tours throughout the evening.",
-      startAt: fourDays,
-      endAt: new Date(fourDays.getTime() + 5 * 60 * 60 * 1000),
-      venueName: "Golden Gate Beer Garden",
-      address: "3158 16th Street",
-      city: "San Francisco",
-      state: "CA",
-      category: "food" as const,
-      visibility: "public" as const,
-      createdByUserId: demoUsers[1]?.id || "user_demo_2",
-    },
-    {
-      businessId: createdBusinesses[4]?.id,
-      title: "Community Art Exhibition Opening",
-      description:
-        "Celebrate local artists at our quarterly exhibition opening. Meet the artists, enjoy refreshments, and explore diverse works from our community.",
-      startAt: fiveDays,
-      endAt: new Date(fiveDays.getTime() + 3 * 60 * 60 * 1000),
-      venueName: "Mission Arts Gallery",
-      address: "2868 Mission Street",
-      city: "San Francisco",
-      state: "CA",
-      category: "art" as const,
-      visibility: "public" as const,
-      createdByUserId: demoUsers[2]?.id || "user_demo_3",
-    },
-    {
-      businessId: createdBusinesses[0]?.id,
-      title: "Saturday Blues Brunch",
-      description:
-        "Start your weekend right with live blues music and our signature brunch menu. Bottomless mimosas available.",
-      startAt: sixDays,
-      endAt: new Date(sixDays.getTime() + 3 * 60 * 60 * 1000),
-      venueName: "Blue Note Jazz Club",
-      address: "2350 Market Street",
-      city: "San Francisco",
-      state: "CA",
-      category: "music" as const,
-      visibility: "public" as const,
-      createdByUserId: demoUsers[0]?.id || "user_demo_1",
-    },
-    {
-      businessId: null,
-      title: "Golden Gate Park Yoga Session",
-      description:
-        "Free community yoga class in the park. All levels welcome. Bring your own mat.",
-      startAt: tomorrow,
-      endAt: new Date(tomorrow.getTime() + 1.5 * 60 * 60 * 1000),
-      venueName: "Golden Gate Park",
-      address: "Music Concourse",
-      city: "San Francisco",
-      state: "CA",
-      category: "community" as const,
-      visibility: "public" as const,
-      createdByUserId: demoUsers[2]?.id || "user_demo_3",
-    },
-    {
-      businessId: null,
-      title: "Tech Networking Happy Hour",
-      description:
-        "Connect with other tech professionals in the Bay Area. Casual networking over drinks and appetizers.",
-      startAt: threeDays,
-      endAt: new Date(threeDays.getTime() + 2 * 60 * 60 * 1000),
-      venueName: "The Ramp",
-      address: "855 Terry A Francois Boulevard",
-      city: "San Francisco",
-      state: "CA",
+        "A late-night blend of house, disco edits, and upbeat grooves. Dress bright, dance harder.",
+      imageUrl: null,
+      startAt: daysFromNowAt(1, 21, 0),
+      endAt: hoursAfter(daysFromNowAt(1, 21, 0), 4),
+      venueName: "House of Blues Boston",
+      address: "15 Lansdowne St, Boston, MA 02215",
+      city: "Boston",
+      state: "MA",
       category: "nightlife" as const,
       visibility: "public" as const,
-      createdByUserId: demoUsers[1]?.id || "user_demo_2",
+    },
+    {
+      venueId: venueIdBySlug.get("royale-boston") ?? null,
+      organizerId: organizerIdBySlug.get("midnight-moves") ?? null,
+      createdByUserId: u3,
+      title: "Midnight Moves: Classic Club Night",
+      description:
+        "A proper club night: house classics, peak-time energy, and zero phones on the dancefloor vibes.",
+      imageUrl: null,
+      startAt: daysFromNowAt(3, 22, 30),
+      endAt: hoursAfter(daysFromNowAt(3, 22, 30), 4.5),
+      venueName: "Royale",
+      address: "279 Tremont St, Boston, MA 02116",
+      city: "Boston",
+      state: "MA",
+      category: "nightlife" as const,
+      visibility: "public" as const,
+    },
+    {
+      venueId: venueIdBySlug.get("the-sinclair") ?? null,
+      organizerId: null,
+      createdByUserId: u1,
+      title: "Indie Electronic Live Set + Afterparty",
+      description:
+        "Live electronic performance followed by a short DJ afterparty. Intimate room, big sound.",
+      imageUrl: null,
+      startAt: daysFromNowAt(5, 20, 0),
+      endAt: hoursAfter(daysFromNowAt(5, 20, 0), 3),
+      venueName: "The Sinclair",
+      address: "52 Church St, Cambridge, MA 02138",
+      city: "Cambridge",
+      state: "MA",
+      category: "music" as const,
+      visibility: "public" as const,
+    },
+    {
+      venueId: null,
+      organizerId: organizerIdBySlug.get("run-club-social") ?? null,
+      createdByUserId: u3,
+      title: "Run Club Social: Esplanade Loop (5K)",
+      description:
+        "Easy 5K along the Charles with a post-run coffee hang. All paces welcome.",
+      imageUrl: null,
+      startAt: daysFromNowAt(2, 9, 0),
+      endAt: hoursAfter(daysFromNowAt(2, 9, 0), 1.5),
+      venueName: "Charles River Esplanade",
+      address: "Storrow Dr, Boston, MA",
+      city: "Boston",
+      state: "MA",
+      category: "sports" as const,
+      visibility: "public" as const,
+    },
+    {
+      venueId: null,
+      organizerId: organizerIdBySlug.get("taste-of-the-city") ?? null,
+      createdByUserId: u1,
+      title: "Taste of the City: Dumpling Pop-Up",
+      description:
+        "A casual dumpling + small bites pop-up featuring rotating fillings and sauces. Come hungry.",
+      imageUrl: null,
+      startAt: daysFromNowAt(6, 18, 0),
+      endAt: hoursAfter(daysFromNowAt(6, 18, 0), 2.5),
+      venueName: "Downtown Food Hall (Pop-Up)",
+      address: "100 Summer St, Boston, MA 02110",
+      city: "Boston",
+      state: "MA",
+      category: "food" as const,
+      visibility: "public" as const,
+    },
+
+    // ----------
+    // NYC
+    // ----------
+    {
+      venueId: venueIdBySlug.get("elsewhere-brooklyn") ?? null,
+      organizerId: organizerIdBySlug.get("neon-nights-collective") ?? null,
+      createdByUserId: u2,
+      title: "Neon Nights NYC: Rooftop Grooves",
+      description:
+        "Rooftop party with melodic house and feel-good edits. Limited capacity.",
+      imageUrl: null,
+      startAt: daysFromNowAt(2, 19, 30),
+      endAt: hoursAfter(daysFromNowAt(2, 19, 30), 4),
+      venueName: "Elsewhere Rooftop",
+      address: "599 Johnson Ave, Brooklyn, NY 11237",
+      city: "Brooklyn",
+      state: "NY",
+      category: "nightlife" as const,
+      visibility: "public" as const,
+    },
+    {
+      venueId: venueIdBySlug.get("brooklyn-steel") ?? null,
+      organizerId: organizerIdBySlug.get("midnight-moves") ?? null,
+      createdByUserId: u4,
+      title: "Midnight Moves Presents: Warehouse House",
+      description:
+        "Big-room house energy with a stacked lineup of selectors. Expect strong openers.",
+      imageUrl: null,
+      startAt: daysFromNowAt(4, 21, 0),
+      endAt: hoursAfter(daysFromNowAt(4, 21, 0), 5),
+      venueName: "Brooklyn Steel",
+      address: "319 Frost St, Brooklyn, NY 11222",
+      city: "Brooklyn",
+      state: "NY",
+      category: "music" as const,
+      visibility: "public" as const,
+    },
+    {
+      venueId: venueIdBySlug.get("terminal-5") ?? null,
+      organizerId: null,
+      createdByUserId: u2,
+      title: "Dance-Pop Arena Night",
+      description:
+        "A high-energy dance-pop show with full production and a late closing set.",
+      imageUrl: null,
+      startAt: daysFromNowAt(7, 20, 0),
+      endAt: hoursAfter(daysFromNowAt(7, 20, 0), 3.5),
+      venueName: "Terminal 5",
+      address: "610 W 56th St, New York, NY 10019",
+      city: "New York",
+      state: "NY",
+      category: "music" as const,
+      visibility: "public" as const,
+    },
+    {
+      venueId: null,
+      organizerId: organizerIdBySlug.get("run-club-social") ?? null,
+      createdByUserId: u4,
+      title: "Run Club Social: Williamsburg Bridge Sunset Jog",
+      description:
+        "Short run with skyline views, followed by a chill hang. Bring layers.",
+      imageUrl: null,
+      startAt: daysFromNowAt(3, 17, 0),
+      endAt: hoursAfter(daysFromNowAt(3, 17, 0), 1.25),
+      venueName: "Williamsburg Bridge (Meet-up)",
+      address: "Williamsburg Bridge, Brooklyn, NY",
+      city: "Brooklyn",
+      state: "NY",
+      category: "sports" as const,
+      visibility: "public" as const,
+    },
+    {
+      venueId: null,
+      organizerId: organizerIdBySlug.get("taste-of-the-city") ?? null,
+      createdByUserId: u2,
+      title: "Taste of the City NYC: Ramen + Vinyl",
+      description:
+        "Ramen pop-up with a vinyl-only DJ set. Cozy, casual, and delicious.",
+      imageUrl: null,
+      startAt: daysFromNowAt(1, 18, 30),
+      endAt: hoursAfter(daysFromNowAt(1, 18, 30), 2.5),
+      venueName: "Lower East Side Pop-Up Space",
+      address: "220 E Houston St, New York, NY 10002",
+      city: "New York",
+      state: "NY",
+      category: "food" as const,
+      visibility: "public" as const,
+    },
+    {
+      venueId: venueIdBySlug.get("elsewhere-brooklyn") ?? null,
+      organizerId: organizerIdBySlug.get("midnight-moves") ?? null,
+      createdByUserId: u2,
+      title: "All-Night DJ Relay",
+      description:
+        "Four DJs, one room, no breaks. Rotating styles from deep to peak-time.",
+      imageUrl: null,
+      startAt: daysFromNowAt(6, 23, 0),
+      endAt: hoursAfter(daysFromNowAt(6, 23, 0), 5),
+      venueName: "Elsewhere - Main Room",
+      address: "599 Johnson Ave, Brooklyn, NY 11237",
+      city: "Brooklyn",
+      state: "NY",
+      category: "nightlife" as const,
+      visibility: "public" as const,
     },
   ];
 
@@ -283,7 +547,6 @@ async function main() {
   console.log(`✓ Created ${createdEvents.length} events`);
 
   console.log("✅ Seeding complete!");
-
   await pool.end();
 }
 

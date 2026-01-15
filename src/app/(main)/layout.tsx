@@ -37,6 +37,8 @@ export default function MainLayout({
   const isAdmin = adminCheck?.isAdmin ?? false;
 
   const { data: user } = trpc.user.getCurrentUser.useQuery();
+  const { data: hasVenues } = trpc.user.hasVenues.useQuery();
+  const { data: hasOrganizers } = trpc.user.hasOrganizers.useQuery();
 
   const handleSignOut = async () => {
     await signOut();
@@ -72,9 +74,14 @@ export default function MainLayout({
             {/*    Calendar*/}
             {/*  </Button>*/}
             {/*</Link>*/}
-            <Link href="/businesses">
+            <Link href="/venues">
               <Button variant="ghost" size="sm">
-                Businesses
+                Venues
+              </Button>
+            </Link>
+            <Link href="/organizers">
+              <Button variant="ghost" size="sm">
+                Organizers
               </Button>
             </Link>
             <Link href="/friends">
@@ -89,21 +96,6 @@ export default function MainLayout({
 
           {/* Desktop Right Menu */}
           <div className="hidden md:flex items-center gap-2">
-            {isAdmin && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="default" size="sm" className={'bg-green-500'}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem asChild>
-                    <Link href="/business/new">New Business</Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
             <NotificationsBell />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -123,6 +115,30 @@ export default function MainLayout({
                     My Profile
                   </Link>
                 </DropdownMenuItem>
+                {hasVenues && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/my-venues" className="flex items-center cursor-pointer">
+                      <Building2 className="h-4 w-4 mr-2" />
+                      My Venues
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                {hasOrganizers && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/my-organizers" className="flex items-center cursor-pointer">
+                      <Users className="h-4 w-4 mr-2" />
+                      My Organizers
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                {isAdmin && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin" className="flex items-center cursor-pointer">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Admin Settings
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={handleSignOut}
@@ -156,6 +172,30 @@ export default function MainLayout({
                     My Profile
                   </Link>
                 </DropdownMenuItem>
+                {hasVenues && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/my-venues" className="flex items-center cursor-pointer">
+                      <Building2 className="h-4 w-4 mr-2" />
+                      My Venues
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                {hasOrganizers && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/my-organizers" className="flex items-center cursor-pointer">
+                      <Users className="h-4 w-4 mr-2" />
+                      My Organizers
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                {isAdmin && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin" className="flex items-center cursor-pointer">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Admin Settings
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={handleSignOut}
@@ -190,10 +230,16 @@ export default function MainLayout({
                   {/*    Calendar*/}
                   {/*  </Button>*/}
                   {/*</Link>*/}
-                  <Link href="/businesses" onClick={closeMobileMenu}>
+                  <Link href="/venues" onClick={closeMobileMenu}>
                     <Button variant="ghost" className="w-full justify-start" size="lg">
                       <Building2 className="h-5 w-5 mr-3" />
-                      Businesses
+                      Venues
+                    </Button>
+                  </Link>
+                  <Link href="/organizers" onClick={closeMobileMenu}>
+                    <Button variant="ghost" className="w-full justify-start" size="lg">
+                      <Users className="h-5 w-5 mr-3" />
+                      Organizers
                     </Button>
                   </Link>
                   <Link href="/friends" onClick={closeMobileMenu}>
@@ -210,11 +256,27 @@ export default function MainLayout({
                         My Profile
                       </Button>
                     </Link>
+                    {hasVenues && (
+                      <Link href="/my-venues" onClick={closeMobileMenu}>
+                        <Button variant="ghost" className="w-full justify-start" size="lg">
+                          <Building2 className="h-5 w-5 mr-3" />
+                          My Venues
+                        </Button>
+                      </Link>
+                    )}
+                    {hasOrganizers && (
+                      <Link href="/my-organizers" onClick={closeMobileMenu}>
+                        <Button variant="ghost" className="w-full justify-start" size="lg">
+                          <Users className="h-5 w-5 mr-3" />
+                          My Organizers
+                        </Button>
+                      </Link>
+                    )}
                     {isAdmin && (
-                      <Link href="/business/new" onClick={closeMobileMenu}>
+                      <Link href="/admin" onClick={closeMobileMenu}>
                         <Button variant="ghost" className="w-full justify-start" size="lg">
                           <Plus className="h-5 w-5 mr-3" />
-                          New Business
+                          Admin Settings
                         </Button>
                       </Link>
                     )}
