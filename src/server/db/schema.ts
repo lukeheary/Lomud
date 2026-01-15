@@ -176,6 +176,8 @@ export const events = pgTable(
     state: varchar("state", { length: 2 }).notNull(),
     category: eventCategoryEnum("category").notNull().default("other"),
     visibility: eventVisibilityEnum("visibility").notNull().default("public"),
+    externalId: text("external_id"),
+    sourceUrl: text("source_url"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -189,6 +191,10 @@ export const events = pgTable(
     startVisibilityIdx: index("events_start_visibility_idx").on(
       table.startAt,
       table.visibility
+    ),
+    sourceExternalIdx: uniqueIndex("events_source_external_idx").on(
+      table.sourceUrl,
+      table.externalId
     ),
   })
 );

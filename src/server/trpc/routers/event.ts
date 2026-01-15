@@ -3,6 +3,7 @@ import { router, publicProcedure, protectedProcedure, adminProcedure } from "../
 import { events, businesses, rsvps, follows, friends, users } from "../../db/schema";
 import { eq, and, or, desc, gte, lte, inArray, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
+import { parseIcsFile, type EventCategory } from "../../lib/ics-parser";
 
 export const eventRouter = router({
   createEvent: adminProcedure
@@ -396,4 +397,164 @@ export const eventRouter = router({
 
     return result;
   }),
+
+  importFromIcsFeed: publicProcedure
+    .input(
+      z.object({
+        icsUrl: z.string().url(),
+        defaultCity: z.string().min(1).max(100),
+        defaultState: z.string().length(2),
+        defaultCategory: z
+          .enum([
+            "music",
+            "food",
+            "art",
+            "sports",
+            "community",
+            "nightlife",
+            "other",
+          ])
+          .default("other"),
+        overrideBusinessId: z.string().uuid().optional(),
+        skipDuplicates: z.boolean().default(true),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const SYSTEM_USER_ID = "system_ics_importer";
+
+      // Validate URL (security: only HTTPS, block localhost/private IPs)
+      const parsedUrl = new URL(input.icsUrl);
+      if (parsedUrl.protocol !== "https:") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Only HTTPS URLs are allowed",
+        });
+      }
+
+      // Block internal/private IPs
+      const blockedHosts = ["localhost", "127.0.0.1", "0.0.0.0", "::1"];
+      if (
+        blockedHosts.includes(parsedUrl.hostname) ||
+        parsedUrl.hostname.startsWith("192.168.") ||
+        parsedUrl.hostname.startsWith("10.") ||
+        parsedUrl.hostname.startsWith("172.16.")
+      ) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Internal/private network URLs not allowed",
+        });
+      }
+
+      // Fetch ICS feed with timeout
+      let response: Response;
+      try {
+        response = await fetch(input.icsUrl, {
+          headers: { "User-Agent": "SocialCal/1.0" },
+          signal: AbortSignal.timeout(10000), // 10s timeout
+        });
+      } catch (err) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Failed to fetch ICS feed: ${err instanceof Error ? err.message : "Unknown error"}`,
+        });
+      }
+
+      if (!response.ok) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `ICS feed returned ${response.status}: ${response.statusText}`,
+        });
+      }
+
+      // Parse ICS data
+      const icsText = await response.text();
+      let parsedEvents: any[];
+
+      try {
+        parsedEvents = parseIcsFile(icsText, input.defaultCategory as EventCategory);
+      } catch (err) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Failed to parse ICS data: ${err instanceof Error ? err.message : "Invalid format"}`,
+        });
+      }
+
+      if (!parsedEvents || parsedEvents.length === 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "ICS feed is empty or contains no events",
+        });
+      }
+
+      // Process events
+      const results = {
+        imported: 0,
+        skipped: 0,
+        failed: 0,
+        errors: [] as string[],
+        events: [] as any[],
+      };
+
+      for (const parsedEvent of parsedEvents) {
+        try {
+          // Check for duplicates using externalId and sourceUrl
+          if (input.skipDuplicates) {
+            const existing = await ctx.db.query.events.findFirst({
+              where: and(
+                eq(events.sourceUrl, input.icsUrl),
+                eq(events.externalId, parsedEvent.uid)
+              ),
+            });
+
+            if (existing) {
+              results.skipped++;
+              continue;
+            }
+          }
+
+          // Insert event with externalId and sourceUrl
+          const [event] = await ctx.db
+            .insert(events)
+            .values({
+              title: parsedEvent.title,
+              description: parsedEvent.description ?? null,
+              startAt: parsedEvent.startAt,
+              endAt: parsedEvent.endAt ?? null,
+              venueName: parsedEvent.venueName ?? null,
+              address: parsedEvent.location ?? null,
+              city: input.defaultCity,
+              state: input.defaultState,
+              category: parsedEvent.category,
+              visibility: "public",
+              businessId: input.overrideBusinessId ?? null,
+              createdByUserId: SYSTEM_USER_ID,
+              imageUrl: null,
+              externalId: parsedEvent.uid,
+              sourceUrl: input.icsUrl,
+            })
+            .returning();
+
+          results.events.push(event);
+          results.imported++;
+        } catch (err) {
+          results.failed++;
+          results.errors.push(
+            `Event ${parsedEvent.uid}: ${err instanceof Error ? err.message : "Unknown error"}`
+          );
+          // Continue processing other events
+        }
+      }
+
+      return {
+        success: true,
+        summary: {
+          imported: results.imported,
+          skipped: results.skipped,
+          failed: results.failed,
+          totalProcessed: results.imported + results.skipped + results.failed,
+        },
+        events: results.events,
+        errors: results.errors,
+      };
+    }),
 });
