@@ -367,22 +367,23 @@ export default function EventPage() {
             <div className="sticky top-4">
               <Card className="overflow-hidden">
                 {/* Event Image - Square on Top */}
-                <div className="relative aspect-square w-full overflow-hidden bg-muted">
+                <div className="relative w-full overflow-hidden bg-muted">
                   {event.imageUrl ? (
                     <div
-                      className="relative h-full w-full cursor-pointer transition-all hover:brightness-75"
+                      className="relative w-full cursor-pointer transition-all hover:brightness-75"
                       onClick={() => setIsImageModalOpen(true)}
                     >
                       <Image
                         src={event.imageUrl}
                         alt={event.title}
-                        fill
-                        className="object-cover"
+                        width={500}
+                        height={500}
+                        className="h-auto w-full object-contain"
                         priority
                       />
                     </div>
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
+                    <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
                       <Calendar className="h-24 w-24 text-muted-foreground/40" />
                     </div>
                   )}
