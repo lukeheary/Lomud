@@ -320,6 +320,7 @@ function HomePageContent() {
                       </div>
                     )}
                   </div>
+
                   <div className="w-full flex-1">
                     {dayEvents.length === 0 ? (
                       <div className="flex min-h-[112px] items-center justify-center rounded-lg border border-dashed md:min-h-[300px]">

@@ -14,6 +14,8 @@ export const organizerRouter = router({
   listOrganizers: publicProcedure
     .input(
       z.object({
+        city: z.string().optional(),
+        state: z.string().optional(),
         search: z.string().optional(),
         limit: z.number().min(1).max(100).default(20),
         offset: z.number().min(0).default(0),
@@ -21,6 +23,11 @@ export const organizerRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const conditions = [];
+
+      // Note: Organizers don't have city/state fields in the schema yet
+      // When they're added, uncomment these lines:
+      // if (input.city) conditions.push(eq(organizers.city, input.city));
+      // if (input.state) conditions.push(eq(organizers.state, input.state));
 
       if (input.search) {
         conditions.push(ilike(organizers.name, `%${input.search}%`));

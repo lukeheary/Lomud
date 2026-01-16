@@ -173,7 +173,7 @@ export const userRouter = router({
         state: updatedUser.state,
       });
 
-      // Sync with Clerk
+      // Sync with Clerk (firstName and lastName only, not imageUrl as we use S3)
       try {
         const client = await clerkClient();
         const clerkUpdateData: Record<string, any> = {};
@@ -185,16 +185,9 @@ export const userRouter = router({
           clerkUpdateData.lastName = input.lastName;
         }
 
-        // Update Clerk user metadata
-        if (Object.keys(clerkUpdateData).length > 0 || input.imageUrl) {
-          await client.users.updateUser(userId, {
-            ...clerkUpdateData,
-            ...(input.imageUrl && {
-              publicMetadata: {
-                profileImageUrl: input.imageUrl,
-              },
-            }),
-          });
+        // Update Clerk user metadata (excluding imageUrl)
+        if (Object.keys(clerkUpdateData).length > 0) {
+          await client.users.updateUser(userId, clerkUpdateData);
         }
       } catch (error) {
         console.error("Error syncing with Clerk:", error);
@@ -202,62 +195,5 @@ export const userRouter = router({
       }
 
       return updatedUser;
-    }),
-
-  uploadProfileImageToClerk: protectedProcedure
-    .input(
-      z.object({
-        imageData: z.string(), // base64 encoded image
-        fileName: z.string(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const userId = ctx.auth.userId;
-
-      console.log("Uploading profile image to Clerk for user:", userId);
-      console.log("File name:", input.fileName);
-
-      try {
-        // Convert base64 to blob
-        const base64Data = input.imageData.split(",")[1]; // Remove data:image/jpeg;base64, prefix
-        const mimeType = input.imageData.match(/data:([^;]+);/)?.[1] || "image/jpeg";
-        const buffer = Buffer.from(base64Data, "base64");
-        const blob = new Blob([buffer], { type: mimeType });
-        const file = new File([blob], input.fileName, { type: mimeType });
-
-        console.log("Uploading to Clerk...");
-
-        // Update Clerk profile image
-        const client = await clerkClient();
-        const updatedUser = await client.users.updateUserProfileImage(userId, {
-          file,
-        });
-
-        console.log("Profile image uploaded to Clerk successfully");
-        console.log("Clerk image URL:", updatedUser.imageUrl);
-
-        // Update our database with the Clerk image URL
-        const [dbUser] = await ctx.db
-          .update(users)
-          .set({
-            imageUrl: updatedUser.imageUrl,
-            updatedAt: new Date(),
-          })
-          .where(eq(users.id, userId))
-          .returning();
-
-        console.log("Database updated with Clerk image URL");
-
-        return {
-          success: true,
-          imageUrl: updatedUser.imageUrl,
-        };
-      } catch (error) {
-        console.error("Error uploading profile image to Clerk:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: error instanceof Error ? error.message : "Failed to upload profile image to Clerk",
-        });
-      }
     }),
 });

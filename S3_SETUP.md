@@ -152,7 +152,7 @@ This keeps your development and production files completely separated in the sam
 ### Default Folders
 
 - `events/` - Event images
-- `profiles/` - Profile pictures
+- `profiles/avatars/` - User profile pictures
 - `uploads/` - Default folder for other uploads
 
 ### Custom Folders
@@ -211,15 +211,29 @@ This utility is used internally by the S3 uploader but can be used anywhere you 
 - Verify your environment variables are set correctly
 - Ensure the bucket exists and is in the correct region
 
+## Profile Pictures
+
+Profile pictures are now stored in S3 instead of Clerk. The application:
+
+1. **Uploads** profile images to S3 under `profiles/avatars/` folder
+2. **Stores** the S3 URL in the database `users.imageUrl` field
+3. **Displays** avatars using the S3 URL throughout the application
+4. **Preserves** S3 URLs when Clerk webhooks sync user data (S3 takes precedence)
+
+All avatar displays (`<AvatarImage>` components) automatically use the database `imageUrl` field, which contains the S3 URL.
+
 ## Migration Notes
 
 This replaces the previous UploadThing integration. The following files were modified:
 
 - Created: `/src/lib/s3.ts` - S3 utility functions
+- Created: `/src/lib/env.ts` - Environment utility functions
 - Created: `/src/app/api/upload/route.ts` - Upload API endpoint
 - Created: `/src/components/ui/s3-uploader.tsx` - Reusable upload component
-- Modified: `/src/app/(main)/event/[id]/edit/page.tsx` - Uses S3Uploader
-- Modified: `/src/app/(main)/profile/page.tsx` - Removed UploadThing import
+- Modified: `/src/app/(main)/event/[id]/edit/page.tsx` - Uses S3Uploader for event images
+- Modified: `/src/app/(main)/profile/page.tsx` - Uses S3Uploader for profile images
+- Modified: `/src/server/trpc/routers/user.ts` - Removed Clerk image upload, updated sync logic
+- Modified: `/src/app/api/webhooks/clerk/route.ts` - Preserves S3 imageUrl during sync
 - Modified: `/src/middleware.ts` - Removed UploadThing route exception
 - Deleted: `/src/server/uploadthing.ts`
 - Deleted: `/src/lib/uploadthing.ts`

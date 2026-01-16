@@ -76,7 +76,8 @@ export async function POST(req: Request) {
           ...(username ? { username } : {}),
           firstName: first_name,
           lastName: last_name,
-          imageUrl: image_url,
+          // Don't overwrite imageUrl if user already has one (S3 takes precedence)
+          ...(existingUser?.imageUrl ? {} : { imageUrl: image_url }),
           updatedAt: new Date(),
         },
       });

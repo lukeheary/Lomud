@@ -188,7 +188,7 @@ export default function VenuePage() {
 
       {/* Upcoming Events */}
       <Card className={"border-none bg-background"}>
-        <CardHeader className={"px-0 md:p-6"}>
+        <CardHeader className={"px-0 md:px-6 md:pb-0 md:pt-6"}>
           <CardTitle>Upcoming Events</CardTitle>
         </CardHeader>
         <CardContent className={"px-0 md:p-6"}>

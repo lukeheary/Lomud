@@ -12,6 +12,7 @@ import { UserButton } from "@clerk/nextjs";
 import { Loader2, Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { GooglePlacesAutocomplete } from "@/components/google-places-autocomplete";
+import { S3Uploader } from "@/components/ui/s3-uploader";
 
 export default function ProfilePage() {
   const { toast } = useToast();
@@ -61,63 +62,12 @@ export default function ProfilePage() {
     },
   });
 
-  const uploadImageToClerkMutation =
-    trpc.user.uploadProfileImageToClerk.useMutation({
-      onSuccess: (data) => {
-        console.log("Image uploaded to Clerk successfully:", data);
-        toast({
-          title: "Profile image updated",
-          description: "Your profile image has been updated successfully",
-        });
-        // Update local state and invalidate queries
-        setImageUrl(data.imageUrl);
-        utils.user.getCurrentUser.invalidate();
-      },
-      onError: (error) => {
-        toast({
-          title: "Upload failed",
-          description: error.message,
-          variant: "destructive",
-        });
-      },
+  const handleImageUpload = (url: string) => {
+    setImageUrl(url);
+    // Immediately update the profile with the new image URL
+    updateProfileMutation.mutate({
+      imageUrl: url,
     });
-
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Check file size (max 4MB)
-    if (file.size > 4 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Please select an image smaller than 4MB",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Check file type
-    if (!file.type.startsWith("image/")) {
-      toast({
-        title: "Invalid file type",
-        description: "Please select an image file",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    console.log("Uploading image to Clerk...");
-
-    // Convert file to base64
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result as string;
-      uploadImageToClerkMutation.mutate({
-        imageData: base64,
-        fileName: file.name,
-      });
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleCitySelect = (place: {
@@ -192,44 +142,14 @@ export default function ProfilePage() {
               </AvatarFallback>
             </Avatar>
             <div className="space-y-2">
-              {/*{isEditing && (*/}
-              <>
-                <div>
-                  <Label htmlFor="profile-image" className="cursor-pointer">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={uploadImageToClerkMutation.isPending}
-                      onClick={() =>
-                        document.getElementById("profile-image")?.click()
-                      }
-                    >
-                      {uploadImageToClerkMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Uploading...
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="mr-2 h-4 w-4" />
-                          Upload Profile Image
-                        </>
-                      )}
-                    </Button>
-                  </Label>
-                  <Input
-                    id="profile-image"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageChange}
-                    disabled={uploadImageToClerkMutation.isPending}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">Max 4MB.</p>
-              </>
-              {/*)}*/}
+              <S3Uploader
+                folder="profiles/avatars"
+                onUploadComplete={handleImageUpload}
+                variant="button"
+                buttonText="Upload Profile Image"
+                maxSizeMB={4}
+              />
+              <p className="text-xs text-muted-foreground">Max 4MB.</p>
             </div>
           </div>
 

@@ -105,7 +105,7 @@ export default function OrganizerPage() {
             <div className="flex-1 space-y-4">
               <div>
                 <div className="mb-2 flex items-center gap-3">
-                  <Users className="h-8 w-8" />
+                  {/*<Users className="h-8 w-8" />*/}
                   <h1 className="text-3xl font-bold">{organizer.name}</h1>
                 </div>
                 {organizer.description && (
@@ -173,10 +173,10 @@ export default function OrganizerPage() {
 
       {/* Upcoming Events */}
       <Card className={"border-none bg-background"}>
-        <CardHeader>
+        <CardHeader className={"px-0 md:px-6 md:pb-0 md:pt-6"}>
           <CardTitle>Upcoming Events</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className={"px-0 md:p-6"}>
           {(organizer as any).events && (organizer as any).events.length > 0 ? (
             <EventCardGrid
               events={(organizer as any).events}
