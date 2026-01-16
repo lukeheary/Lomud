@@ -4,7 +4,7 @@ import { useRef, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { useLoadScript } from "@react-google-maps/api";
 
-const libraries: ("places")[] = ["places"];
+const libraries: "places"[] = ["places"];
 
 interface PlaceResult {
   name: string;
@@ -35,74 +35,111 @@ function AutocompleteInput({
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   useEffect(() => {
-    if (!inputRef.current || !window.google) return;
+    if (!inputRef.current || !(window as any).google) return;
 
     // Initialize autocomplete with different types based on searchType
     const types = searchType === "cities" ? ["(cities)"] : ["establishment"];
 
-    autocompleteRef.current = new window.google.maps.places.Autocomplete(
-      inputRef.current,
-      {
-        types,
-        componentRestrictions: { country: "us" },
+    // Clear any existing listeners on prior Autocomplete instance
+    if (autocompleteRef.current) {
+      try {
+        // clear listeners to avoid duplicates when searchType changes
+        (window as any).google.maps.event.clearInstanceListeners(
+          autocompleteRef.current
+        );
+      } catch (err) {
+        // ignore errors clearing listeners
+      }
+    }
+
+    autocompleteRef.current = new (
+      window as any
+    ).google.maps.places.Autocomplete(inputRef.current, {
+      types,
+      componentRestrictions: { country: "us" },
+    });
+
+    // Add place changed listener
+    const listener = autocompleteRef?.current.addListener(
+      "place_changed",
+      () => {
+        const place = autocompleteRef.current?.getPlace();
+
+        console.log("Place selected:", place);
+
+        if (!place || !place.address_components) {
+          console.log("No place or address components found");
+          return;
+        }
+
+        // Extract address components
+        let streetNumber = "";
+        let route = "";
+        let city = "";
+        let state = "";
+
+        place.address_components.forEach((component) => {
+          const types = component.types;
+
+          if (types.includes("street_number")) {
+            streetNumber = component.long_name;
+          }
+          if (types.includes("route")) {
+            route = component.long_name;
+          }
+          if (types.includes("locality")) {
+            city = component.long_name;
+          }
+          if (types.includes("administrative_area_level_1")) {
+            state = component.short_name;
+          }
+        });
+
+        const address = `${streetNumber} ${route}`.trim();
+        const formattedAddress = place.formatted_address || "";
+        const name = place.name || "";
+
+        console.log("Extracted data:", {
+          name,
+          address,
+          city,
+          state,
+          formattedAddress,
+        });
+
+        onPlaceSelect({
+          name,
+          address,
+          city,
+          state,
+          formattedAddress,
+        });
       }
     );
 
-    // Add place changed listener
-    const listener = autocompleteRef.current.addListener("place_changed", () => {
-      const place = autocompleteRef.current?.getPlace();
-
-      console.log("Place selected:", place);
-
-      if (!place || !place.address_components) {
-        console.log("No place or address components found");
-        return;
+    return () => {
+      // remove the specific listener if possible
+      try {
+        if (listener && (window as any).google?.maps?.event?.removeListener) {
+          (window as any).google.maps.event.removeListener(listener);
+        }
+      } catch (err) {
+        // ignore removal errors
       }
 
-      // Extract address components
-      let streetNumber = "";
-      let route = "";
-      let city = "";
-      let state = "";
-
-      place.address_components.forEach((component) => {
-        const types = component.types;
-
-        if (types.includes("street_number")) {
-          streetNumber = component.long_name;
+      // clear any remaining listeners and null the autocomplete ref
+      if (autocompleteRef.current) {
+        try {
+          (window as any).google.maps.event.clearInstanceListeners(
+            autocompleteRef.current
+          );
+        } catch (err) {
+          // ignore
         }
-        if (types.includes("route")) {
-          route = component.long_name;
-        }
-        if (types.includes("locality")) {
-          city = component.long_name;
-        }
-        if (types.includes("administrative_area_level_1")) {
-          state = component.short_name;
-        }
-      });
-
-      const address = `${streetNumber} ${route}`.trim();
-      const formattedAddress = place.formatted_address || "";
-      const name = place.name || "";
-
-      console.log("Extracted data:", { name, address, city, state, formattedAddress });
-
-      onPlaceSelect({
-        name,
-        address,
-        city,
-        state,
-        formattedAddress,
-      });
-    });
-
-    return () => {
-      if (listener) {
-        google.maps.event.removeListener(listener);
+        autocompleteRef.current = null;
       }
     };
-  }, [onPlaceSelect]);
+  }, [onPlaceSelect, searchType]);
 
   return (
     <Input

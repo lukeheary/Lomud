@@ -77,7 +77,7 @@ export default async function LandingPage() {
                 <h3 className="text-xl font-semibold">Event Discovery</h3>
                 <p className="text-muted-foreground">
                   Browse local events by category, date, or venue. Find exactly
-                  what you're looking for.
+                  what you&apos;re looking for.
                 </p>
               </div>
 
@@ -99,7 +99,7 @@ export default async function LandingPage() {
                 </div>
                 <h3 className="text-xl font-semibold">Local First</h3>
                 <p className="text-muted-foreground">
-                  Discover what's happening in your neighborhood and support
+                  Discover what&apos;s happening in your neighborhood and support
                   local businesses.
                 </p>
               </div>

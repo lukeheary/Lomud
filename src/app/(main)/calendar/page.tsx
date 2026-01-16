@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Image from "next/image";
 import {
   format,
   addDays,
@@ -324,10 +325,11 @@ export default function CalendarPage() {
                               {/* Event Image */}
                               {event.imageUrl && (
                                 <div className="relative h-32 w-full overflow-hidden rounded-md">
-                                  <img
+                                  <Image
                                     src={event.imageUrl}
                                     alt={event.title}
-                                    className="h-full w-full object-cover"
+                                    fill
+                                    className="object-cover"
                                   />
                                 </div>
                               )}

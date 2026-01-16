@@ -308,7 +308,7 @@ export default function EventPage() {
                           variant="default"
                           className="bg-green-500 px-4 py-2 text-base"
                         >
-                          You're going!
+                          You&apos;re going!
                         </Badge>
                       )}
                       {event.userRsvp?.status === "interested" && (
@@ -322,7 +322,7 @@ export default function EventPage() {
                     </div>
                     {!event.userRsvp && (
                       <p className="text-sm text-muted-foreground">
-                        RSVP to let others know you're attending
+                        RSVP to let others know you&apos;re attending
                       </p>
                     )}
                   </div>
