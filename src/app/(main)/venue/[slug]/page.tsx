@@ -95,12 +95,12 @@ export default function VenuePage() {
   if (!venue) {
     return (
       <div className="container mx-auto py-12 text-center">
-        <Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+        {/*<Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />*/}
         <h2 className="mb-2 text-2xl font-bold">Venue not found</h2>
         <p className="mb-4 text-muted-foreground">
           The venue you&apos;re looking for doesn&apos;t exist
         </p>
-        <Link href="/venues">
+        <Link href="/venues-and-organizers">
           <Button>Browse Venues</Button>
         </Link>
       </div>
@@ -116,7 +116,7 @@ export default function VenuePage() {
             <div className="flex-1 space-y-4">
               <div>
                 <div className="mb-2 flex items-center gap-3">
-                  <Building2 className="h-8 w-8" />
+                  {/*<Building2 className="h-8 w-8" />*/}
                   <h1 className="text-3xl font-bold">{venue.name}</h1>
                 </div>
                 {venue.description && (
@@ -188,10 +188,10 @@ export default function VenuePage() {
 
       {/* Upcoming Events */}
       <Card className={"border-none bg-background"}>
-        <CardHeader>
+        <CardHeader className={"px-0 md:p-6"}>
           <CardTitle>Upcoming Events</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className={"px-0 md:p-6"}>
           {(venue as any).events && (venue as any).events.length > 0 ? (
             <EventCardGrid
               events={(venue as any).events}

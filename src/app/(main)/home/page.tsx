@@ -61,6 +61,7 @@ function HomePageContent() {
   });
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [hasSetInitialCity, setHasSetInitialCity] = useState(false);
 
   // Get current user to show their city
   const { data: currentUser } = trpc.user.getCurrentUser.useQuery();
@@ -68,12 +69,13 @@ function HomePageContent() {
   // Get available cities
   const { data: cities } = trpc.event.getAvailableCities.useQuery();
 
-  // Set default city to user's city on load
+  // Set default city to user's city on initial load only
   useEffect(() => {
-    if (currentUser?.city && selectedCity === "all") {
+    if (currentUser?.city && selectedCity === "all" && !hasSetInitialCity) {
       void setSelectedCity(currentUser.city);
+      setHasSetInitialCity(true);
     }
-  }, [currentUser, selectedCity, setSelectedCity]);
+  }, [currentUser, selectedCity, hasSetInitialCity, setSelectedCity]);
 
   // Calculate date range based on view mode
   const dateRange = useMemo(() => {

@@ -80,7 +80,7 @@ export default function MainLayout({
                 Events
               </Button>
             </Link>
-            <Link href="/venues">
+            <Link href="/venues-and-organizers">
               <Button variant="ghost" size="sm">
                 Venues & Organizers
               </Button>
@@ -155,7 +155,7 @@ export default function MainLayout({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={handleSignOut}
-                  className="cursor-pointer text-destructive focus:text-destructive"
+                  className="cursor-pointer text-red-500"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout
@@ -239,13 +239,17 @@ export default function MainLayout({
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+              <SheetTitle></SheetTitle>
+              <SheetContent
+                side="right"
+                className="w-[300px] px-4 sm:w-[400px]"
+              >
                 <SheetHeader></SheetHeader>
-                <nav className="mt-8 flex flex-col gap-4">
+                <nav className="mt-8 flex flex-col gap-2">
                   <Link href="/home" onClick={closeMobileMenu}>
                     <Button
                       variant="ghost"
-                      className="w-full justify-start"
+                      className="w-full justify-start px-4 text-base"
                       size="lg"
                     >
                       <Calendar className="mr-3 h-5 w-5" />
@@ -253,10 +257,10 @@ export default function MainLayout({
                     </Button>
                   </Link>
 
-                  <Link href="/venues" onClick={closeMobileMenu}>
+                  <Link href="/venues-and-organizers" onClick={closeMobileMenu}>
                     <Button
                       variant="ghost"
-                      className="w-full justify-start"
+                      className="w-full justify-start px-4 text-base"
                       size="lg"
                     >
                       <Building2 className="mr-3 h-5 w-5" />
@@ -266,7 +270,7 @@ export default function MainLayout({
                   <Link href="/friends" onClick={closeMobileMenu}>
                     <Button
                       variant="ghost"
-                      className="w-full justify-start"
+                      className="w-full justify-start px-4 text-base"
                       size="lg"
                     >
                       <Users className="mr-3 h-5 w-5" />
@@ -274,11 +278,11 @@ export default function MainLayout({
                     </Button>
                   </Link>
 
-                  <div className="mt-4 border-t pt-4">
+                  <div className="mt-4 flex flex-col gap-2 border-t pt-4">
                     <Link href="/profile" onClick={closeMobileMenu}>
                       <Button
                         variant="ghost"
-                        className="w-full justify-start"
+                        className="w-full justify-start px-4 text-base"
                         size="lg"
                       >
                         <User className="mr-3 h-5 w-5" />
@@ -289,7 +293,7 @@ export default function MainLayout({
                       <Link href="/my-venues" onClick={closeMobileMenu}>
                         <Button
                           variant="ghost"
-                          className="w-full justify-start"
+                          className="w-full justify-start px-4 text-base"
                           size="lg"
                         >
                           <Building2 className="mr-3 h-5 w-5" />
@@ -301,7 +305,7 @@ export default function MainLayout({
                       <Link href="/my-organizers" onClick={closeMobileMenu}>
                         <Button
                           variant="ghost"
-                          className="w-full justify-start"
+                          className="w-full justify-start px-4 text-base"
                           size="lg"
                         >
                           <Users className="mr-3 h-5 w-5" />
@@ -313,7 +317,7 @@ export default function MainLayout({
                       <Link href="/admin" onClick={closeMobileMenu}>
                         <Button
                           variant="ghost"
-                          className="w-full justify-start"
+                          className="w-full justify-start px-4 text-base"
                           size="lg"
                         >
                           <Plus className="mr-3 h-5 w-5" />
@@ -323,7 +327,7 @@ export default function MainLayout({
                     )}
                     <Button
                       variant="ghost"
-                      className="w-full justify-start text-destructive hover:text-destructive"
+                      className="w-full justify-start px-4 text-base text-red-500"
                       size="lg"
                       onClick={() => {
                         closeMobileMenu();

@@ -39,10 +39,10 @@ export default function MyOrganizersPage() {
               key={organizer.id}
               className="transition-colors hover:bg-accent/50"
             >
-              <CardHeader>
+              <CardHeader className={"pb-2"}>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
+                    {/*<Users className="h-5 w-5" />*/}
                     <CardTitle className="text-lg">{organizer.name}</CardTitle>
                   </div>
                 </div>
@@ -70,12 +70,15 @@ export default function MyOrganizersPage() {
                     href={`/organizer/${organizer.slug}`}
                     className="flex-1"
                   >
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className={"w-full"}>
                       View Organizer
                     </Button>
                   </Link>
-                  <Link href={`/event/new?organizerId=${organizer.id}`}>
-                    <Button>Create Event</Button>
+                  <Link
+                    href={`/event/new?organizerId=${organizer.id}`}
+                    className={"flex-1"}
+                  >
+                    <Button className={"w-full"}>Create Event</Button>
                   </Link>
                 </div>
               </CardContent>

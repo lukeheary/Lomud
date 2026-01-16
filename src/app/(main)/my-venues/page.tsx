@@ -26,31 +26,34 @@ export default function MyVenuesPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-4">
+    <div className="container mx-auto space-y-4 py-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">My Venues</h1>
-        <p className="text-muted-foreground">
-          Venues where you are a member
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+          My Venues
+        </h1>
+        <p className="text-muted-foreground">Venues where you are a member</p>
       </div>
 
       {/* Venues Grid */}
       {myVenues && myVenues.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {myVenues.map((venue) => (
-            <Card key={venue.id} className="hover:bg-accent/50 transition-colors">
-              <CardHeader>
+            <Card
+              key={venue.id}
+              className="transition-colors hover:bg-accent/50"
+            >
+              <CardHeader className={"pb-2"}>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
-                    <Building2 className="h-5 w-5" />
+                    {/*<Building2 className="h-5 w-5" />*/}
                     <CardTitle className="text-lg">{venue.name}</CardTitle>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 {venue.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
+                  <p className="line-clamp-2 text-sm text-muted-foreground">
                     {venue.description}
                   </p>
                 )}
@@ -64,11 +67,11 @@ export default function MyVenuesPage() {
 
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">
-                    <UsersIcon className="h-3 w-3 mr-1" />
+                    <UsersIcon className="mr-1 h-3 w-3" />
                     {(venue as any).members?.length || 0} members
                   </Badge>
                   <Badge variant="outline">
-                    <Calendar className="h-3 w-3 mr-1" />
+                    <Calendar className="mr-1 h-3 w-3" />
                     {(venue as any).events?.length || 0} upcoming
                   </Badge>
                 </div>
@@ -79,10 +82,11 @@ export default function MyVenuesPage() {
                       View Venue
                     </Button>
                   </Link>
-                  <Link href={`/event/new?venueId=${venue.id}`}>
-                    <Button>
-                      Create Event
-                    </Button>
+                  <Link
+                    href={`/event/new?venueId=${venue.id}`}
+                    className={"flex-1"}
+                  >
+                    <Button className={"w-full"}>Create Event</Button>
                   </Link>
                 </div>
               </CardContent>
@@ -92,12 +96,13 @@ export default function MyVenuesPage() {
       ) : (
         <Card>
           <CardContent className="py-12 text-center">
-            <Building2 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">No venues yet</h3>
-            <p className="text-muted-foreground mb-4">
-              You are not a member of any venues. Contact an admin to be added to a venue.
+            <Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <h3 className="mb-2 text-lg font-semibold">No venues yet</h3>
+            <p className="mb-4 text-muted-foreground">
+              You are not a member of any venues. Contact an admin to be added
+              to a venue.
             </p>
-            <Link href="/venues">
+            <Link href="/venues-and-organizers">
               <Button>Browse Venues</Button>
             </Link>
           </CardContent>
