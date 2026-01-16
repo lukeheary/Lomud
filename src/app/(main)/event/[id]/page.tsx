@@ -20,11 +20,13 @@ import {
   User,
   Edit,
   Users,
+  X,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { AvatarStack } from "@/components/ui/avatar-stack";
+import { useState } from "react";
 
 type RsvpStatus = "going" | "interested" | "not_going";
 
@@ -33,6 +35,7 @@ export default function EventPage() {
   const eventId = params.id as string;
   const { toast } = useToast();
   const utils = trpc.useUtils();
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   // Fetch event data
   const { data: event, isLoading } = trpc.event.getEventById.useQuery({
@@ -116,16 +119,50 @@ export default function EventPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Image Modal */}
+      {isImageModalOpen && event.imageUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setIsImageModalOpen(false)}
+        >
+          <Button
+            size="icon"
+            variant="ghost"
+            className="absolute right-4 top-4 h-10 w-10 text-white hover:bg-white/20"
+            onClick={() => setIsImageModalOpen(false)}
+          >
+            <X className="h-6 w-6" />
+          </Button>
+          <div
+            className="relative max-h-[90vh] max-w-[90vw]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={event.imageUrl}
+              alt={event.title}
+              width={1200}
+              height={800}
+              className="h-auto max-h-[90vh] w-auto max-w-[90vw] object-contain"
+            />
+          </div>
+        </div>
+      )}
+
       {/* Mobile Image - Full Width at Top */}
       <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted lg:hidden">
         {event.imageUrl ? (
-          <Image
-            src={event.imageUrl}
-            alt={event.title}
-            fill
-            className="object-cover"
-            priority
-          />
+          <div
+            className="relative h-full w-full cursor-pointer"
+            onClick={() => setIsImageModalOpen(true)}
+          >
+            <Image
+              src={event.imageUrl}
+              alt={event.title}
+              fill
+              className="object-cover"
+              priority
+            />
+          </div>
         ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
             <Calendar className="h-24 w-24 text-muted-foreground/40" />
@@ -332,13 +369,18 @@ export default function EventPage() {
                 {/* Event Image - Square on Top */}
                 <div className="relative aspect-square w-full overflow-hidden bg-muted">
                   {event.imageUrl ? (
-                    <Image
-                      src={event.imageUrl}
-                      alt={event.title}
-                      fill
-                      className="object-cover"
-                      priority
-                    />
+                    <div
+                      className="relative h-full w-full cursor-pointer transition-all hover:brightness-75"
+                      onClick={() => setIsImageModalOpen(true)}
+                    >
+                      <Image
+                        src={event.imageUrl}
+                        alt={event.title}
+                        fill
+                        className="object-cover"
+                        priority
+                      />
+                    </div>
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
                       <Calendar className="h-24 w-24 text-muted-foreground/40" />

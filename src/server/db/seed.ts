@@ -14,7 +14,7 @@ import {
   venueFollows,
   organizerFollows,
 } from "./schema";
-import { inArray, sql } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 
 neonConfig.webSocketConstructor = ws;
 
@@ -98,7 +98,6 @@ async function main() {
     .onConflictDoNothing()
     .returning();
 
-  // If returning() yields [] due to conflicts, fall back to known IDs
   const demoUserIds =
     insertedUsers.length > 0
       ? insertedUsers.map((u) => u.id)
@@ -137,18 +136,7 @@ async function main() {
       website: null,
       instagram: null,
     },
-    {
-      slug: "the-grand-boston",
-      name: "The Grand Boston",
-      description:
-        "Seaport mega-club with high production, big bookings, and a polished vibe.",
-      imageUrl: null,
-      address: "58 Seaport Blvd, Boston, MA 02210",
-      city: "Boston",
-      state: "MA",
-      website: null,
-      instagram: null,
-    },
+    // REMOVED: the-grand-boston
     {
       slug: "middlesex-lounge-cambridge",
       name: "The Middlesex Lounge",
@@ -175,18 +163,7 @@ async function main() {
       website: "https://www.elsewhere.club",
       instagram: "elsewherenyc",
     },
-    {
-      slug: "brooklyn-steel",
-      name: "Brooklyn Steel",
-      description:
-        "Large industrial venue that regularly hosts club-style electronic bookings and DJ nights.",
-      imageUrl: null,
-      address: "319 Frost St, Brooklyn, NY 11222",
-      city: "Brooklyn",
-      state: "NY",
-      website: "https://www.bowerypresents.com",
-      instagram: "brooklynsteel",
-    },
+    // REMOVED: brooklyn-steel
     {
       slug: "good-room-brooklyn",
       name: "Good Room",
@@ -199,23 +176,11 @@ async function main() {
       website: null,
       instagram: null,
     },
-    {
-      slug: "public-records-brooklyn",
-      name: "Public Records",
-      description:
-        "Sound-system-forward spot with a dancefloor, bar, and eclectic electronic bookings.",
-      imageUrl: null,
-      address: "233 Butler St, Brooklyn, NY 11217",
-      city: "Brooklyn",
-      state: "NY",
-      website: null,
-      instagram: null,
-    },
+    // REMOVED: public-records-brooklyn
   ];
 
   await db.insert(venues).values(venueData).onConflictDoNothing();
 
-  // Always re-fetch by slug so we can safely reference IDs even after conflicts
   const venueRows = await db
     .select({ id: venues.id, slug: venues.slug })
     .from(venues)
@@ -332,14 +297,16 @@ async function main() {
     ])
     .onConflictDoNothing();
 
-  // Optional: some follows
+  // Optional: some follows (updated to avoid removed venues)
   await db
     .insert(venueFollows)
     .values([
       { userId: u1, venueId: venueIdBySlug.get("elsewhere-brooklyn")! },
       { userId: u2, venueId: venueIdBySlug.get("royale-boston")! },
-      { userId: u3, venueId: venueIdBySlug.get("public-records-brooklyn")! },
-      { userId: u4, venueId: venueIdBySlug.get("the-grand-boston")! },
+      // REMOVED: public-records-brooklyn follow
+      // REMOVED: the-grand-boston follow
+      { userId: u3, venueId: venueIdBySlug.get("bijou-boston")! },
+      { userId: u4, venueId: venueIdBySlug.get("good-room-brooklyn")! },
     ])
     .onConflictDoNothing();
 
@@ -358,14 +325,17 @@ async function main() {
   console.log("✓ Created memberships & follows");
 
   // ---------------------------------------------------------------------------
-  // EVENTS (clubs/bars only) — venueId is NEVER null
+  // EVENTS — venueId is NEVER null
+  // start/end are always based on "today" at runtime (not hard-coded dates)
   // ---------------------------------------------------------------------------
   console.log("Creating events...");
 
-  const now = new Date();
+  // Anchor to start-of-today so reruns later in the day don't shift times.
+  const base = new Date();
+  base.setHours(0, 0, 0, 0);
 
-  const daysFromNowAt = (days: number, hour: number, minute = 0) => {
-    const d = new Date(now);
+  const daysFromTodayAt = (days: number, hour: number, minute = 0) => {
+    const d = new Date(base);
     d.setDate(d.getDate() + days);
     d.setHours(hour, minute, 0, 0);
     return d;
@@ -386,8 +356,8 @@ async function main() {
       description:
         "House + disco all night in the main room. Bright fits encouraged; phone-light moments discouraged.",
       imageUrl: null,
-      startAt: daysFromNowAt(1, 22, 0),
-      endAt: hoursAfter(daysFromNowAt(1, 22, 0), 4.5),
+      startAt: daysFromTodayAt(0, 22, 0),
+      endAt: hoursAfter(daysFromTodayAt(1, 22, 0), 4.5),
       venueName: "Royale Boston",
       address: "279 Tremont St, Boston, MA 02116",
       city: "Boston",
@@ -403,8 +373,8 @@ async function main() {
       description:
         "Low ceilings, deep grooves. Underground house selectors from open to close.",
       imageUrl: null,
-      startAt: daysFromNowAt(2, 23, 0),
-      endAt: hoursAfter(daysFromNowAt(2, 23, 0), 5),
+      startAt: daysFromTodayAt(2, 23, 0),
+      endAt: hoursAfter(daysFromTodayAt(2, 23, 0), 5),
       venueName: "Bijou Boston",
       address: "51 Stuart St, Boston, MA 02116",
       city: "Boston",
@@ -412,23 +382,7 @@ async function main() {
       category: "nightlife" as const,
       visibility: "public" as const,
     },
-    {
-      venueId: venueIdBySlug.get("the-grand-boston")!,
-      organizerId: organizerIdBySlug.get("midnight-moves") ?? null,
-      createdByUserId: u1,
-      title: "Midnight Moves: Seaport Saturday",
-      description:
-        "Peak-time club set with classic house, modern edits, and a big-room finish.",
-      imageUrl: null,
-      startAt: daysFromNowAt(4, 22, 30),
-      endAt: hoursAfter(daysFromNowAt(4, 22, 30), 4),
-      venueName: "The Grand Boston",
-      address: "58 Seaport Blvd, Boston, MA 02210",
-      city: "Boston",
-      state: "MA",
-      category: "nightlife" as const,
-      visibility: "public" as const,
-    },
+    // REMOVED: The Grand Boston event(s) because venue was removed
     {
       venueId: venueIdBySlug.get("middlesex-lounge-cambridge")!,
       organizerId: organizerIdBySlug.get("midnight-moves") ?? null,
@@ -437,8 +391,8 @@ async function main() {
       description:
         "Disco warmup into late house heaters. Smaller room, louder singalongs.",
       imageUrl: null,
-      startAt: daysFromNowAt(6, 21, 0),
-      endAt: hoursAfter(daysFromNowAt(6, 21, 0), 4),
+      startAt: daysFromTodayAt(6, 21, 0),
+      endAt: hoursAfter(daysFromTodayAt(6, 21, 0), 4),
       venueName: "The Middlesex Lounge",
       address: "14 Massachusetts Ave, Cambridge, MA 02139",
       city: "Cambridge",
@@ -456,8 +410,8 @@ async function main() {
       description:
         "Early side-room warmup: rolling tech house and quick transitions before the main takeover.",
       imageUrl: null,
-      startAt: daysFromNowAt(1, 20, 30),
-      endAt: hoursAfter(daysFromNowAt(1, 20, 30), 2),
+      startAt: daysFromTodayAt(1, 20, 30),
+      endAt: hoursAfter(daysFromTodayAt(1, 20, 30), 2),
       venueName: "Royale Boston (Side Room)",
       address: "279 Tremont St, Boston, MA 02116",
       city: "Boston",
@@ -473,8 +427,8 @@ async function main() {
       description:
         "Local DJ rotation with drink specials. Casual, packed, and unapologetically fun.",
       imageUrl: null,
-      startAt: daysFromNowAt(3, 22, 0),
-      endAt: hoursAfter(daysFromNowAt(3, 22, 0), 3.5),
+      startAt: daysFromTodayAt(3, 22, 0),
+      endAt: hoursAfter(daysFromTodayAt(3, 22, 0), 3.5),
       venueName: "Bijou Boston",
       address: "51 Stuart St, Boston, MA 02116",
       city: "Boston",
@@ -494,8 +448,8 @@ async function main() {
       description:
         "Rooftop sets from golden hour into nightfall. Melodic house, disco edits, and good energy.",
       imageUrl: null,
-      startAt: daysFromNowAt(1, 17, 30),
-      endAt: hoursAfter(daysFromNowAt(1, 17, 30), 4),
+      startAt: daysFromTodayAt(2, 17, 30),
+      endAt: hoursAfter(daysFromTodayAt(1, 17, 30), 4),
       venueName: "Elsewhere (Rooftop)",
       address: "599 Johnson Ave, Brooklyn, NY 11237",
       city: "Brooklyn",
@@ -511,44 +465,10 @@ async function main() {
       description:
         "One room, no breaks. Deep-to-peak house progression with late-night surprises.",
       imageUrl: null,
-      startAt: daysFromNowAt(2, 23, 30),
-      endAt: hoursAfter(daysFromNowAt(2, 23, 30), 6),
+      startAt: daysFromTodayAt(2, 23, 30),
+      endAt: hoursAfter(daysFromTodayAt(2, 23, 30), 6),
       venueName: "Good Room",
       address: "98 Meserole Ave, Brooklyn, NY 11222",
-      city: "Brooklyn",
-      state: "NY",
-      category: "nightlife" as const,
-      visibility: "public" as const,
-    },
-    {
-      venueId: venueIdBySlug.get("public-records-brooklyn")!,
-      organizerId: organizerIdBySlug.get("neon-nights-collective") ?? null,
-      createdByUserId: u2,
-      title: "Public Records: Sound System Fridays",
-      description:
-        "Sound-system-forward night with leftfield house, breaks, and hypnotic grooves.",
-      imageUrl: null,
-      startAt: daysFromNowAt(4, 22, 0),
-      endAt: hoursAfter(daysFromNowAt(4, 22, 0), 5),
-      venueName: "Public Records",
-      address: "233 Butler St, Brooklyn, NY 11217",
-      city: "Brooklyn",
-      state: "NY",
-      category: "nightlife" as const,
-      visibility: "public" as const,
-    },
-    {
-      venueId: venueIdBySlug.get("brooklyn-steel")!,
-      organizerId: organizerIdBySlug.get("midnight-moves") ?? null,
-      createdByUserId: u4,
-      title: "Brooklyn Steel: Club Night (Main Floor)",
-      description:
-        "Club-forward night on a big system—high BPM second half, hands-up moments, strong openers.",
-      imageUrl: null,
-      startAt: daysFromNowAt(6, 21, 0),
-      endAt: hoursAfter(daysFromNowAt(6, 21, 0), 5),
-      venueName: "Brooklyn Steel",
-      address: "319 Frost St, Brooklyn, NY 11222",
       city: "Brooklyn",
       state: "NY",
       category: "nightlife" as const,
@@ -564,8 +484,8 @@ async function main() {
       description:
         "Early rooftop warmup before the main party. Vinyl-only, groovy, and laid back.",
       imageUrl: null,
-      startAt: daysFromNowAt(1, 16, 0),
-      endAt: hoursAfter(daysFromNowAt(1, 16, 0), 1.5),
+      startAt: daysFromTodayAt(0, 16, 0),
+      endAt: hoursAfter(daysFromTodayAt(1, 16, 0), 1.5),
       venueName: "Elsewhere (Rooftop)",
       address: "599 Johnson Ave, Brooklyn, NY 11237",
       city: "Brooklyn",
@@ -581,8 +501,8 @@ async function main() {
       description:
         "Disco and funk to start the night before the marathon kicks off. Come early, leave sweaty.",
       imageUrl: null,
-      startAt: daysFromNowAt(2, 20, 0),
-      endAt: hoursAfter(daysFromNowAt(2, 20, 0), 3),
+      startAt: daysFromTodayAt(2, 20, 0),
+      endAt: hoursAfter(daysFromTodayAt(2, 20, 0), 3),
       venueName: "Good Room (Front Bar)",
       address: "98 Meserole Ave, Brooklyn, NY 11222",
       city: "Brooklyn",
@@ -592,7 +512,6 @@ async function main() {
     },
   ];
 
-  // Extra safety: ensure we never insert a null venueId
   const invalidEvents = eventData.filter((e) => !e.venueId);
   if (invalidEvents.length > 0) {
     throw new Error(

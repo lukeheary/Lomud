@@ -15,6 +15,12 @@ import {
   eachDayOfInterval,
   nextSunday,
   getDay,
+  startOfWeek,
+  endOfWeek,
+  isAfter,
+  isBefore,
+  startOfISOWeek,
+  endOfISOWeek,
 } from "date-fns";
 import { trpc } from "@/lib/trpc";
 import { EventCardGrid } from "@/components/events/event-card-grid";
@@ -81,9 +87,27 @@ function HomePageContent() {
   const dateRange = useMemo(() => {
     if (viewMode === "week") {
       const today = startOfDay(new Date());
-      const start = currentDate < today ? today : startOfDay(currentDate);
-      // If today is Sunday (0), end is today. Otherwise, get next Sunday
-      const end = getDay(start) === 0 ? start : nextSunday(start);
+      const startOfCurrentWeek = startOfDay(currentDate);
+
+      // Check if we're viewing the current week (the week that contains today)
+      const isCurrentWeek =
+        isSameDay(startOfCurrentWeek, today) ||
+        (isAfter(today, startOfCurrentWeek) &&
+          isBefore(today, addDays(startOfCurrentWeek, 7)));
+
+      let start: Date;
+      let end: Date;
+
+      if (isCurrentWeek) {
+        // Current week: start from today (Friday) and go to next Sunday
+        start = today;
+        end = getDay(start) === 0 ? start : nextSunday(start);
+      } else {
+        // Any other week: show full week from Monday to Sunday
+        start = startOfWeek(startOfCurrentWeek, { weekStartsOn: 1 }); // 1 = Monday
+        end = endOfWeek(startOfCurrentWeek, { weekStartsOn: 1 });
+      }
+
       return { startDate: start, endDate: end };
     } else {
       const start = startOfMonth(currentDate);
@@ -125,9 +149,15 @@ function HomePageContent() {
 
   const handlePrevious = () => {
     if (viewMode === "week") {
-      const newDate = addDays(currentDate, -7);
       const today = startOfDay(new Date());
-      setCurrentDate(newDate < today ? today : newDate);
+      const newDate = addDays(currentDate, -7);
+
+      // Don't allow going before today
+      if (newDate < today) {
+        setCurrentDate(today);
+      } else {
+        setCurrentDate(newDate);
+      }
     } else {
       setCurrentDate(subMonths(currentDate, 1));
     }
@@ -135,7 +165,23 @@ function HomePageContent() {
 
   const handleNext = () => {
     if (viewMode === "week") {
-      setCurrentDate(addDays(currentDate, 7));
+      const today = startOfDay(new Date());
+      const nextWeekStart = addDays(currentDate, 7);
+
+      // When moving to next week, jump to Monday of next week
+      const isCurrentWeek =
+        isSameDay(currentDate, today) ||
+        (isAfter(today, currentDate) &&
+          isBefore(today, addDays(currentDate, 7)));
+
+      if (isCurrentWeek) {
+        // From current week (Friday start), go to Monday of next week
+        const nextMonday = startOfWeek(addDays(today, 7), { weekStartsOn: 1 });
+        setCurrentDate(nextMonday);
+      } else {
+        // From any other week, just add 7 days (next Monday)
+        setCurrentDate(nextWeekStart);
+      }
     } else {
       setCurrentDate(addMonths(currentDate, 1));
     }
@@ -148,16 +194,16 @@ function HomePageContent() {
   // Get days to display based on view mode
   const daysToDisplay = useMemo(() => {
     if (viewMode === "week") {
-      const today = startOfDay(new Date());
-      const start = currentDate < today ? today : startOfDay(currentDate);
-      const end = getDay(start) === 0 ? start : nextSunday(start);
-      return eachDayOfInterval({ start, end });
+      return eachDayOfInterval({
+        start: dateRange.startDate,
+        end: dateRange.endDate,
+      });
     } else {
       const start = startOfMonth(currentDate);
       const end = endOfMonth(currentDate);
       return eachDayOfInterval({ start, end });
     }
-  }, [viewMode, currentDate]);
+  }, [viewMode, currentDate, dateRange]);
 
   // Show error toast in useEffect to avoid rendering issues
   useEffect(() => {
