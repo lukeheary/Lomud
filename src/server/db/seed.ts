@@ -536,6 +536,99 @@ async function main() {
       category: "nightlife" as const,
       visibility: "public" as const,
     },
+
+    // New test events: same-city, same-day overlaps
+    {
+      // Boston: same day as "Neon Nights: House & Disco Showcase" (daysFromNowAt(1,...))
+      venueId: venueIdBySlug.get("boston-house-of-blues") ?? null,
+      organizerId: organizerIdBySlug.get("midnight-moves") ?? null,
+      createdByUserId: u3,
+      title: "Boston Pre-Party: Local DJ Warmup",
+      description:
+        "Early warmup with local DJs before the main Neon Nights event — come early for drinks and tunes.",
+      imageUrl: null,
+      startAt: daysFromNowAt(1, 19, 0),
+      endAt: hoursAfter(daysFromNowAt(1, 19, 0), 2),
+      venueName: "House of Blues Boston - Bar Room",
+      address: "15 Lansdowne St, Boston, MA 02215",
+      city: "Boston",
+      state: "MA",
+      category: "nightlife" as const,
+      visibility: "public" as const,
+    },
+    {
+      // Boston: same day as Run Club (daysFromNowAt(2,...))
+      venueId: null,
+      organizerId: organizerIdBySlug.get("taste-of-the-city") ?? null,
+      createdByUserId: u1,
+      title: "Post-Run Coffee & Stretch",
+      description:
+        "Light cooldown and coffee meetup after the Run Club Social 5K — informal and free.",
+      imageUrl: null,
+      startAt: daysFromNowAt(2, 10, 30),
+      endAt: hoursAfter(daysFromNowAt(2, 10, 30), 0.75),
+      venueName: "Esplanade Lawn",
+      address: "Storrow Dr, Boston, MA",
+      city: "Boston",
+      state: "MA",
+      category: "sports" as const,
+      visibility: "public" as const,
+    },
+
+    // NYC / Brooklyn: same day as Elsewhere Rooftop Neon Nights (daysFromNowAt(2,...))
+    {
+      venueId: venueIdBySlug.get("elsewhere-brooklyn") ?? null,
+      organizerId: organizerIdBySlug.get("neon-nights-collective") ?? null,
+      createdByUserId: u2,
+      title: "Brooklyn Warmup: Sunset Vinyl Sets",
+      description:
+        "Sunset vinyl warmup on the rooftop ahead of the main Neon Nights rooftop party.",
+      imageUrl: null,
+      startAt: daysFromNowAt(2, 18, 0),
+      endAt: hoursAfter(daysFromNowAt(2, 18, 0), 1.5),
+      venueName: "Elsewhere Rooftop",
+      address: "599 Johnson Ave, Brooklyn, NY 11237",
+      city: "Brooklyn",
+      state: "NY",
+      category: "music" as const,
+      visibility: "public" as const,
+    },
+    {
+      // Brooklyn: overlaps the All-Night DJ Relay (daysFromNowAt(6,...))
+      venueId: venueIdBySlug.get("elsewhere-brooklyn") ?? null,
+      organizerId: null,
+      createdByUserId: u4,
+      title: "Basement Bangers",
+      description:
+        "Late-night basement party with tight selectors — overlaps the all-night relay upstairs.",
+      imageUrl: null,
+      startAt: daysFromNowAt(6, 22, 30),
+      endAt: hoursAfter(daysFromNowAt(6, 22, 30), 4),
+      venueName: "Elsewhere - Basement",
+      address: "599 Johnson Ave, Brooklyn, NY 11237",
+      city: "Brooklyn",
+      state: "NY",
+      category: "nightlife" as const,
+      visibility: "public" as const,
+    },
+    {
+      // Manhattan / New York: same day as "Taste of the City NYC: Ramen + Vinyl" (daysFromNowAt(1,...))
+      venueId: null,
+      organizerId: organizerIdBySlug.get("taste-of-the-city") ?? null,
+      createdByUserId: u2,
+      title: "Lower East Side Vinyl Market",
+      description:
+        "Vinyl sellers and a DJ set in the lot — runs earlier the same evening as the Ramen + Vinyl pop-up.",
+      imageUrl: null,
+      startAt: daysFromNowAt(1, 17, 0),
+      endAt: hoursAfter(daysFromNowAt(1, 17, 0), 2),
+      venueName: "LES Pop-Up Lot",
+      address: "220 E Houston St, New York, NY 10002",
+      city: "New York",
+      state: "NY",
+      category: "food" as const,
+      visibility: "public" as const,
+    },
   ];
 
   const createdEvents = await db

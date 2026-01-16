@@ -62,25 +62,26 @@ export default function ProfilePage() {
     },
   });
 
-  const uploadImageToClerkMutation = trpc.user.uploadProfileImageToClerk.useMutation({
-    onSuccess: (data) => {
-      console.log("Image uploaded to Clerk successfully:", data);
-      toast({
-        title: "Profile image updated",
-        description: "Your profile image has been updated successfully",
-      });
-      // Update local state and invalidate queries
-      setImageUrl(data.imageUrl);
-      utils.user.getCurrentUser.invalidate();
-    },
-    onError: (error) => {
-      toast({
-        title: "Upload failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+  const uploadImageToClerkMutation =
+    trpc.user.uploadProfileImageToClerk.useMutation({
+      onSuccess: (data) => {
+        console.log("Image uploaded to Clerk successfully:", data);
+        toast({
+          title: "Profile image updated",
+          description: "Your profile image has been updated successfully",
+        });
+        // Update local state and invalidate queries
+        setImageUrl(data.imageUrl);
+        utils.user.getCurrentUser.invalidate();
+      },
+      onError: (error) => {
+        toast({
+          title: "Upload failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      },
+    });
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -171,7 +172,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto py-8 max-w-2xl space-y-6">
+    <div className="container mx-auto max-w-2xl space-y-6 py-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Profile</h1>
         {/*<UserButton afterSignOutUrl="/sign-in" />*/}
@@ -193,42 +194,42 @@ export default function ProfilePage() {
             </Avatar>
             <div className="space-y-2">
               {/*{isEditing && (*/}
-                <>
-                  <div>
-                    <Label htmlFor="profile-image" className="cursor-pointer">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={uploadImageToClerkMutation.isPending}
-                        onClick={() => document.getElementById("profile-image")?.click()}
-                      >
-                        {uploadImageToClerkMutation.isPending ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Uploading...
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="h-4 w-4 mr-2" />
-                            Upload Profile Image
-                          </>
-                        )}
-                      </Button>
-                    </Label>
-                    <Input
-                      id="profile-image"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleImageChange}
+              <>
+                <div>
+                  <Label htmlFor="profile-image" className="cursor-pointer">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
                       disabled={uploadImageToClerkMutation.isPending}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Max 4MB. Image will be uploaded to Clerk.
-                  </p>
-                </>
+                      onClick={() =>
+                        document.getElementById("profile-image")?.click()
+                      }
+                    >
+                      {uploadImageToClerkMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="mr-2 h-4 w-4" />
+                          Upload Profile Image
+                        </>
+                      )}
+                    </Button>
+                  </Label>
+                  <Input
+                    id="profile-image"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageChange}
+                    disabled={uploadImageToClerkMutation.isPending}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">Max 4MB.</p>
+              </>
               {/*)}*/}
             </div>
           </div>
@@ -268,7 +269,8 @@ export default function ProfilePage() {
                 className="bg-muted"
               />
               <p className="text-xs text-muted-foreground">
-                Email cannot be changed here. Manage your email in account settings.
+                Email cannot be changed here. Manage your email in account
+                settings.
               </p>
             </div>
 
@@ -309,29 +311,30 @@ export default function ProfilePage() {
             {/*{!isEditing ? (*/}
             {/*  <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>*/}
             {/*) : (*/}
-              <>
-                <Button
-                  onClick={handleSave}
-                  disabled={updateProfileMutation.isPending ||
-                    (firstName === (user.firstName || "") &&
-                     lastName === (user.lastName || "") &&
-                     city === (user.city || "") &&
-                     state === (user.state || ""))
-                  }
-                >
-                  {updateProfileMutation.isPending && (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  )}
-                  Save Changes
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleCancel}
-                  disabled={updateProfileMutation.isPending}
-                >
-                  Cancel
-                </Button>
-              </>
+            <>
+              <Button
+                onClick={handleSave}
+                disabled={
+                  updateProfileMutation.isPending ||
+                  (firstName === (user.firstName || "") &&
+                    lastName === (user.lastName || "") &&
+                    city === (user.city || "") &&
+                    state === (user.state || ""))
+                }
+              >
+                {updateProfileMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Save Changes
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                disabled={updateProfileMutation.isPending}
+              >
+                Cancel
+              </Button>
+            </>
             {/*)}*/}
           </div>
         </CardContent>

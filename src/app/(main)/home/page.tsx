@@ -208,35 +208,38 @@ export default function HomePage() {
         </div>
 
         {/* Navigation Controls */}
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleToday}>
-            Today
-          </Button>
-          <div className="flex items-center rounded-md border">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={handlePrevious}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={handleNext}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+        {/*<div className="flex items-center gap-2">*/}
+        {/*  /!* hide today button if you're viewing a different week*!/*/}
+
+        {/*  <Button variant="outline" size="sm" onClick={handleToday}>*/}
+        {/*    Today*/}
+        {/*  </Button>*/}
+
+        {/*  <div className="flex items-center rounded-md border">*/}
+        {/*    <Button*/}
+        {/*      variant="ghost"*/}
+        {/*      size="icon"*/}
+        {/*      className="h-8 w-8"*/}
+        {/*      onClick={handlePrevious}*/}
+        {/*    >*/}
+        {/*      <ChevronLeft className="h-4 w-4" />*/}
+        {/*    </Button>*/}
+        {/*    <Button*/}
+        {/*      variant="ghost"*/}
+        {/*      size="icon"*/}
+        {/*      className="h-8 w-8"*/}
+        {/*      onClick={handleNext}*/}
+        {/*    >*/}
+        {/*      <ChevronRight className="h-4 w-4" />*/}
+        {/*    </Button>*/}
+        {/*  </div>*/}
+        {/*</div>*/}
       </div>
 
       {/* Search and Filters */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         {/* Search Input */}
-        <div className="relative flex-1">
+        <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search events..."
@@ -248,7 +251,7 @@ export default function HomePage() {
 
         {/* City Filter */}
         <Select value={selectedCity} onValueChange={setSelectedCity}>
-          <SelectTrigger className="w-full md:w-fit">
+          <SelectTrigger className="w-full shrink-0 md:w-fit">
             <SelectValue placeholder="Select city" />
           </SelectTrigger>
           <SelectContent>
@@ -260,26 +263,32 @@ export default function HomePage() {
             ))}
           </SelectContent>
         </Select>
-      </div>
 
-      {/* View Mode Toggle and Filter Tabs */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <EventFilterTabs
           value={activeFilter}
           onValueChange={setActiveFilter}
           className="flex-1"
         />
-
-        <Tabs
-          value={viewMode}
-          onValueChange={(value) => setViewMode(value as ViewMode)}
-        >
-          <TabsList>
-            <TabsTrigger value="week">Week</TabsTrigger>
-            <TabsTrigger value="month">Month</TabsTrigger>
-          </TabsList>
-        </Tabs>
       </div>
+
+      {/* View Mode Toggle and Filter Tabs */}
+      {/*<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">*/}
+      {/*  <EventFilterTabs*/}
+      {/*    value={activeFilter}*/}
+      {/*    onValueChange={setActiveFilter}*/}
+      {/*    className="flex-1"*/}
+      {/*  />*/}
+
+      {/*  <Tabs*/}
+      {/*    value={viewMode}*/}
+      {/*    onValueChange={(value) => setViewMode(value as ViewMode)}*/}
+      {/*  >*/}
+      {/*    <TabsList>*/}
+      {/*      <TabsTrigger value="week">Week</TabsTrigger>*/}
+      {/*      <TabsTrigger value="month">Month</TabsTrigger>*/}
+      {/*    </TabsList>*/}
+      {/*  </Tabs>*/}
+      {/*</div>*/}
 
       {/* Loading State */}
       {isLoading && (
@@ -291,7 +300,7 @@ export default function HomePage() {
       {/* Week View */}
       {!isLoading && viewMode === "week" && (
         <div className="space-y-8">
-          {daysToDisplay.map((date) => {
+          {daysToDisplay.map((date, index) => {
             const dateKey = format(date, "yyyy-MM-dd");
             const dayEvents = filteredEventsByDay[dateKey] || [];
             const isToday = isSameDay(date, new Date());
@@ -299,19 +308,51 @@ export default function HomePage() {
             return (
               <div key={dateKey}>
                 <div className="flex flex-col items-start">
-                  <div className="min-w-[100px]">
+                  <div className="mb-2 flex w-full min-w-[100px] flex-row items-center justify-between">
                     <div
                       className={cn(
-                        "mb-2 text-xl font-semibold",
+                        "text-xl font-semibold",
                         isToday && "text-primary"
                       )}
                     >
                       {format(date, "EEEE, MMMM d")}
                     </div>
+
+                    {index === 0 && (
+                      <div className="flex items-center gap-2">
+                        {/* hide today button if you're viewing a different week*/}
+                        {/*<Button*/}
+                        {/*  variant="outline"*/}
+                        {/*  size="sm"*/}
+                        {/*  onClick={handleToday}*/}
+                        {/*>*/}
+                        {/*  Today*/}
+                        {/*</Button>*/}
+
+                        <div className="flex items-center rounded-md border">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={handlePrevious}
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={handleNext}
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="w-full flex-1">
                     {dayEvents.length === 0 ? (
-                      <div className="flex min-h-[300px] items-center justify-center rounded-lg border border-dashed">
+                      <div className="flex min-h-[112px] items-center justify-center rounded-lg border border-dashed md:min-h-[300px]">
                         <p className="text-sm text-muted-foreground">
                           No events scheduled
                         </p>
@@ -319,7 +360,7 @@ export default function HomePage() {
                     ) : (
                       <EventCardGrid
                         events={dayEvents}
-                        columns={{ mobile: 2, desktop: 4 }}
+                        columns={{ mobile: 1, desktop: 4 }}
                         gap="md"
                       />
                     )}

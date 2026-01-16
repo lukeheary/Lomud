@@ -40,9 +40,10 @@ export default function EditEventPage() {
   const { toast } = useToast();
 
   // Fetch event data
-  const { data: event, isLoading: eventLoading } = trpc.event.getEventById.useQuery({
-    eventId,
-  });
+  const { data: event, isLoading: eventLoading } =
+    trpc.event.getEventById.useQuery({
+      eventId,
+    });
 
   // Check if user is admin
   const { data: adminCheck } = trpc.user.isAdmin.useQuery();
@@ -87,7 +88,9 @@ export default function EditEventPage() {
         imageUrl: event.imageUrl || "",
         category: event.category as (typeof EVENT_CATEGORIES)[number],
         startAt: format(new Date(event.startAt), "yyyy-MM-dd'T'HH:mm"),
-        endAt: event.endAt ? format(new Date(event.endAt), "yyyy-MM-dd'T'HH:mm") : "",
+        endAt: event.endAt
+          ? format(new Date(event.endAt), "yyyy-MM-dd'T'HH:mm")
+          : "",
         venueName: event.venueName || "",
         address: event.address || "",
         city: event.city || "",
@@ -153,23 +156,20 @@ export default function EditEventPage() {
   if (!event) {
     return (
       <div className="container mx-auto py-12 text-center">
-        <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-        <h2 className="text-2xl font-bold mb-2">Event not found</h2>
-        <p className="text-muted-foreground mb-4">
+        <Calendar className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+        <h2 className="mb-2 text-2xl font-bold">Event not found</h2>
+        <p className="mb-4 text-muted-foreground">
           The event you&apos;re looking for doesn&apos;t exist
         </p>
-        <Link href="/calendar">
-          <Button>Back to Calendar</Button>
-        </Link>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 max-w-2xl">
+    <div className="container mx-auto max-w-2xl py-8">
       <Link
         href={`/event/${eventId}`}
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-4"
+        className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Event
@@ -193,7 +193,7 @@ export default function EditEventPage() {
             <div className="space-y-2">
               <Label htmlFor="image">Event Image</Label>
               {formData.imageUrl ? (
-                <div className="relative w-full h-48 rounded-lg overflow-hidden">
+                <div className="relative h-48 w-full overflow-hidden rounded-lg">
                   <Image
                     src={formData.imageUrl}
                     alt="Event image"
@@ -204,15 +204,15 @@ export default function EditEventPage() {
                     type="button"
                     variant="destructive"
                     size="icon"
-                    className="absolute top-2 right-2"
+                    className="absolute right-2 top-2"
                     onClick={() => setFormData({ ...formData, imageUrl: "" })}
                   >
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
               ) : (
-                <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                  <ImageIcon className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
+                <div className="rounded-lg border-2 border-dashed p-6 text-center">
+                  <ImageIcon className="mx-auto mb-2 h-12 w-12 text-muted-foreground" />
                   <UploadButton
                     endpoint="eventImage"
                     onClientUploadComplete={(res) => {
@@ -232,7 +232,7 @@ export default function EditEventPage() {
                       });
                     }}
                   />
-                  <p className="text-xs text-muted-foreground mt-2">
+                  <p className="mt-2 text-xs text-muted-foreground">
                     Upload an image for your event
                   </p>
                 </div>
@@ -399,7 +399,7 @@ export default function EditEventPage() {
                 className="flex-1"
               >
                 {updateMutation.isPending && (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 Update Event
               </Button>

@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 type RsvpStatus = "going" | "interested" | "not_going";
 
@@ -110,16 +111,51 @@ export default function EventPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Mobile Image - Full Width at Top */}
+      <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted lg:hidden">
+        {event.imageUrl ? (
+          <Image
+            src={event.imageUrl}
+            alt={event.title}
+            fill
+            className="object-cover"
+            priority
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
+            <Calendar className="h-24 w-24 text-muted-foreground/40" />
+          </div>
+        )}
+
+        {/* Action Icons - Bottom Right on Mobile */}
+        <div className="absolute bottom-4 right-4 flex gap-2">
+          {canEdit && (
+            <Link href={`/event/${eventId}/edit`}>
+              <Button size="icon" variant="secondary" className="h-10 w-10">
+                <Edit className="h-4 w-4" />
+              </Button>
+            </Link>
+          )}
+          <Button size="icon" variant="secondary" className="h-10 w-10">
+            <Heart className="h-4 w-4" />
+          </Button>
+          <Button size="icon" variant="secondary" className="h-10 w-10">
+            <Share2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
       {/* Content */}
       <div className="container mx-auto px-4 py-8">
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Left Column - Main Content */}
-          <div className="space-y-6 lg:col-span-2">
+          <div className="lg:col-span-2">
             {/* Title & Basic Info */}
             <div>
               <div className="mb-2 flex items-start justify-between">
                 <h1 className="text-4xl font-bold">{event.title}</h1>
-                <div className="flex gap-2">
+                {/* Desktop Action Icons */}
+                <div className="hidden gap-2 lg:flex">
                   {canEdit && (
                     <Link href={`/event/${eventId}/edit`}>
                       <Button size="icon" variant="outline">
@@ -181,10 +217,38 @@ export default function EventPage() {
               {/*)}*/}
             </div>
 
+            {/* Mobile RSVP Buttons */}
+            <div className="flex gap-2 py-4 lg:hidden">
+              <Button
+                variant={
+                  event.userRsvp?.status === "interested"
+                    ? "secondary"
+                    : "outline"
+                }
+                className="flex-1 text-base font-medium"
+                size="lg"
+                onClick={() => handleRsvp("interested")}
+                disabled={rsvpMutation.isPending}
+              >
+                Interested
+              </Button>
+              <Button
+                variant={"outline"}
+                className={cn("flex-1 text-base font-medium", {
+                  "bg-green-500 text-black": event.userRsvp?.status === "going",
+                })}
+                size="lg"
+                onClick={() => handleRsvp("going")}
+                disabled={rsvpMutation.isPending}
+              >
+                {event.userRsvp?.status === "going" ? "Going" : "I'm Going"}
+              </Button>
+            </div>
+
             <Separator />
 
             {/* About Section */}
-            <div>
+            <div className={"pt-4"}>
               <h2 className="mb-4 text-2xl font-bold">About</h2>
 
               {/* Event Date */}
@@ -235,7 +299,7 @@ export default function EventPage() {
 
             {/* Lineup / Attendees Section */}
             {attendees && attendees.length > 0 && (
-              <div>
+              <div className={"pt-4"}>
                 <h2 className="mb-4 text-2xl font-bold">Who&apos;s Going</h2>
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
                   {attendees
@@ -272,8 +336,8 @@ export default function EventPage() {
             )}
           </div>
 
-          {/* Sidebar - Sticky Card with Image and RSVP */}
-          <div className="lg:col-span-1">
+          {/* Sidebar - Sticky Card with Image and RSVP (Desktop Only) */}
+          <div className="hidden lg:col-span-1 lg:block">
             <div className="sticky top-4">
               <Card className="overflow-hidden">
                 {/* Event Image - Square on Top */}
