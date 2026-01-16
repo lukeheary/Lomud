@@ -14,6 +14,7 @@ import {
   venueFollows,
   organizerFollows,
 } from "./schema";
+import { inArray, sql } from "drizzle-orm";
 
 neonConfig.webSocketConstructor = ws;
 
@@ -26,6 +27,24 @@ async function main() {
   const db = drizzle(pool, { schema });
 
   console.log("🌱 Seeding database...");
+
+  // ---------------------------------------------------------------------------
+  // CLEAR (venues, organizers, events) + their dependent join rows
+  // ---------------------------------------------------------------------------
+  console.log("🧹 Clearing existing venue/organizer/event data...");
+
+  // Delete dependents first to avoid FK violations
+  await db.delete(venueMembers);
+  await db.delete(venueFollows);
+  await db.delete(organizerMembers);
+  await db.delete(organizerFollows);
+
+  // Then core tables
+  await db.delete(events);
+  await db.delete(venues);
+  await db.delete(organizers);
+
+  console.log("✓ Cleared venues, organizers, events (and related join tables)");
 
   // ---------------------------------------------------------------------------
   // USERS (demo records; in prod you'd create via Clerk webhook)
@@ -88,29 +107,17 @@ async function main() {
   console.log(`✓ Seeded users (returned: ${insertedUsers.length})`);
 
   // ---------------------------------------------------------------------------
-  // VENUES
+  // VENUES (clubs/bars)
   // ---------------------------------------------------------------------------
   console.log("Creating venues...");
 
   const venueData = [
     // Boston
     {
-      slug: "boston-house-of-blues",
-      name: "House of Blues Boston",
-      description:
-        "Iconic live music venue at Lansdowne Street with touring acts and late-night shows.",
-      imageUrl: null,
-      address: "15 Lansdowne St, Boston, MA 02215",
-      city: "Boston",
-      state: "MA",
-      website: "https://www.houseofblues.com/boston",
-      instagram: "houseofbluesboston",
-    },
-    {
       slug: "royale-boston",
       name: "Royale Boston",
       description:
-        "Downtown nightclub and concert venue hosting DJs, dance nights, and special events.",
+        "Downtown nightclub with touring DJs, themed parties, and big-room energy.",
       imageUrl: null,
       address: "279 Tremont St, Boston, MA 02116",
       city: "Boston",
@@ -119,36 +126,48 @@ async function main() {
       instagram: "royaleboston",
     },
     {
-      slug: "the-sinclair",
-      name: "The Sinclair",
+      slug: "bijou-boston",
+      name: "Bijou Boston",
       description:
-        "Intimate live music venue in Harvard Square featuring indie and electronic acts.",
+        "Basement club lounge known for house nights, bottle service, and late sets.",
       imageUrl: null,
-      address: "52 Church St, Cambridge, MA 02138",
+      address: "51 Stuart St, Boston, MA 02116",
+      city: "Boston",
+      state: "MA",
+      website: null,
+      instagram: null,
+    },
+    {
+      slug: "the-grand-boston",
+      name: "The Grand Boston",
+      description:
+        "Seaport mega-club with high production, big bookings, and a polished vibe.",
+      imageUrl: null,
+      address: "58 Seaport Blvd, Boston, MA 02210",
+      city: "Boston",
+      state: "MA",
+      website: null,
+      instagram: null,
+    },
+    {
+      slug: "middlesex-lounge-cambridge",
+      name: "The Middlesex Lounge",
+      description:
+        "Cambridge spot with dance nights, DJ lineups, and a cozy late-night floor.",
+      imageUrl: null,
+      address: "14 Massachusetts Ave, Cambridge, MA 02139",
       city: "Cambridge",
       state: "MA",
-      website: "https://www.sinclaircambridge.com",
-      instagram: "sinclaircambridge",
+      website: null,
+      instagram: null,
     },
 
     // NYC
     {
-      slug: "brooklyn-steel",
-      name: "Brooklyn Steel",
-      description:
-        "Large-scale industrial venue in Williamsburg with top-tier production and major acts.",
-      imageUrl: null,
-      address: "319 Frost St, Brooklyn, NY 11222",
-      city: "Brooklyn",
-      state: "NY",
-      website: "https://www.bowerypresents.com",
-      instagram: "brooklynsteel",
-    },
-    {
       slug: "elsewhere-brooklyn",
       name: "Elsewhere",
       description:
-        "Multi-room club in Brooklyn known for electronic music, rooftop parties, and community vibes.",
+        "Multi-room Brooklyn club with electronic nights, rooftop parties, and community vibes.",
       imageUrl: null,
       address: "599 Johnson Ave, Brooklyn, NY 11237",
       city: "Brooklyn",
@@ -157,29 +176,68 @@ async function main() {
       instagram: "elsewherenyc",
     },
     {
-      slug: "terminal-5",
-      name: "Terminal 5",
+      slug: "brooklyn-steel",
+      name: "Brooklyn Steel",
       description:
-        "Large Manhattan venue for concerts and special events with multiple viewing levels.",
+        "Large industrial venue that regularly hosts club-style electronic bookings and DJ nights.",
       imageUrl: null,
-      address: "610 W 56th St, New York, NY 10019",
-      city: "New York",
+      address: "319 Frost St, Brooklyn, NY 11222",
+      city: "Brooklyn",
       state: "NY",
-      website: "https://www.terminal5nyc.com",
-      instagram: "terminal5nyc",
+      website: "https://www.bowerypresents.com",
+      instagram: "brooklynsteel",
+    },
+    {
+      slug: "good-room-brooklyn",
+      name: "Good Room",
+      description:
+        "Beloved Brooklyn club with deep house, disco, and all-night dance floor energy.",
+      imageUrl: null,
+      address: "98 Meserole Ave, Brooklyn, NY 11222",
+      city: "Brooklyn",
+      state: "NY",
+      website: null,
+      instagram: null,
+    },
+    {
+      slug: "public-records-brooklyn",
+      name: "Public Records",
+      description:
+        "Sound-system-forward spot with a dancefloor, bar, and eclectic electronic bookings.",
+      imageUrl: null,
+      address: "233 Butler St, Brooklyn, NY 11217",
+      city: "Brooklyn",
+      state: "NY",
+      website: null,
+      instagram: null,
     },
   ];
 
-  const createdVenues = await db
-    .insert(venues)
-    .values(venueData)
-    .onConflictDoNothing()
-    .returning();
+  await db.insert(venues).values(venueData).onConflictDoNothing();
 
-  console.log(`✓ Created ${createdVenues.length} venues`);
+  // Always re-fetch by slug so we can safely reference IDs even after conflicts
+  const venueRows = await db
+    .select({ id: venues.id, slug: venues.slug })
+    .from(venues)
+    .where(
+      inArray(
+        venues.slug,
+        venueData.map((v) => v.slug)
+      )
+    );
 
-  // Helper: find venue IDs by slug from returned rows
-  const venueIdBySlug = new Map(createdVenues.map((v) => [v.slug, v.id]));
+  const venueIdBySlug = new Map(venueRows.map((v) => [v.slug, v.id]));
+
+  const missingVenueSlugs = venueData
+    .map((v) => v.slug)
+    .filter((s) => !venueIdBySlug.get(s));
+  if (missingVenueSlugs.length > 0) {
+    throw new Error(
+      `Missing venue IDs for slugs: ${missingVenueSlugs.join(", ")}`
+    );
+  }
+
+  console.log(`✓ Ensured ${venueRows.length} venues exist`);
 
   // ---------------------------------------------------------------------------
   // ORGANIZERS
@@ -200,42 +258,46 @@ async function main() {
       slug: "neon-nights-collective",
       name: "Neon Nights Collective",
       description:
-        "Electronic events, DJ showcases, and themed club nights across Boston and NYC.",
+        "Electronic parties, DJ showcases, and themed club nights across Boston and NYC.",
       imageUrl: null,
       website: "https://neonnights.example.com",
       instagram: "neonnightscollective",
     },
     {
-      slug: "taste-of-the-city",
-      name: "Taste of the City",
+      slug: "afterhours-society",
+      name: "AfterHours Society",
       description:
-        "Food + culture pop-ups with tastings, chef collabs, and community hangouts.",
+        "Late-night DJ-driven events focused on underground house and techno.",
       imageUrl: null,
-      website: "https://tasteofthecity.example.com",
-      instagram: "tasteofthecity",
+      website: "https://afterhours.example.com",
+      instagram: "afterhourssociety",
     },
     {
-      slug: "run-club-social",
-      name: "Run Club Social",
+      slug: "rooftop-rituals",
+      name: "Rooftop Rituals",
       description:
-        "Weekly social runs + post-run meetups (coffee, bars, and seasonal specials).",
+        "Seasonal rooftop parties with groove-forward lineups and sunset sets.",
       imageUrl: null,
-      website: "https://runclubsocial.example.com",
-      instagram: "runclubsocial",
+      website: "https://rooftoprituals.example.com",
+      instagram: "rooftoprituals",
     },
   ];
 
-  const createdOrganizers = await db
-    .insert(organizers)
-    .values(organizerData)
-    .onConflictDoNothing()
-    .returning();
+  await db.insert(organizers).values(organizerData).onConflictDoNothing();
 
-  console.log(`✓ Created ${createdOrganizers.length} organizers`);
+  const organizerRows = await db
+    .select({ id: organizers.id, slug: organizers.slug })
+    .from(organizers)
+    .where(
+      inArray(
+        organizers.slug,
+        organizerData.map((o) => o.slug)
+      )
+    );
 
-  const organizerIdBySlug = new Map(
-    createdOrganizers.map((o) => [o.slug, o.id])
-  );
+  const organizerIdBySlug = new Map(organizerRows.map((o) => [o.slug, o.id]));
+
+  console.log(`✓ Ensured ${organizerRows.length} organizers exist`);
 
   // ---------------------------------------------------------------------------
   // MEMBERSHIPS (optional, but useful for demo data)
@@ -247,90 +309,61 @@ async function main() {
   const u3 = demoUserIds[2] ?? "user_demo_3";
   const u4 = demoUserIds[3] ?? "user_demo_4";
 
-  const membershipVenueRows = [
-    // Alice helps run a Boston venue
-    {
-      userId: u1,
-      venueId: venueIdBySlug.get("boston-house-of-blues")!,
-    },
-    // Charlie helps run Royale
-    {
-      userId: u3,
-      venueId: venueIdBySlug.get("royale-boston")!,
-    },
-    // Bob helps run Elsewhere
-    {
-      userId: u2,
-      venueId: venueIdBySlug.get("elsewhere-brooklyn")!,
-    },
-    // Dana helps run Brooklyn Steel
-    {
-      userId: u4,
-      venueId: venueIdBySlug.get("brooklyn-steel")!,
-    },
-  ].filter((r) => Boolean(r.venueId));
+  await db
+    .insert(venueMembers)
+    .values([
+      { userId: u1, venueId: venueIdBySlug.get("royale-boston")! },
+      { userId: u3, venueId: venueIdBySlug.get("bijou-boston")! },
+      { userId: u2, venueId: venueIdBySlug.get("elsewhere-brooklyn")! },
+      { userId: u4, venueId: venueIdBySlug.get("good-room-brooklyn")! },
+    ])
+    .onConflictDoNothing();
 
-  if (membershipVenueRows.length > 0) {
-    await db
-      .insert(venueMembers)
-      .values(membershipVenueRows)
-      .onConflictDoNothing();
-  }
-
-  const membershipOrganizerRows = [
-    {
-      userId: u1,
-      organizerId: organizerIdBySlug.get("neon-nights-collective")!,
-    },
-    { userId: u2, organizerId: organizerIdBySlug.get("midnight-moves")! },
-    { userId: u3, organizerId: organizerIdBySlug.get("taste-of-the-city")! },
-    { userId: u4, organizerId: organizerIdBySlug.get("run-club-social")! },
-  ].filter((r) => Boolean(r.organizerId));
-
-  if (membershipOrganizerRows.length > 0) {
-    await db
-      .insert(organizerMembers)
-      .values(membershipOrganizerRows)
-      .onConflictDoNothing();
-  }
+  await db
+    .insert(organizerMembers)
+    .values([
+      {
+        userId: u1,
+        organizerId: organizerIdBySlug.get("neon-nights-collective")!,
+      },
+      { userId: u2, organizerId: organizerIdBySlug.get("midnight-moves")! },
+      { userId: u3, organizerId: organizerIdBySlug.get("afterhours-society")! },
+      { userId: u4, organizerId: organizerIdBySlug.get("rooftop-rituals")! },
+    ])
+    .onConflictDoNothing();
 
   // Optional: some follows
   await db
     .insert(venueFollows)
-    .values(
-      [
-        { userId: u1, venueId: venueIdBySlug.get("elsewhere-brooklyn")! },
-        { userId: u2, venueId: venueIdBySlug.get("royale-boston")! },
-        { userId: u3, venueId: venueIdBySlug.get("terminal-5")! },
-        { userId: u4, venueId: venueIdBySlug.get("the-sinclair")! },
-      ].filter((r) => Boolean(r.venueId))
-    )
+    .values([
+      { userId: u1, venueId: venueIdBySlug.get("elsewhere-brooklyn")! },
+      { userId: u2, venueId: venueIdBySlug.get("royale-boston")! },
+      { userId: u3, venueId: venueIdBySlug.get("public-records-brooklyn")! },
+      { userId: u4, venueId: venueIdBySlug.get("the-grand-boston")! },
+    ])
     .onConflictDoNothing();
 
   await db
     .insert(organizerFollows)
-    .values(
-      [
-        { userId: u1, organizerId: organizerIdBySlug.get("midnight-moves")! },
-        {
-          userId: u2,
-          organizerId: organizerIdBySlug.get("taste-of-the-city")!,
-        },
-        { userId: u3, organizerId: organizerIdBySlug.get("run-club-social")! },
-      ].filter((r) => Boolean(r.organizerId))
-    )
+    .values([
+      { userId: u1, organizerId: organizerIdBySlug.get("midnight-moves")! },
+      { userId: u2, organizerId: organizerIdBySlug.get("afterhours-society")! },
+      {
+        userId: u3,
+        organizerId: organizerIdBySlug.get("neon-nights-collective")!,
+      },
+    ])
     .onConflictDoNothing();
 
   console.log("✓ Created memberships & follows");
 
   // ---------------------------------------------------------------------------
-  // EVENTS (Boston + NYC)
+  // EVENTS (clubs/bars only) — venueId is NEVER null
   // ---------------------------------------------------------------------------
   console.log("Creating events...");
 
   const now = new Date();
 
-  // helper to build start/end
   const daysFromNowAt = (days: number, hour: number, minute = 0) => {
     const d = new Date(now);
     d.setDate(d.getDate() + days);
@@ -343,36 +376,19 @@ async function main() {
 
   const eventData = [
     // -------------------
-    // Boston / Cambridge
+    // Boston
     // -------------------
     {
-      venueId: venueIdBySlug.get("boston-house-of-blues") ?? null,
+      venueId: venueIdBySlug.get("royale-boston")!,
       organizerId: organizerIdBySlug.get("neon-nights-collective") ?? null,
       createdByUserId: u1,
-      title: "Neon Nights: House & Disco Showcase",
+      title: "Neon Nights: Royale Takeover",
       description:
-        "A late-night blend of house, disco edits, and upbeat grooves. Dress bright, dance harder.",
+        "House + disco all night in the main room. Bright fits encouraged; phone-light moments discouraged.",
       imageUrl: null,
-      startAt: daysFromNowAt(1, 21, 0),
-      endAt: hoursAfter(daysFromNowAt(1, 21, 0), 4),
-      venueName: "House of Blues Boston",
-      address: "15 Lansdowne St, Boston, MA 02215",
-      city: "Boston",
-      state: "MA",
-      category: "nightlife" as const,
-      visibility: "public" as const,
-    },
-    {
-      venueId: venueIdBySlug.get("royale-boston") ?? null,
-      organizerId: organizerIdBySlug.get("midnight-moves") ?? null,
-      createdByUserId: u3,
-      title: "Midnight Moves: Classic Club Night",
-      description:
-        "A proper club night: house classics, peak-time energy, and zero phones on the dancefloor vibes.",
-      imageUrl: null,
-      startAt: daysFromNowAt(3, 22, 30),
-      endAt: hoursAfter(daysFromNowAt(3, 22, 30), 4.5),
-      venueName: "Royale",
+      startAt: daysFromNowAt(1, 22, 0),
+      endAt: hoursAfter(daysFromNowAt(1, 22, 0), 4.5),
+      venueName: "Royale Boston",
       address: "279 Tremont St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
@@ -380,71 +396,107 @@ async function main() {
       visibility: "public" as const,
     },
     {
-      venueId: venueIdBySlug.get("the-sinclair") ?? null,
-      organizerId: null,
-      createdByUserId: u1,
-      title: "Indie Electronic Live Set + Afterparty",
+      venueId: venueIdBySlug.get("bijou-boston")!,
+      organizerId: organizerIdBySlug.get("afterhours-society") ?? null,
+      createdByUserId: u3,
+      title: "AfterHours: Basement House Session",
       description:
-        "Live electronic performance followed by a short DJ afterparty. Intimate room, big sound.",
+        "Low ceilings, deep grooves. Underground house selectors from open to close.",
       imageUrl: null,
-      startAt: daysFromNowAt(5, 20, 0),
-      endAt: hoursAfter(daysFromNowAt(5, 20, 0), 3),
-      venueName: "The Sinclair",
-      address: "52 Church St, Cambridge, MA 02138",
+      startAt: daysFromNowAt(2, 23, 0),
+      endAt: hoursAfter(daysFromNowAt(2, 23, 0), 5),
+      venueName: "Bijou Boston",
+      address: "51 Stuart St, Boston, MA 02116",
+      city: "Boston",
+      state: "MA",
+      category: "nightlife" as const,
+      visibility: "public" as const,
+    },
+    {
+      venueId: venueIdBySlug.get("the-grand-boston")!,
+      organizerId: organizerIdBySlug.get("midnight-moves") ?? null,
+      createdByUserId: u1,
+      title: "Midnight Moves: Seaport Saturday",
+      description:
+        "Peak-time club set with classic house, modern edits, and a big-room finish.",
+      imageUrl: null,
+      startAt: daysFromNowAt(4, 22, 30),
+      endAt: hoursAfter(daysFromNowAt(4, 22, 30), 4),
+      venueName: "The Grand Boston",
+      address: "58 Seaport Blvd, Boston, MA 02210",
+      city: "Boston",
+      state: "MA",
+      category: "nightlife" as const,
+      visibility: "public" as const,
+    },
+    {
+      venueId: venueIdBySlug.get("middlesex-lounge-cambridge")!,
+      organizerId: organizerIdBySlug.get("midnight-moves") ?? null,
+      createdByUserId: u3,
+      title: "Middlesex: Disco Warmup + Late House",
+      description:
+        "Disco warmup into late house heaters. Smaller room, louder singalongs.",
+      imageUrl: null,
+      startAt: daysFromNowAt(6, 21, 0),
+      endAt: hoursAfter(daysFromNowAt(6, 21, 0), 4),
+      venueName: "The Middlesex Lounge",
+      address: "14 Massachusetts Ave, Cambridge, MA 02139",
       city: "Cambridge",
       state: "MA",
-      category: "music" as const,
+      category: "nightlife" as const,
       visibility: "public" as const,
     },
+
+    // Boston overlaps / test density
     {
-      venueId: null,
-      organizerId: organizerIdBySlug.get("run-club-social") ?? null,
+      venueId: venueIdBySlug.get("royale-boston")!,
+      organizerId: organizerIdBySlug.get("afterhours-society") ?? null,
       createdByUserId: u3,
-      title: "Run Club Social: Esplanade Loop (5K)",
+      title: "Royale Side Room: Tech House Hour",
       description:
-        "Easy 5K along the Charles with a post-run coffee hang. All paces welcome.",
+        "Early side-room warmup: rolling tech house and quick transitions before the main takeover.",
       imageUrl: null,
-      startAt: daysFromNowAt(2, 9, 0),
-      endAt: hoursAfter(daysFromNowAt(2, 9, 0), 1.5),
-      venueName: "Charles River Esplanade",
-      address: "Storrow Dr, Boston, MA",
+      startAt: daysFromNowAt(1, 20, 30),
+      endAt: hoursAfter(daysFromNowAt(1, 20, 30), 2),
+      venueName: "Royale Boston (Side Room)",
+      address: "279 Tremont St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
-      category: "sports" as const,
+      category: "nightlife" as const,
       visibility: "public" as const,
     },
     {
-      venueId: null,
-      organizerId: organizerIdBySlug.get("taste-of-the-city") ?? null,
+      venueId: venueIdBySlug.get("bijou-boston")!,
+      organizerId: null,
       createdByUserId: u1,
-      title: "Taste of the City: Dumpling Pop-Up",
+      title: "Guest List Thursdays: Local Selectors",
       description:
-        "A casual dumpling + small bites pop-up featuring rotating fillings and sauces. Come hungry.",
+        "Local DJ rotation with drink specials. Casual, packed, and unapologetically fun.",
       imageUrl: null,
-      startAt: daysFromNowAt(6, 18, 0),
-      endAt: hoursAfter(daysFromNowAt(6, 18, 0), 2.5),
-      venueName: "Downtown Food Hall (Pop-Up)",
-      address: "100 Summer St, Boston, MA 02110",
+      startAt: daysFromNowAt(3, 22, 0),
+      endAt: hoursAfter(daysFromNowAt(3, 22, 0), 3.5),
+      venueName: "Bijou Boston",
+      address: "51 Stuart St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
-      category: "food" as const,
+      category: "nightlife" as const,
       visibility: "public" as const,
     },
 
     // ----------
-    // NYC
+    // NYC / Brooklyn
     // ----------
     {
-      venueId: venueIdBySlug.get("elsewhere-brooklyn") ?? null,
-      organizerId: organizerIdBySlug.get("neon-nights-collective") ?? null,
+      venueId: venueIdBySlug.get("elsewhere-brooklyn")!,
+      organizerId: organizerIdBySlug.get("rooftop-rituals") ?? null,
       createdByUserId: u2,
-      title: "Neon Nights NYC: Rooftop Grooves",
+      title: "Rooftop Rituals: Sunset Grooves",
       description:
-        "Rooftop party with melodic house and feel-good edits. Limited capacity.",
+        "Rooftop sets from golden hour into nightfall. Melodic house, disco edits, and good energy.",
       imageUrl: null,
-      startAt: daysFromNowAt(2, 19, 30),
-      endAt: hoursAfter(daysFromNowAt(2, 19, 30), 4),
-      venueName: "Elsewhere Rooftop",
+      startAt: daysFromNowAt(1, 17, 30),
+      endAt: hoursAfter(daysFromNowAt(1, 17, 30), 4),
+      venueName: "Elsewhere (Rooftop)",
       address: "599 Johnson Ave, Brooklyn, NY 11237",
       city: "Brooklyn",
       state: "NY",
@@ -452,141 +504,69 @@ async function main() {
       visibility: "public" as const,
     },
     {
-      venueId: venueIdBySlug.get("brooklyn-steel") ?? null,
+      venueId: venueIdBySlug.get("good-room-brooklyn")!,
+      organizerId: organizerIdBySlug.get("afterhours-society") ?? null,
+      createdByUserId: u4,
+      title: "Good Room: All-Night House Marathon",
+      description:
+        "One room, no breaks. Deep-to-peak house progression with late-night surprises.",
+      imageUrl: null,
+      startAt: daysFromNowAt(2, 23, 30),
+      endAt: hoursAfter(daysFromNowAt(2, 23, 30), 6),
+      venueName: "Good Room",
+      address: "98 Meserole Ave, Brooklyn, NY 11222",
+      city: "Brooklyn",
+      state: "NY",
+      category: "nightlife" as const,
+      visibility: "public" as const,
+    },
+    {
+      venueId: venueIdBySlug.get("public-records-brooklyn")!,
+      organizerId: organizerIdBySlug.get("neon-nights-collective") ?? null,
+      createdByUserId: u2,
+      title: "Public Records: Sound System Fridays",
+      description:
+        "Sound-system-forward night with leftfield house, breaks, and hypnotic grooves.",
+      imageUrl: null,
+      startAt: daysFromNowAt(4, 22, 0),
+      endAt: hoursAfter(daysFromNowAt(4, 22, 0), 5),
+      venueName: "Public Records",
+      address: "233 Butler St, Brooklyn, NY 11217",
+      city: "Brooklyn",
+      state: "NY",
+      category: "nightlife" as const,
+      visibility: "public" as const,
+    },
+    {
+      venueId: venueIdBySlug.get("brooklyn-steel")!,
       organizerId: organizerIdBySlug.get("midnight-moves") ?? null,
       createdByUserId: u4,
-      title: "Midnight Moves Presents: Warehouse House",
+      title: "Brooklyn Steel: Club Night (Main Floor)",
       description:
-        "Big-room house energy with a stacked lineup of selectors. Expect strong openers.",
+        "Club-forward night on a big system—high BPM second half, hands-up moments, strong openers.",
       imageUrl: null,
-      startAt: daysFromNowAt(4, 21, 0),
-      endAt: hoursAfter(daysFromNowAt(4, 21, 0), 5),
+      startAt: daysFromNowAt(6, 21, 0),
+      endAt: hoursAfter(daysFromNowAt(6, 21, 0), 5),
       venueName: "Brooklyn Steel",
       address: "319 Frost St, Brooklyn, NY 11222",
       city: "Brooklyn",
       state: "NY",
-      category: "music" as const,
-      visibility: "public" as const,
-    },
-    {
-      venueId: venueIdBySlug.get("terminal-5") ?? null,
-      organizerId: null,
-      createdByUserId: u2,
-      title: "Dance-Pop Arena Night",
-      description:
-        "A high-energy dance-pop show with full production and a late closing set.",
-      imageUrl: null,
-      startAt: daysFromNowAt(7, 20, 0),
-      endAt: hoursAfter(daysFromNowAt(7, 20, 0), 3.5),
-      venueName: "Terminal 5",
-      address: "610 W 56th St, New York, NY 10019",
-      city: "New York",
-      state: "NY",
-      category: "music" as const,
-      visibility: "public" as const,
-    },
-    {
-      venueId: null,
-      organizerId: organizerIdBySlug.get("run-club-social") ?? null,
-      createdByUserId: u4,
-      title: "Run Club Social: Williamsburg Bridge Sunset Jog",
-      description:
-        "Short run with skyline views, followed by a chill hang. Bring layers.",
-      imageUrl: null,
-      startAt: daysFromNowAt(3, 17, 0),
-      endAt: hoursAfter(daysFromNowAt(3, 17, 0), 1.25),
-      venueName: "Williamsburg Bridge (Meet-up)",
-      address: "Williamsburg Bridge, Brooklyn, NY",
-      city: "Brooklyn",
-      state: "NY",
-      category: "sports" as const,
-      visibility: "public" as const,
-    },
-    {
-      venueId: null,
-      organizerId: organizerIdBySlug.get("taste-of-the-city") ?? null,
-      createdByUserId: u2,
-      title: "Taste of the City NYC: Ramen + Vinyl",
-      description:
-        "Ramen pop-up with a vinyl-only DJ set. Cozy, casual, and delicious.",
-      imageUrl: null,
-      startAt: daysFromNowAt(1, 18, 30),
-      endAt: hoursAfter(daysFromNowAt(1, 18, 30), 2.5),
-      venueName: "Lower East Side Pop-Up Space",
-      address: "220 E Houston St, New York, NY 10002",
-      city: "New York",
-      state: "NY",
-      category: "food" as const,
-      visibility: "public" as const,
-    },
-    {
-      venueId: venueIdBySlug.get("elsewhere-brooklyn") ?? null,
-      organizerId: organizerIdBySlug.get("midnight-moves") ?? null,
-      createdByUserId: u2,
-      title: "All-Night DJ Relay",
-      description:
-        "Four DJs, one room, no breaks. Rotating styles from deep to peak-time.",
-      imageUrl: null,
-      startAt: daysFromNowAt(6, 23, 0),
-      endAt: hoursAfter(daysFromNowAt(6, 23, 0), 5),
-      venueName: "Elsewhere - Main Room",
-      address: "599 Johnson Ave, Brooklyn, NY 11237",
-      city: "Brooklyn",
-      state: "NY",
       category: "nightlife" as const,
       visibility: "public" as const,
     },
 
-    // New test events: same-city, same-day overlaps
+    // NYC test density / overlaps
     {
-      // Boston: same day as "Neon Nights: House & Disco Showcase" (daysFromNowAt(1,...))
-      venueId: venueIdBySlug.get("boston-house-of-blues") ?? null,
-      organizerId: organizerIdBySlug.get("midnight-moves") ?? null,
-      createdByUserId: u3,
-      title: "Boston Pre-Party: Local DJ Warmup",
-      description:
-        "Early warmup with local DJs before the main Neon Nights event — come early for drinks and tunes.",
-      imageUrl: null,
-      startAt: daysFromNowAt(1, 19, 0),
-      endAt: hoursAfter(daysFromNowAt(1, 19, 0), 2),
-      venueName: "House of Blues Boston - Bar Room",
-      address: "15 Lansdowne St, Boston, MA 02215",
-      city: "Boston",
-      state: "MA",
-      category: "nightlife" as const,
-      visibility: "public" as const,
-    },
-    {
-      // Boston: same day as Run Club (daysFromNowAt(2,...))
-      venueId: null,
-      organizerId: organizerIdBySlug.get("taste-of-the-city") ?? null,
-      createdByUserId: u1,
-      title: "Post-Run Coffee & Stretch",
-      description:
-        "Light cooldown and coffee meetup after the Run Club Social 5K — informal and free.",
-      imageUrl: null,
-      startAt: daysFromNowAt(2, 10, 30),
-      endAt: hoursAfter(daysFromNowAt(2, 10, 30), 0.75),
-      venueName: "Esplanade Lawn",
-      address: "Storrow Dr, Boston, MA",
-      city: "Boston",
-      state: "MA",
-      category: "sports" as const,
-      visibility: "public" as const,
-    },
-
-    // NYC / Brooklyn: same day as Elsewhere Rooftop Neon Nights (daysFromNowAt(2,...))
-    {
-      venueId: venueIdBySlug.get("elsewhere-brooklyn") ?? null,
+      venueId: venueIdBySlug.get("elsewhere-brooklyn")!,
       organizerId: organizerIdBySlug.get("neon-nights-collective") ?? null,
       createdByUserId: u2,
-      title: "Brooklyn Warmup: Sunset Vinyl Sets",
+      title: "Elsewhere Warmup: Vinyl-Only Hour",
       description:
-        "Sunset vinyl warmup on the rooftop ahead of the main Neon Nights rooftop party.",
+        "Early rooftop warmup before the main party. Vinyl-only, groovy, and laid back.",
       imageUrl: null,
-      startAt: daysFromNowAt(2, 18, 0),
-      endAt: hoursAfter(daysFromNowAt(2, 18, 0), 1.5),
-      venueName: "Elsewhere Rooftop",
+      startAt: daysFromNowAt(1, 16, 0),
+      endAt: hoursAfter(daysFromNowAt(1, 16, 0), 1.5),
+      venueName: "Elsewhere (Rooftop)",
       address: "599 Johnson Ave, Brooklyn, NY 11237",
       city: "Brooklyn",
       state: "NY",
@@ -594,42 +574,33 @@ async function main() {
       visibility: "public" as const,
     },
     {
-      // Brooklyn: overlaps the All-Night DJ Relay (daysFromNowAt(6,...))
-      venueId: venueIdBySlug.get("elsewhere-brooklyn") ?? null,
-      organizerId: null,
+      venueId: venueIdBySlug.get("good-room-brooklyn")!,
+      organizerId: organizerIdBySlug.get("midnight-moves") ?? null,
       createdByUserId: u4,
-      title: "Basement Bangers",
+      title: "Good Room (Front Bar): Disco Happy Hour",
       description:
-        "Late-night basement party with tight selectors — overlaps the all-night relay upstairs.",
+        "Disco and funk to start the night before the marathon kicks off. Come early, leave sweaty.",
       imageUrl: null,
-      startAt: daysFromNowAt(6, 22, 30),
-      endAt: hoursAfter(daysFromNowAt(6, 22, 30), 4),
-      venueName: "Elsewhere - Basement",
-      address: "599 Johnson Ave, Brooklyn, NY 11237",
+      startAt: daysFromNowAt(2, 20, 0),
+      endAt: hoursAfter(daysFromNowAt(2, 20, 0), 3),
+      venueName: "Good Room (Front Bar)",
+      address: "98 Meserole Ave, Brooklyn, NY 11222",
       city: "Brooklyn",
       state: "NY",
       category: "nightlife" as const,
-      visibility: "public" as const,
-    },
-    {
-      // Manhattan / New York: same day as "Taste of the City NYC: Ramen + Vinyl" (daysFromNowAt(1,...))
-      venueId: null,
-      organizerId: organizerIdBySlug.get("taste-of-the-city") ?? null,
-      createdByUserId: u2,
-      title: "Lower East Side Vinyl Market",
-      description:
-        "Vinyl sellers and a DJ set in the lot — runs earlier the same evening as the Ramen + Vinyl pop-up.",
-      imageUrl: null,
-      startAt: daysFromNowAt(1, 17, 0),
-      endAt: hoursAfter(daysFromNowAt(1, 17, 0), 2),
-      venueName: "LES Pop-Up Lot",
-      address: "220 E Houston St, New York, NY 10002",
-      city: "New York",
-      state: "NY",
-      category: "food" as const,
       visibility: "public" as const,
     },
   ];
+
+  // Extra safety: ensure we never insert a null venueId
+  const invalidEvents = eventData.filter((e) => !e.venueId);
+  if (invalidEvents.length > 0) {
+    throw new Error(
+      `Found events with null/undefined venueId: ${invalidEvents
+        .map((e) => e.title)
+        .join(", ")}`
+    );
+  }
 
   const createdEvents = await db
     .insert(events)

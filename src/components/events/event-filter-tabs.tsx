@@ -16,7 +16,6 @@ export function EventFilterTabs({
   value,
   onValueChange,
   className,
-  gridLayout = false,
 }: EventFilterTabsProps) {
   return (
     <Tabs
@@ -24,17 +23,26 @@ export function EventFilterTabs({
       onValueChange={(val) => onValueChange(val as EventFilterTab)}
       className={className}
     >
-      <TabsList className={cn(gridLayout && "grid w-full grid-cols-3")}>
-        <TabsTrigger value="all" className="flex items-center gap-2 px-5">
-          <Calendar className="h-4 w-4 shrink-0" />
+      <TabsList className={"w-full"}>
+        <TabsTrigger
+          value="all"
+          className="flex flex-1 items-center gap-2 md:px-6"
+        >
+          {/*<Calendar className="hidden h-4 w-4 shrink-0 md:block" />*/}
           All Events
         </TabsTrigger>
-        <TabsTrigger value="followed" className="flex items-center gap-2 px-5">
-          <Building2 className="h-4 w-4 shrink-0" />
+        <TabsTrigger
+          value="followed"
+          className="flex flex-1 items-center gap-2 md:px-6"
+        >
+          {/*<Building2 className="hidden h-4 w-4 shrink-0 md:block" />*/}
           Following
         </TabsTrigger>
-        <TabsTrigger value="friends" className="flex items-center gap-2 px-5">
-          <Users className="h-4 w-4 shrink-0" />
+        <TabsTrigger
+          value="friends"
+          className="flex flex-1 items-center gap-2 md:px-6"
+        >
+          {/*<Users className="hidden h-4 w-4 shrink-0 md:block" />*/}
           Friends Going
         </TabsTrigger>
       </TabsList>

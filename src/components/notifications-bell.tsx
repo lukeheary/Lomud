@@ -14,7 +14,8 @@ import { formatDistanceToNow } from "date-fns";
 
 export function NotificationsBell() {
   const { toast } = useToast();
-  const { data: pendingRequests, refetch } = trpc.friends.getPendingRequests.useQuery();
+  const { data: pendingRequests, refetch } =
+    trpc.friends.getPendingRequests.useQuery();
 
   const acceptMutation = trpc.friends.acceptFriendRequest.useMutation({
     onSuccess: () => {
@@ -57,7 +58,7 @@ export function NotificationsBell() {
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           {hasNotifications && (
-            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-[10px] font-semibold text-primary-foreground flex items-center justify-center">
+            <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
               {pendingRequests!.length}
             </span>
           )}
@@ -66,7 +67,7 @@ export function NotificationsBell() {
       <PopoverContent className="w-80" align="end">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h4 className="font-semibold text-sm">Notifications</h4>
+            <h4 className="text-sm font-semibold">Notifications</h4>
             {hasNotifications && (
               <span className="text-xs text-muted-foreground">
                 {pendingRequests!.length} new
@@ -79,11 +80,11 @@ export function NotificationsBell() {
               No new notifications
             </div>
           ) : (
-            <div className="space-y-3 max-h-[400px] overflow-y-auto">
+            <div className="max-h-[400px] space-y-3 overflow-y-auto">
               {pendingRequests!.map((request) => (
                 <div
                   key={request.id}
-                  className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                  className="flex items-start gap-3 rounded-lg bg-muted/50 p-3 transition-colors hover:bg-muted"
                 >
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={request.user.imageUrl || undefined} />
@@ -101,7 +102,7 @@ export function NotificationsBell() {
                       <p className="text-xs text-muted-foreground">
                         @{request.user.username}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="mt-1 text-xs text-muted-foreground">
                         {formatDistanceToNow(new Date(request.createdAt), {
                           addSuffix: true,
                         })}
@@ -109,21 +110,6 @@ export function NotificationsBell() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        className="h-7 text-xs"
-                        onClick={() =>
-                          acceptMutation.mutate({
-                            friendRequestId: request.id,
-                          })
-                        }
-                        disabled={
-                          acceptMutation.isPending || rejectMutation.isPending
-                        }
-                      >
-                        <Check className="h-3 w-3 mr-1" />
-                        Accept
-                      </Button>
                       <Button
                         size="sm"
                         variant="outline"
@@ -137,8 +123,23 @@ export function NotificationsBell() {
                           acceptMutation.isPending || rejectMutation.isPending
                         }
                       >
-                        <X className="h-3 w-3 mr-1" />
+                        <X className="mr-1 h-3 w-3" />
                         Reject
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={() =>
+                          acceptMutation.mutate({
+                            friendRequestId: request.id,
+                          })
+                        }
+                        disabled={
+                          acceptMutation.isPending || rejectMutation.isPending
+                        }
+                      >
+                        <Check className="mr-1 h-3 w-3" />
+                        Accept
                       </Button>
                     </div>
                   </div>

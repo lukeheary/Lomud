@@ -8,15 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import {
-  Users,
-  Search,
-  UserPlus,
-  Check,
-  X,
-  Loader2,
-  Mail,
-} from "lucide-react";
+import { Users, Search, UserPlus, Check, X, Loader2, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function FriendsPage() {
@@ -101,10 +93,12 @@ export default function FriendsPage() {
     pendingRequests?.filter((f) => f.isSender === false) || [];
 
   return (
-    <div className="container mx-auto py-8 space-y-4">
+    <div className="container mx-auto space-y-4 py-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Friends</h1>
+        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+          Friends
+        </h1>
         <p className="text-muted-foreground">
           Manage your friends and see what events they&apos;re attending
         </p>
@@ -148,9 +142,9 @@ export default function FriendsPage() {
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
               ) : acceptedFriends.length === 0 ? (
-                <div className="text-center py-8">
-                  <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <p className="text-muted-foreground mb-4">
+                <div className="py-8 text-center">
+                  <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                  <p className="mb-4 text-muted-foreground">
                     You don&apos;t have any friends yet
                   </p>
                   <p className="text-sm text-muted-foreground">
@@ -162,7 +156,7 @@ export default function FriendsPage() {
                   {acceptedFriends.map((friend) => (
                     <div
                       key={friend.id}
-                      className="flex items-center justify-between p-4 rounded-lg border"
+                      className="flex items-center justify-between rounded-lg border p-4"
                     >
                       <div className="flex items-center gap-3">
                         <Avatar>
@@ -176,8 +170,7 @@ export default function FriendsPage() {
                         </Avatar>
                         <div>
                           <p className="font-medium">
-                            {friend.friend?.firstName}{" "}
-                            {friend.friend?.lastName}
+                            {friend.friend?.firstName} {friend.friend?.lastName}
                           </p>
                           <p className="text-sm text-muted-foreground">
                             @{friend.friend?.username}
@@ -202,8 +195,8 @@ export default function FriendsPage() {
             </CardHeader>
             <CardContent>
               {receivedRequests.length === 0 ? (
-                <div className="text-center py-8">
-                  <Mail className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <div className="py-8 text-center">
+                  <Mail className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
                   <p className="text-muted-foreground">
                     No pending friend requests
                   </p>
@@ -213,7 +206,7 @@ export default function FriendsPage() {
                   {receivedRequests.map((request) => (
                     <div
                       key={request.id}
-                      className="flex items-center justify-between p-4 rounded-lg border"
+                      className="flex items-center justify-between rounded-lg border p-4"
                     >
                       <div className="flex items-center gap-3">
                         <Avatar>
@@ -235,19 +228,7 @@ export default function FriendsPage() {
                           </p>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() =>
-                            acceptMutation.mutate({
-                              friendRequestId: request.id,
-                            })
-                          }
-                          disabled={acceptMutation.isPending}
-                        >
-                          <Check className="h-4 w-4 mr-1" />
-                          Accept
-                        </Button>
+                      <div className="flex gap-4">
                         <Button
                           size="sm"
                           variant="outline"
@@ -258,8 +239,20 @@ export default function FriendsPage() {
                           }
                           disabled={rejectMutation.isPending}
                         >
-                          <X className="h-4 w-4 mr-1" />
+                          <X className="mr-1 h-4 w-4" />
                           Reject
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() =>
+                            acceptMutation.mutate({
+                              friendRequestId: request.id,
+                            })
+                          }
+                          disabled={acceptMutation.isPending}
+                        >
+                          <Check className="mr-1 h-4 w-4" />
+                          Accept
                         </Button>
                       </div>
                     </div>
@@ -280,7 +273,7 @@ export default function FriendsPage() {
                   {sentRequests.map((request) => (
                     <div
                       key={request.id}
-                      className="flex items-center justify-between p-4 rounded-lg border"
+                      className="flex items-center justify-between rounded-lg border p-4"
                     >
                       <div className="flex items-center gap-3">
                         <Avatar>
@@ -329,7 +322,7 @@ export default function FriendsPage() {
               </div>
 
               {searchQuery.length < 2 ? (
-                <div className="text-center py-8 text-muted-foreground">
+                <div className="py-8 text-center text-muted-foreground">
                   Enter at least 2 characters to search
                 </div>
               ) : searchLoading ? (
@@ -337,7 +330,7 @@ export default function FriendsPage() {
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
               ) : !searchResults || searchResults.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
+                <div className="py-8 text-center text-muted-foreground">
                   No users found
                 </div>
               ) : (
@@ -345,7 +338,7 @@ export default function FriendsPage() {
                   {searchResults.map((user) => (
                     <div
                       key={user.id}
-                      className="flex items-center justify-between p-4 rounded-lg border"
+                      className="flex items-center justify-between rounded-lg border p-4"
                     >
                       <div className="flex items-center gap-3">
                         <Avatar>
@@ -371,7 +364,7 @@ export default function FriendsPage() {
                         }
                         disabled={sendRequestMutation.isPending}
                       >
-                        <UserPlus className="h-4 w-4 mr-2" />
+                        <UserPlus className="mr-2 h-4 w-4" />
                         Add Friend
                       </Button>
                     </div>

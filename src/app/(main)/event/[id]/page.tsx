@@ -24,6 +24,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { AvatarStack } from "@/components/ui/avatar-stack";
 
 type RsvpStatus = "going" | "interested" | "not_going";
 
@@ -100,6 +101,10 @@ export default function EventPage() {
   const interestedCount =
     attendees?.filter((a) => a.status === "interested").length || 0;
 
+  // Get users who are going for avatar stack
+  const goingUsers =
+    attendees?.filter((a) => a.status === "going").map((a) => a.user) || [];
+
   const eventDate = new Date(event.startAt);
   const dayOfWeek = format(eventDate, "EEEE");
   const monthDay = format(eventDate, "MMMM d, yyyy");
@@ -127,8 +132,8 @@ export default function EventPage() {
           </div>
         )}
 
-        {/* Action Icons - Bottom Right on Mobile */}
-        <div className="absolute bottom-4 right-4 flex gap-2">
+        {/* Action Icons - Top Right on Mobile */}
+        <div className="absolute right-4 top-4 flex gap-2">
           {canEdit && (
             <Link href={`/event/${eventId}/edit`}>
               <Button size="icon" variant="secondary" className="h-10 w-10">
@@ -143,6 +148,13 @@ export default function EventPage() {
             <Share2 className="h-4 w-4" />
           </Button>
         </div>
+
+        {/* Avatars - Bottom Right on Mobile */}
+        {goingUsers.length > 0 && (
+          <div className="absolute bottom-4 right-4">
+            <AvatarStack users={goingUsers} maxDisplay={5} size="md" />
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -151,7 +163,7 @@ export default function EventPage() {
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2">
             {/* Title & Basic Info */}
-            <div>
+            <div className={"pb-4"}>
               <div className="mb-2 flex items-start justify-between">
                 <h1 className="text-4xl font-bold">{event.title}</h1>
                 {/* Desktop Action Icons */}
@@ -174,7 +186,7 @@ export default function EventPage() {
 
               {event.venueName && (
                 <div className="flex items-center gap-2 text-lg">
-                  <MapPin className="h-5 w-5 text-muted-foreground" />
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium">{event.venueName}</span>
                 </div>
               )}
@@ -186,16 +198,6 @@ export default function EventPage() {
                 </span>
               </div>
 
-              {/*{event.venue && (*/}
-              {/*  <Link*/}
-              {/*    href={`/venue/${event.venue.slug}`}*/}
-              {/*    className="mt-1 flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary"*/}
-              {/*  >*/}
-              {/*    <Building2 className="h-4 w-4" />*/}
-              {/*    <span>At {event.venue.name}</span>*/}
-              {/*  </Link>*/}
-              {/*)}*/}
-
               {event.organizer && (
                 <Link
                   href={`/organizer/${event.organizer.slug}`}
@@ -205,20 +207,10 @@ export default function EventPage() {
                   <span>Hosted by {event.organizer.name}</span>
                 </Link>
               )}
-
-              {/*{event.venue && (*/}
-              {/*  <Link*/}
-              {/*    href={`/business/${event.venue.slug}`}*/}
-              {/*    className="mt-1 flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary"*/}
-              {/*  >*/}
-              {/*    <Building2 className="h-4 w-4" />*/}
-              {/*    <span>Presented by {event.venue.name}</span>*/}
-              {/*  </Link>*/}
-              {/*)}*/}
             </div>
 
             {/* Mobile RSVP Buttons */}
-            <div className="flex gap-2 py-4 lg:hidden">
+            <div className="flex gap-2 pb-4 lg:hidden">
               <Button
                 variant={
                   event.userRsvp?.status === "interested"
@@ -249,13 +241,10 @@ export default function EventPage() {
 
             {/* About Section */}
             <div className={"pt-4"}>
-              <h2 className="mb-4 text-2xl font-bold">About</h2>
+              <h2 className="mb-2 text-2xl font-bold">About</h2>
 
               {/* Event Date */}
               <div className="mb-6">
-                <h3 className="mb-2 font-semibold">
-                  {dayOfWeek}, {monthDay}
-                </h3>
                 <p className="text-muted-foreground">{event.title}</p>
               </div>
 
@@ -358,48 +347,28 @@ export default function EventPage() {
                 </div>
 
                 {/* Card Content Below Image */}
-                <CardContent className="space-y-4 p-6">
-                  {/* RSVP Status */}
-                  <div>
-                    <div
-                      className={"flex flex-row items-center justify-between"}
-                    >
-                      <p className="text-base text-muted-foreground">
-                        Your RSVP
-                      </p>
-                      {event.userRsvp?.status === "going" && (
-                        <Badge
-                          variant="default"
-                          className="bg-green-500 px-4 py-2 text-base"
-                        >
-                          You&apos;re going!
-                        </Badge>
-                      )}
-                      {event.userRsvp?.status === "interested" && (
-                        <Badge
-                          variant="default"
-                          className="bg-yellow-500 px-4 py-2 text-base"
-                        >
-                          Interested
-                        </Badge>
-                      )}
-                    </div>
-                    {!event.userRsvp && (
-                      <p className="text-sm text-muted-foreground">
-                        RSVP to let others know you&apos;re attending
-                      </p>
-                    )}
-                  </div>
-
+                <CardContent className="p-6">
                   {/* RSVP Buttons */}
-                  <div className="space-y-2">
+                  <div className="flex gap-2 pb-4">
                     <Button
                       variant={
-                        event.userRsvp?.status === "going"
-                          ? "default"
+                        event.userRsvp?.status === "interested"
+                          ? "secondary"
                           : "outline"
                       }
-                      className="w-full"
+                      className="flex-1 text-base font-medium"
+                      size="lg"
+                      onClick={() => handleRsvp("interested")}
+                      disabled={rsvpMutation.isPending}
+                    >
+                      Interested
+                    </Button>
+                    <Button
+                      variant={"outline"}
+                      className={cn("flex-1 text-base font-medium", {
+                        "bg-green-500 text-black":
+                          event.userRsvp?.status === "going",
+                      })}
                       size="lg"
                       onClick={() => handleRsvp("going")}
                       disabled={rsvpMutation.isPending}
@@ -408,24 +377,12 @@ export default function EventPage() {
                         ? "Going"
                         : "I'm Going"}
                     </Button>
-                    <Button
-                      variant={
-                        event.userRsvp?.status === "interested"
-                          ? "secondary"
-                          : "outline"
-                      }
-                      className="w-full"
-                      onClick={() => handleRsvp("interested")}
-                      disabled={rsvpMutation.isPending}
-                    >
-                      Interested
-                    </Button>
                   </div>
 
                   <Separator />
 
                   {/* Attendee Count */}
-                  <div className="space-y-2">
+                  <div className="space-y-2 pt-4">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">
                         Going

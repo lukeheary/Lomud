@@ -264,20 +264,8 @@ export default function HomePage() {
           </SelectContent>
         </Select>
 
-        <EventFilterTabs
-          value={activeFilter}
-          onValueChange={setActiveFilter}
-          className="flex-1"
-        />
+        <EventFilterTabs value={activeFilter} onValueChange={setActiveFilter} />
       </div>
-
-      {/* View Mode Toggle and Filter Tabs */}
-      {/*<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">*/}
-      {/*  <EventFilterTabs*/}
-      {/*    value={activeFilter}*/}
-      {/*    onValueChange={setActiveFilter}*/}
-      {/*    className="flex-1"*/}
-      {/*  />*/}
 
       {/*  <Tabs*/}
       {/*    value={viewMode}*/}

@@ -76,12 +76,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      <EventFilterTabs
-        value={activeFilter}
-        onValueChange={setActiveFilter}
-        gridLayout
-        className="w-full"
-      />
+      <EventFilterTabs value={activeFilter} onValueChange={setActiveFilter} />
 
       {/* Loading State */}
       {isLoading && (

@@ -4,11 +4,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatTime } from "@/lib/utils";
 import { Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { type EventListItem } from "@/types/trpc";
+import { AvatarStack } from "@/components/ui/avatar-stack";
 
 interface EventCardProps {
   event: EventListItem;
@@ -22,8 +22,7 @@ export function EventCard({ event }: EventCardProps) {
   const startTime = formatTime(event.startAt);
 
   const friendsGoing = event.friendsGoing || [];
-  const displayedFriends = friendsGoing.slice(0, 5);
-  const remainingCount = friendsGoing.length - displayedFriends.length;
+  const goingUsers = friendsGoing.map((rsvp) => rsvp.user);
 
   return (
     <Link href={`/event/${event.id}`} className="group">
@@ -46,44 +45,14 @@ export function EventCard({ event }: EventCardProps) {
             )}
 
             {/* Friends Going - Bottom Right (shown on both mobile and desktop) */}
-            {friendsGoing.length > 0 && (
-              <div className="absolute bottom-1 right-1 flex items-center gap-1 md:bottom-4 md:right-4">
-                <div className="flex -space-x-2">
-                  {displayedFriends.slice(0, 3).map((rsvp) => (
-                    <Avatar
-                      key={rsvp.user.id}
-                      className="h-6 w-6 border border-background md:h-8 md:w-8"
-                    >
-                      <AvatarImage src={rsvp.user.imageUrl || undefined} />
-                      <AvatarFallback className="text-xs">
-                        {rsvp.user.firstName?.[0]}
-                        {rsvp.user.lastName?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                  ))}
-                  {displayedFriends.slice(3, 5).map((rsvp) => (
-                    <Avatar
-                      key={rsvp.user.id}
-                      className="hidden h-8 w-8 border border-background md:block"
-                    >
-                      <AvatarImage src={rsvp.user.imageUrl || undefined} />
-                      <AvatarFallback className="text-xs">
-                        {rsvp.user.firstName?.[0]}
-                        {rsvp.user.lastName?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                  ))}
+            {goingUsers.length > 0 && (
+              <div className="absolute bottom-1 right-1 md:bottom-4 md:right-4">
+                <div className="md:hidden">
+                  <AvatarStack users={goingUsers} maxDisplay={3} size="sm" />
                 </div>
-                {friendsGoing.length > 3 && (
-                  <div className="ml-1 flex h-6 w-6 items-center justify-center rounded-full border border-background bg-muted text-xs font-semibold md:hidden">
-                    +{friendsGoing.length - 3}
-                  </div>
-                )}
-                {remainingCount > 0 && (
-                  <div className="ml-1 hidden h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-muted text-xs font-semibold md:flex">
-                    +{remainingCount}
-                  </div>
-                )}
+                <div className="hidden md:block">
+                  <AvatarStack users={goingUsers} maxDisplay={5} size="md" />
+                </div>
               </div>
             )}
           </div>
