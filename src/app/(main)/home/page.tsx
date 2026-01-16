@@ -20,7 +20,6 @@ import { trpc } from "@/lib/trpc";
 import { EventCardGrid } from "@/components/events/event-card-grid";
 import {
   Loader2,
-  Search,
   CalendarIcon,
   ChevronLeft,
   ChevronRight,
@@ -28,7 +27,7 @@ import {
   Clock,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectContent,
@@ -221,15 +220,12 @@ export default function HomePage() {
       {/* Search and Filters */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         {/* Search Input */}
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search events..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+        <SearchInput
+          placeholder="Search events..."
+          value={searchQuery}
+          onChange={setSearchQuery}
+          className="w-full"
+        />
 
         {/* City Filter */}
         <Select value={selectedCity} onValueChange={setSelectedCity}>
@@ -463,7 +459,6 @@ export default function HomePage() {
                                 </div>
                               )}
 
-                              {/* Business */}
                               {event.venue && (
                                 <div className="border-t pt-2 text-xs text-muted-foreground">
                                   Hosted by {event.venue.name}

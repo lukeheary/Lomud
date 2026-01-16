@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, MapPin, Heart, Search, Loader2, Users } from "lucide-react";
+import { Building2, MapPin, Heart, Loader2, Users } from "lucide-react";
 import { useQueryState } from "nuqs";
 
 export default function VenuesAndOrganizersPage() {
@@ -44,15 +44,12 @@ export default function VenuesAndOrganizersPage() {
         </div>
 
         {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search venues..."
-            value={venueSearch}
-            onChange={(e) => setVenueSearch(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+        <SearchInput
+          placeholder="Search venues..."
+          value={venueSearch}
+          onChange={setVenueSearch}
+          className="max-w-lg"
+        />
 
         {/* Loading State */}
         {venuesLoading && (
@@ -131,15 +128,12 @@ export default function VenuesAndOrganizersPage() {
         </div>
 
         {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search organizers..."
-            value={organizerSearch}
-            onChange={(e) => setOrganizerSearch(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+        <SearchInput
+          placeholder="Search organizers..."
+          value={organizerSearch}
+          onChange={setOrganizerSearch}
+          className="max-w-lg"
+        />
 
         {/* Loading State */}
         {organizersLoading && (
