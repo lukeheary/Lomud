@@ -7,13 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EventCardGrid } from "@/components/events/event-card-grid";
-import {
-  Users,
-  Globe,
-  Instagram,
-  Heart,
-  Loader2,
-} from "lucide-react";
+import { Users, Globe, Instagram, Heart, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@clerk/nextjs";
 
@@ -25,9 +19,8 @@ export default function OrganizerPage() {
   const utils = trpc.useUtils();
 
   // Fetch organizer data
-  const { data: organizer, isLoading } = trpc.organizer.getOrganizerBySlug.useQuery(
-    { slug }
-  );
+  const { data: organizer, isLoading } =
+    trpc.organizer.getOrganizerBySlug.useQuery({ slug });
 
   // Check if following
   const { data: isFollowing } = trpc.organizer.isFollowingOrganizer.useQuery(
@@ -83,7 +76,6 @@ export default function OrganizerPage() {
     }
   };
 
-
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">
@@ -95,32 +87,31 @@ export default function OrganizerPage() {
   if (!organizer) {
     return (
       <div className="container mx-auto py-12 text-center">
-        <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-        <h2 className="text-2xl font-bold mb-2">Organizer not found</h2>
-        <p className="text-muted-foreground mb-4">
+        <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+        <h2 className="mb-2 text-2xl font-bold">Organizer not found</h2>
+        <p className="mb-4 text-muted-foreground">
           The organizer you&apos;re looking for doesn&apos;t exist
         </p>
-        <Link href="/organizers">
-          <Button>Browse Organizers</Button>
-        </Link>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-4">
+    <div className="container mx-auto space-y-4 py-8">
       {/* Organizer Header */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-start justify-between">
-            <div className="space-y-4 flex-1">
+            <div className="flex-1 space-y-4">
               <div>
-                <div className="flex items-center gap-3 mb-2">
+                <div className="mb-2 flex items-center gap-3">
                   <Users className="h-8 w-8" />
                   <h1 className="text-3xl font-bold">{organizer.name}</h1>
                 </div>
                 {organizer.description && (
-                  <p className="text-muted-foreground">{organizer.description}</p>
+                  <p className="text-muted-foreground">
+                    {organizer.description}
+                  </p>
                 )}
               </div>
 
@@ -151,7 +142,7 @@ export default function OrganizerPage() {
 
               <div className="flex items-center gap-4">
                 <Badge variant="outline">
-                  <Heart className="h-3 w-3 mr-1" />
+                  <Heart className="mr-1 h-3 w-3" />
                   {(organizer as any).follows?.length || 0} followers
                 </Badge>
                 <Badge variant="outline">
@@ -169,7 +160,7 @@ export default function OrganizerPage() {
                 }
               >
                 <Heart
-                  className={`h-4 w-4 mr-2 ${
+                  className={`mr-2 h-4 w-4 ${
                     isFollowing ? "fill-current" : ""
                   }`}
                 />
@@ -181,7 +172,7 @@ export default function OrganizerPage() {
       </Card>
 
       {/* Upcoming Events */}
-      <Card className={'bg-background border-none'}>
+      <Card className={"border-none bg-background"}>
         <CardHeader>
           <CardTitle>Upcoming Events</CardTitle>
         </CardHeader>
@@ -193,7 +184,7 @@ export default function OrganizerPage() {
               gap="md"
             />
           ) : (
-            <div className="text-center py-8">
+            <div className="py-8 text-center">
               <p className="text-muted-foreground">
                 No upcoming events scheduled
               </p>

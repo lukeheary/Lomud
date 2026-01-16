@@ -5,14 +5,11 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Users,
-  Calendar,
-  Loader2,
-} from "lucide-react";
+import { Users, Calendar, Loader2 } from "lucide-react";
 
 export default function MyOrganizersPage() {
-  const { data: myOrganizers, isLoading } = trpc.organizer.getMyOrganizers.useQuery();
+  const { data: myOrganizers, isLoading } =
+    trpc.organizer.getMyOrganizers.useQuery();
 
   if (isLoading) {
     return (
@@ -23,10 +20,12 @@ export default function MyOrganizersPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-4">
+    <div className="container mx-auto space-y-4 py-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">My Organizers</h1>
+        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+          My Organizers
+        </h1>
         <p className="text-muted-foreground">
           Organizers where you are a member
         </p>
@@ -36,7 +35,10 @@ export default function MyOrganizersPage() {
       {myOrganizers && myOrganizers.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {myOrganizers.map((organizer) => (
-            <Card key={organizer.id} className="hover:bg-accent/50 transition-colors">
+            <Card
+              key={organizer.id}
+              className="transition-colors hover:bg-accent/50"
+            >
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
@@ -47,32 +49,33 @@ export default function MyOrganizersPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {organizer.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
+                  <p className="line-clamp-2 text-sm text-muted-foreground">
                     {organizer.description}
                   </p>
                 )}
 
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">
-                    <Users className="h-3 w-3 mr-1" />
+                    <Users className="mr-1 h-3 w-3" />
                     {(organizer as any).members?.length || 0} members
                   </Badge>
                   <Badge variant="outline">
-                    <Calendar className="h-3 w-3 mr-1" />
+                    <Calendar className="mr-1 h-3 w-3" />
                     {(organizer as any).events?.length || 0} upcoming
                   </Badge>
                 </div>
 
                 <div className="flex gap-2">
-                  <Link href={`/organizer/${organizer.slug}`} className="flex-1">
+                  <Link
+                    href={`/organizer/${organizer.slug}`}
+                    className="flex-1"
+                  >
                     <Button variant="outline" className="w-full">
                       View Organizer
                     </Button>
                   </Link>
                   <Link href={`/event/new?organizerId=${organizer.id}`}>
-                    <Button>
-                      Create Event
-                    </Button>
+                    <Button>Create Event</Button>
                   </Link>
                 </div>
               </CardContent>
@@ -82,14 +85,12 @@ export default function MyOrganizersPage() {
       ) : (
         <Card>
           <CardContent className="py-12 text-center">
-            <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">No organizers yet</h3>
-            <p className="text-muted-foreground mb-4">
-              You are not a member of any organizers. Contact an admin to be added to an organizer.
+            <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <h3 className="mb-2 text-lg font-semibold">No organizers yet</h3>
+            <p className="mb-4 text-muted-foreground">
+              You are not a member of any organizers. Contact an admin to be
+              added to an organizer.
             </p>
-            <Link href="/organizers">
-              <Button>Browse Organizers</Button>
-            </Link>
           </CardContent>
         </Card>
       )}
