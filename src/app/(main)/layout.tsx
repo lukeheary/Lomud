@@ -76,12 +76,7 @@ export default function MainLayout({
             {/*</Link>*/}
             <Link href="/venues">
               <Button variant="ghost" size="sm">
-                Venues
-              </Button>
-            </Link>
-            <Link href="/organizers">
-              <Button variant="ghost" size="sm">
-                Organizers
+                Venues & Organizers
               </Button>
             </Link>
             <Link href="/friends">
@@ -233,13 +228,7 @@ export default function MainLayout({
                   <Link href="/venues" onClick={closeMobileMenu}>
                     <Button variant="ghost" className="w-full justify-start" size="lg">
                       <Building2 className="h-5 w-5 mr-3" />
-                      Venues
-                    </Button>
-                  </Link>
-                  <Link href="/organizers" onClick={closeMobileMenu}>
-                    <Button variant="ghost" className="w-full justify-start" size="lg">
-                      <Users className="h-5 w-5 mr-3" />
-                      Organizers
+                      Venues & Organizers
                     </Button>
                   </Link>
                   <Link href="/friends" onClick={closeMobileMenu}>

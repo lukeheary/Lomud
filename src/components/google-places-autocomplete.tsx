@@ -60,7 +60,7 @@ function AutocompleteInput({
     });
 
     // Add place changed listener
-    const listener = autocompleteRef?.current.addListener(
+    const listener = autocompleteRef?.current?.addListener(
       "place_changed",
       () => {
         const place = autocompleteRef.current?.getPlace();

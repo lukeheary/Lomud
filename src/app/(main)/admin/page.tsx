@@ -6,7 +6,13 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -25,7 +31,8 @@ export default function AdminPage() {
   const utils = trpc.useUtils();
 
   // Check if user is admin
-  const { data: adminCheck, isLoading: adminCheckLoading } = trpc.user.isAdmin.useQuery();
+  const { data: adminCheck, isLoading: adminCheckLoading } =
+    trpc.user.isAdmin.useQuery();
   const isAdmin = adminCheck?.isAdmin ?? false;
 
   // Venue form state
@@ -57,21 +64,28 @@ export default function AdminPage() {
   const [userSearch, setUserSearch] = useState("");
 
   // Fetch data
-  const { data: venues } = trpc.admin.listAllVenues.useQuery(undefined, { enabled: isAdmin });
-  const { data: organizers } = trpc.admin.listAllOrganizers.useQuery(undefined, { enabled: isAdmin });
+  const { data: venues } = trpc.admin.listAllVenues.useQuery(
+    {},
+    { enabled: isAdmin }
+  );
+  const { data: organizers } = trpc.admin.listAllOrganizers.useQuery(
+    {},
+    { enabled: isAdmin }
+  );
 
   const { data: venueMembers } = trpc.venue.getVenueMembers.useQuery(
     { venueId: selectedVenue },
     { enabled: !!selectedVenue && isAdmin }
   );
 
-  const { data: organizerMembers } = trpc.organizer.getOrganizerMembers.useQuery(
-    { organizerId: selectedOrganizer },
-    { enabled: !!selectedOrganizer && isAdmin }
-  );
+  const { data: organizerMembers } =
+    trpc.organizer.getOrganizerMembers.useQuery(
+      { organizerId: selectedOrganizer },
+      { enabled: !!selectedOrganizer && isAdmin }
+    );
 
   const { data: searchedUsers } = trpc.admin.searchUsers.useQuery(
-    { search: userSearch },
+    { query: userSearch },
     { enabled: userSearch.length >= 2 && isAdmin }
   );
 
@@ -93,13 +107,20 @@ export default function AdminPage() {
       utils.admin.listAllVenues.invalidate();
     },
     onError: (error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
   const createOrganizerMutation = trpc.admin.createOrganizer.useMutation({
     onSuccess: () => {
-      toast({ title: "Success", description: "Organizer created successfully" });
+      toast({
+        title: "Success",
+        description: "Organizer created successfully",
+      });
       setOrganizerForm({
         slug: "",
         name: "",
@@ -111,7 +132,11 @@ export default function AdminPage() {
       utils.admin.listAllOrganizers.invalidate();
     },
     onError: (error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -121,7 +146,11 @@ export default function AdminPage() {
       utils.venue.getVenueMembers.invalidate();
     },
     onError: (error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -131,7 +160,11 @@ export default function AdminPage() {
       utils.venue.getVenueMembers.invalidate();
     },
     onError: (error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -141,19 +174,31 @@ export default function AdminPage() {
       utils.organizer.getOrganizerMembers.invalidate();
     },
     onError: (error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
-  const removeOrganizerMemberMutation = trpc.admin.removeOrganizerMember.useMutation({
-    onSuccess: () => {
-      toast({ title: "Success", description: "Member removed from organizer" });
-      utils.organizer.getOrganizerMembers.invalidate();
-    },
-    onError: (error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    },
-  });
+  const removeOrganizerMemberMutation =
+    trpc.admin.removeOrganizerMember.useMutation({
+      onSuccess: () => {
+        toast({
+          title: "Success",
+          description: "Member removed from organizer",
+        });
+        utils.organizer.getOrganizerMembers.invalidate();
+      },
+      onError: (error) => {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      },
+    });
 
   // Redirect if not admin
   if (!adminCheckLoading && !isAdmin) {
@@ -170,10 +215,12 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
+    <div className="container mx-auto space-y-8 py-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Admin Settings</h1>
-        <p className="text-muted-foreground">Manage venues, organizers, and their members</p>
+        <p className="text-muted-foreground">
+          Manage venues, organizers, and their members
+        </p>
       </div>
 
       {/* Create Venue */}
@@ -193,7 +240,9 @@ export default function AdminPage() {
                 id="venue-slug"
                 placeholder="big-night-live"
                 value={venueForm.slug}
-                onChange={(e) => setVenueForm({ ...venueForm, slug: e.target.value })}
+                onChange={(e) =>
+                  setVenueForm({ ...venueForm, slug: e.target.value })
+                }
               />
             </div>
             <div>
@@ -202,7 +251,9 @@ export default function AdminPage() {
                 id="venue-name"
                 placeholder="Big Night Live"
                 value={venueForm.name}
-                onChange={(e) => setVenueForm({ ...venueForm, name: e.target.value })}
+                onChange={(e) =>
+                  setVenueForm({ ...venueForm, name: e.target.value })
+                }
               />
             </div>
           </div>
@@ -212,7 +263,9 @@ export default function AdminPage() {
               id="venue-description"
               placeholder="A premier entertainment venue..."
               value={venueForm.description}
-              onChange={(e) => setVenueForm({ ...venueForm, description: e.target.value })}
+              onChange={(e) =>
+                setVenueForm({ ...venueForm, description: e.target.value })
+              }
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -222,7 +275,9 @@ export default function AdminPage() {
                 id="venue-address"
                 placeholder="110 Causeway St"
                 value={venueForm.address}
-                onChange={(e) => setVenueForm({ ...venueForm, address: e.target.value })}
+                onChange={(e) =>
+                  setVenueForm({ ...venueForm, address: e.target.value })
+                }
               />
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -232,7 +287,9 @@ export default function AdminPage() {
                   id="venue-city"
                   placeholder="Boston"
                   value={venueForm.city}
-                  onChange={(e) => setVenueForm({ ...venueForm, city: e.target.value })}
+                  onChange={(e) =>
+                    setVenueForm({ ...venueForm, city: e.target.value })
+                  }
                 />
               </div>
               <div>
@@ -242,7 +299,12 @@ export default function AdminPage() {
                   placeholder="MA"
                   maxLength={2}
                   value={venueForm.state}
-                  onChange={(e) => setVenueForm({ ...venueForm, state: e.target.value.toUpperCase() })}
+                  onChange={(e) =>
+                    setVenueForm({
+                      ...venueForm,
+                      state: e.target.value.toUpperCase(),
+                    })
+                  }
                 />
               </div>
             </div>
@@ -254,7 +316,9 @@ export default function AdminPage() {
                 id="venue-website"
                 placeholder="https://example.com"
                 value={venueForm.website}
-                onChange={(e) => setVenueForm({ ...venueForm, website: e.target.value })}
+                onChange={(e) =>
+                  setVenueForm({ ...venueForm, website: e.target.value })
+                }
               />
             </div>
             <div>
@@ -263,15 +327,25 @@ export default function AdminPage() {
                 id="venue-instagram"
                 placeholder="bignightlive"
                 value={venueForm.instagram}
-                onChange={(e) => setVenueForm({ ...venueForm, instagram: e.target.value })}
+                onChange={(e) =>
+                  setVenueForm({ ...venueForm, instagram: e.target.value })
+                }
               />
             </div>
           </div>
           <Button
             onClick={() => createVenueMutation.mutate(venueForm)}
-            disabled={createVenueMutation.isPending || !venueForm.slug || !venueForm.name || !venueForm.city || !venueForm.state}
+            disabled={
+              createVenueMutation.isPending ||
+              !venueForm.slug ||
+              !venueForm.name ||
+              !venueForm.city ||
+              !venueForm.state
+            }
           >
-            {createVenueMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            {createVenueMutation.isPending && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
             Create Venue
           </Button>
         </CardContent>
@@ -284,7 +358,9 @@ export default function AdminPage() {
             <Users className="h-5 w-5" />
             Create Organizer
           </CardTitle>
-          <CardDescription>Add a new event organizer to the platform</CardDescription>
+          <CardDescription>
+            Add a new event organizer to the platform
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -294,7 +370,9 @@ export default function AdminPage() {
                 id="organizer-slug"
                 placeholder="after-brunch"
                 value={organizerForm.slug}
-                onChange={(e) => setOrganizerForm({ ...organizerForm, slug: e.target.value })}
+                onChange={(e) =>
+                  setOrganizerForm({ ...organizerForm, slug: e.target.value })
+                }
               />
             </div>
             <div>
@@ -303,7 +381,9 @@ export default function AdminPage() {
                 id="organizer-name"
                 placeholder="After Brunch"
                 value={organizerForm.name}
-                onChange={(e) => setOrganizerForm({ ...organizerForm, name: e.target.value })}
+                onChange={(e) =>
+                  setOrganizerForm({ ...organizerForm, name: e.target.value })
+                }
               />
             </div>
           </div>
@@ -313,7 +393,12 @@ export default function AdminPage() {
               id="organizer-description"
               placeholder="Boston's premier social events..."
               value={organizerForm.description}
-              onChange={(e) => setOrganizerForm({ ...organizerForm, description: e.target.value })}
+              onChange={(e) =>
+                setOrganizerForm({
+                  ...organizerForm,
+                  description: e.target.value,
+                })
+              }
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -323,7 +408,12 @@ export default function AdminPage() {
                 id="organizer-website"
                 placeholder="https://example.com"
                 value={organizerForm.website}
-                onChange={(e) => setOrganizerForm({ ...organizerForm, website: e.target.value })}
+                onChange={(e) =>
+                  setOrganizerForm({
+                    ...organizerForm,
+                    website: e.target.value,
+                  })
+                }
               />
             </div>
             <div>
@@ -332,15 +422,26 @@ export default function AdminPage() {
                 id="organizer-instagram"
                 placeholder="afterbrunch"
                 value={organizerForm.instagram}
-                onChange={(e) => setOrganizerForm({ ...organizerForm, instagram: e.target.value })}
+                onChange={(e) =>
+                  setOrganizerForm({
+                    ...organizerForm,
+                    instagram: e.target.value,
+                  })
+                }
               />
             </div>
           </div>
           <Button
             onClick={() => createOrganizerMutation.mutate(organizerForm)}
-            disabled={createOrganizerMutation.isPending || !organizerForm.slug || !organizerForm.name}
+            disabled={
+              createOrganizerMutation.isPending ||
+              !organizerForm.slug ||
+              !organizerForm.name
+            }
           >
-            {createOrganizerMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            {createOrganizerMutation.isPending && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
             Create Organizer
           </Button>
         </CardContent>
@@ -373,15 +474,21 @@ export default function AdminPage() {
             <>
               <div>
                 <Label>Current Members</Label>
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="mt-2 flex flex-wrap gap-2">
                   {venueMembers?.map((member) => (
-                    <Badge key={member.id} variant="secondary" className="flex items-center gap-2">
+                    <Badge
+                      key={member.id}
+                      variant="secondary"
+                      className="flex items-center gap-2"
+                    >
                       {member.user.username || member.user.email}
                       <button
-                        onClick={() => removeVenueMemberMutation.mutate({
-                          venueId: selectedVenue,
-                          userId: member.userId,
-                        })}
+                        onClick={() =>
+                          removeVenueMemberMutation.mutate({
+                            venueId: selectedVenue,
+                            userId: member.userId,
+                          })
+                        }
                         className="hover:text-destructive"
                       >
                         <X className="h-3 w-3" />
@@ -389,7 +496,9 @@ export default function AdminPage() {
                     </Badge>
                   ))}
                   {!venueMembers?.length && (
-                    <p className="text-sm text-muted-foreground">No members yet</p>
+                    <p className="text-sm text-muted-foreground">
+                      No members yet
+                    </p>
                   )}
                 </div>
               </div>
@@ -403,10 +512,15 @@ export default function AdminPage() {
                   onChange={(e) => setUserSearch(e.target.value)}
                 />
                 {searchedUsers && searchedUsers.length > 0 && (
-                  <div className="mt-2 border rounded-md divide-y">
+                  <div className="mt-2 divide-y rounded-md border">
                     {searchedUsers.map((user) => (
-                      <div key={user.id} className="flex items-center justify-between p-2">
-                        <span className="text-sm">{user.username || user.email}</span>
+                      <div
+                        key={user.id}
+                        className="flex items-center justify-between p-2"
+                      >
+                        <span className="text-sm">
+                          {user.username || user.email}
+                        </span>
                         <Button
                           size="sm"
                           onClick={() => {
@@ -417,7 +531,7 @@ export default function AdminPage() {
                             setUserSearch("");
                           }}
                         >
-                          <Plus className="h-4 w-4 mr-1" />
+                          <Plus className="mr-1 h-4 w-4" />
                           Add
                         </Button>
                       </div>
@@ -434,12 +548,17 @@ export default function AdminPage() {
       <Card>
         <CardHeader>
           <CardTitle>Manage Organizer Members</CardTitle>
-          <CardDescription>Add or remove members from organizers</CardDescription>
+          <CardDescription>
+            Add or remove members from organizers
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
             <Label htmlFor="select-organizer">Select Organizer</Label>
-            <Select value={selectedOrganizer} onValueChange={setSelectedOrganizer}>
+            <Select
+              value={selectedOrganizer}
+              onValueChange={setSelectedOrganizer}
+            >
               <SelectTrigger id="select-organizer">
                 <SelectValue placeholder="Choose an organizer" />
               </SelectTrigger>
@@ -457,15 +576,21 @@ export default function AdminPage() {
             <>
               <div>
                 <Label>Current Members</Label>
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="mt-2 flex flex-wrap gap-2">
                   {organizerMembers?.map((member) => (
-                    <Badge key={member.id} variant="secondary" className="flex items-center gap-2">
+                    <Badge
+                      key={member.id}
+                      variant="secondary"
+                      className="flex items-center gap-2"
+                    >
                       {member.user.username || member.user.email}
                       <button
-                        onClick={() => removeOrganizerMemberMutation.mutate({
-                          organizerId: selectedOrganizer,
-                          userId: member.userId,
-                        })}
+                        onClick={() =>
+                          removeOrganizerMemberMutation.mutate({
+                            organizerId: selectedOrganizer,
+                            userId: member.userId,
+                          })
+                        }
                         className="hover:text-destructive"
                       >
                         <X className="h-3 w-3" />
@@ -473,7 +598,9 @@ export default function AdminPage() {
                     </Badge>
                   ))}
                   {!organizerMembers?.length && (
-                    <p className="text-sm text-muted-foreground">No members yet</p>
+                    <p className="text-sm text-muted-foreground">
+                      No members yet
+                    </p>
                   )}
                 </div>
               </div>
@@ -487,10 +614,15 @@ export default function AdminPage() {
                   onChange={(e) => setUserSearch(e.target.value)}
                 />
                 {searchedUsers && searchedUsers.length > 0 && (
-                  <div className="mt-2 border rounded-md divide-y">
+                  <div className="mt-2 divide-y rounded-md border">
                     {searchedUsers.map((user) => (
-                      <div key={user.id} className="flex items-center justify-between p-2">
-                        <span className="text-sm">{user.username || user.email}</span>
+                      <div
+                        key={user.id}
+                        className="flex items-center justify-between p-2"
+                      >
+                        <span className="text-sm">
+                          {user.username || user.email}
+                        </span>
                         <Button
                           size="sm"
                           onClick={() => {
@@ -501,7 +633,7 @@ export default function AdminPage() {
                             setUserSearch("");
                           }}
                         >
-                          <Plus className="h-4 w-4 mr-1" />
+                          <Plus className="mr-1 h-4 w-4" />
                           Add
                         </Button>
                       </div>
