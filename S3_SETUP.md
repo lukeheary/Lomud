@@ -135,12 +135,29 @@ npm install
 
 ## Folder Structure
 
-The S3Uploader component uses the following folder structure in your bucket:
+The S3Uploader component automatically organizes files by environment:
+
+### Environment-Based Organization
+
+Files are automatically saved with an environment prefix:
+- **Production**: `production/[folder]/[filename]`
+- **Development**: `development/[folder]/[filename]`
+
+For example:
+- Development event image: `development/events/1234567890-abc123.jpg`
+- Production profile image: `production/profiles/1234567890-xyz789.jpg`
+
+This keeps your development and production files completely separated in the same bucket.
+
+### Default Folders
 
 - `events/` - Event images
+- `profiles/` - Profile pictures
 - `uploads/` - Default folder for other uploads
 
-You can customize the folder when using the component:
+### Custom Folders
+
+You can specify any folder when using the component:
 
 ```tsx
 <S3Uploader
@@ -148,6 +165,35 @@ You can customize the folder when using the component:
   onUploadComplete={(url) => console.log(url)}
 />
 ```
+
+This will save to `production/custom-folder/` or `development/custom-folder/` depending on `NODE_ENV`.
+
+### Using Environment Utilities
+
+A shared environment utility module is available at `/src/lib/env.ts` for use across your application:
+
+```typescript
+import {
+  isProduction,
+  isDevelopment,
+  getEnvironment,
+  getEnvironmentPrefix,
+  getStoragePath,
+} from "@/lib/env";
+
+// Check environment
+if (isProduction()) {
+  console.log("Running in production");
+}
+
+// Get environment name
+const env = getEnvironment(); // "production" | "development" | "test"
+
+// Get storage path with environment prefix
+const path = getStoragePath("events"); // "production/events" or "development/events"
+```
+
+This utility is used internally by the S3 uploader but can be used anywhere you need environment-specific logic.
 
 ## Troubleshooting
 

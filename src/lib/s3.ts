@@ -3,6 +3,7 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
+import { getStoragePath } from "./env";
 
 // Initialize S3 client
 export const s3Client = new S3Client({
@@ -34,13 +35,15 @@ export function getS3Url(key: string): string {
 
 /**
  * Upload a file to S3
+ * Automatically adds environment prefix (production/development) to the path
  */
 export async function uploadToS3(
   file: File,
   folder: string = "uploads"
 ): Promise<string> {
   const filename = generateUniqueFilename(file.name);
-  const key = `${folder}/${filename}`;
+  const fullPath = getStoragePath(folder);
+  const key = `${fullPath}/${filename}`;
 
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
