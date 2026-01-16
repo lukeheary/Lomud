@@ -11,7 +11,6 @@ import { Separator } from "@/components/ui/separator";
 import { UserButton } from "@clerk/nextjs";
 import { Loader2, Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { UploadButton } from "@/lib/uploadthing";
 import { GooglePlacesAutocomplete } from "@/components/google-places-autocomplete";
 
 export default function ProfilePage() {

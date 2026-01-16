@@ -15,11 +15,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Loader2, ImageIcon, X, ArrowLeft } from "lucide-react";
+import { Calendar, Loader2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { US_STATES } from "@/lib/utils";
-import { UploadButton } from "@/lib/uploadthing";
-import Image from "next/image";
+import { S3Uploader } from "@/components/ui/s3-uploader";
 import Link from "next/link";
 import { format } from "date-fns";
 
@@ -192,51 +191,14 @@ export default function EditEventPage() {
             {/* Event Image */}
             <div className="space-y-2">
               <Label htmlFor="image">Event Image</Label>
-              {formData.imageUrl ? (
-                <div className="relative h-48 w-full overflow-hidden rounded-lg">
-                  <Image
-                    src={formData.imageUrl}
-                    alt="Event image"
-                    fill
-                    className="object-cover"
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute right-2 top-2"
-                    onClick={() => setFormData({ ...formData, imageUrl: "" })}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="rounded-lg border-2 border-dashed p-6 text-center">
-                  <ImageIcon className="mx-auto mb-2 h-12 w-12 text-muted-foreground" />
-                  <UploadButton
-                    endpoint="eventImage"
-                    onClientUploadComplete={(res) => {
-                      if (res?.[0]?.url) {
-                        setFormData({ ...formData, imageUrl: res[0].url });
-                        toast({
-                          title: "Upload Complete",
-                          description: "Image uploaded successfully",
-                        });
-                      }
-                    }}
-                    onUploadError={(error: Error) => {
-                      toast({
-                        title: "Upload Error",
-                        description: error.message,
-                        variant: "destructive",
-                      });
-                    }}
-                  />
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Upload an image for your event
-                  </p>
-                </div>
-              )}
+              <S3Uploader
+                folder="events"
+                currentImageUrl={formData.imageUrl}
+                onUploadComplete={(url) =>
+                  setFormData({ ...formData, imageUrl: url })
+                }
+                onRemoveImage={() => setFormData({ ...formData, imageUrl: "" })}
+              />
             </div>
 
             {/* Title */}

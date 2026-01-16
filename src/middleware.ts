@@ -9,13 +9,6 @@ const isPublicRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  const { nextUrl } = req;
-
-  // Skip authentication for API routes that handle their own auth
-  if (nextUrl.pathname.startsWith('/api/uploadthing')) {
-    return;
-  }
-
   if (!isPublicRoute(req)) {
     await auth.protect();
   }

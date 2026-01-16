@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryState } from "nuqs";
 import { Suspense } from "react";
 
-export default function FriendsPage() {
+function FriendsPageContent() {
   const { toast } = useToast();
   const utils = trpc.useUtils();
   const [searchQuery, setSearchQuery] = useQueryState("search", {
@@ -90,10 +90,8 @@ export default function FriendsPage() {
   });
 
   const acceptedFriends = friends?.filter((f) => f.status === "accepted") || [];
-  const sentRequests =
-    pendingRequests?.filter((f) => f.isSender === true) || [];
-  const receivedRequests =
-    pendingRequests?.filter((f) => f.isSender === false) || [];
+  const sentRequests = pendingRequests?.filter((f) => f.isSender) || [];
+  const receivedRequests = pendingRequests?.filter((f) => !f.isSender) || [];
 
   return (
     <div className="container mx-auto space-y-4 py-8">
@@ -314,13 +312,13 @@ export default function FriendsPage() {
               <CardTitle>Find Friends</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Suspense fallback={null}>
-                <SearchInput
-                  placeholder="Search by name, username, or email..."
-                  value={searchQuery}
-                  onChange={setSearchQuery}
-                />
-              </Suspense>
+              {/*<Suspense fallback={null}>*/}
+              {/*  <SearchInput*/}
+              {/*    placeholder="Search by name, username, or email..."*/}
+              {/*    value={searchQuery}*/}
+              {/*    onChange={setSearchQuery}*/}
+              {/*  />*/}
+              {/*</Suspense>*/}
 
               {searchQuery.length < 2 ? (
                 <div className="py-8 text-center text-muted-foreground">
@@ -377,5 +375,21 @@ export default function FriendsPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+export default function FriendsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container mx-auto py-8">
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        </div>
+      }
+    >
+      <FriendsPageContent />
+    </Suspense>
   );
 }

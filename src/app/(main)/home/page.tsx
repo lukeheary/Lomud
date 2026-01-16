@@ -50,7 +50,7 @@ import { useQueryState } from "nuqs";
 
 type ViewMode = "week" | "month";
 
-export default function HomePage() {
+function HomePageContent() {
   const { toast } = useToast();
   const [activeFilter, setActiveFilter] = useState<EventFilterTab>("all");
   const [searchQuery, setSearchQuery] = useQueryState("search", {
@@ -509,5 +509,21 @@ export default function HomePage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container mx-auto py-8">
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        </div>
+      }
+    >
+      <HomePageContent />
+    </Suspense>
   );
 }

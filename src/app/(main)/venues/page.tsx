@@ -8,7 +8,7 @@ import { Building2, MapPin, Heart, Loader2, Users } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { Suspense } from "react";
 
-export default function VenuesAndOrganizersPage() {
+function VenuesAndOrganizersPageContent() {
   const [venueSearch, setVenueSearch] = useQueryState("venue", {
     defaultValue: "",
   });
@@ -198,5 +198,21 @@ export default function VenuesAndOrganizersPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function VenuesAndOrganizersPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container mx-auto py-8">
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        </div>
+      }
+    >
+      <VenuesAndOrganizersPageContent />
+    </Suspense>
   );
 }
