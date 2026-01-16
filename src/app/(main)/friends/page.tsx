@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,11 +9,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Users, Search, UserPlus, Check, X, Loader2, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryState } from "nuqs";
 
 export default function FriendsPage() {
   const { toast } = useToast();
   const utils = trpc.useUtils();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useQueryState("search", {
+    defaultValue: "",
+  });
 
   // Fetch friends
   const { data: friends, isLoading: friendsLoading } =

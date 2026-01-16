@@ -7,7 +7,7 @@ import {
   organizerMembers,
   users,
 } from "../../db/schema";
-import { eq, and, or, like, desc } from "drizzle-orm";
+import { eq, and, or, ilike, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 export const adminRouter = router({
@@ -22,7 +22,10 @@ export const adminRouter = router({
           .string()
           .min(3)
           .max(100)
-          .regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens"),
+          .regex(
+            /^[a-z0-9-]+$/,
+            "Slug must be lowercase alphanumeric with hyphens"
+          ),
         name: z.string().min(1).max(255),
         description: z.string().optional(),
         imageUrl: z.string().url().optional(),
@@ -151,8 +154,8 @@ export const adminRouter = router({
       if (input.search) {
         conditions.push(
           or(
-            like(venues.name, `%${input.search}%`),
-            like(venues.slug, `%${input.search}%`)
+            ilike(venues.name, `%${input.search}%`),
+            ilike(venues.slug, `%${input.search}%`)
           )!
         );
       }
@@ -182,7 +185,10 @@ export const adminRouter = router({
           .string()
           .min(3)
           .max(100)
-          .regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens"),
+          .regex(
+            /^[a-z0-9-]+$/,
+            "Slug must be lowercase alphanumeric with hyphens"
+          ),
         name: z.string().min(1).max(255),
         description: z.string().optional(),
         imageUrl: z.string().url().optional(),
@@ -203,7 +209,10 @@ export const adminRouter = router({
         });
       }
 
-      const [organizer] = await ctx.db.insert(organizers).values(input).returning();
+      const [organizer] = await ctx.db
+        .insert(organizers)
+        .values(input)
+        .returning();
 
       return organizer;
     }),
@@ -308,8 +317,8 @@ export const adminRouter = router({
       if (input.search) {
         conditions.push(
           or(
-            like(organizers.name, `%${input.search}%`),
-            like(organizers.slug, `%${input.search}%`)
+            ilike(organizers.name, `%${input.search}%`),
+            ilike(organizers.slug, `%${input.search}%`)
           )!
         );
       }
@@ -342,10 +351,10 @@ export const adminRouter = router({
     .query(async ({ ctx, input }) => {
       const results = await ctx.db.query.users.findMany({
         where: or(
-          like(users.username, `%${input.query}%`),
-          like(users.email, `%${input.query}%`),
-          like(users.firstName, `%${input.query}%`),
-          like(users.lastName, `%${input.query}%`)
+          ilike(users.username, `%${input.query}%`),
+          ilike(users.email, `%${input.query}%`),
+          ilike(users.firstName, `%${input.query}%`),
+          ilike(users.lastName, `%${input.query}%`)
         ),
         limit: input.limit,
         orderBy: [desc(users.createdAt)],

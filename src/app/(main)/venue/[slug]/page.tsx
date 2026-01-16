@@ -26,9 +26,9 @@ export default function VenuePage() {
   const utils = trpc.useUtils();
 
   // Fetch venue data
-  const { data: venue, isLoading } = trpc.venue.getVenueBySlug.useQuery(
-    { slug }
-  );
+  const { data: venue, isLoading } = trpc.venue.getVenueBySlug.useQuery({
+    slug,
+  });
 
   // Check if following
   const { data: isFollowing } = trpc.venue.isFollowingVenue.useQuery(
@@ -84,7 +84,6 @@ export default function VenuePage() {
     }
   };
 
-
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">
@@ -96,9 +95,9 @@ export default function VenuePage() {
   if (!venue) {
     return (
       <div className="container mx-auto py-12 text-center">
-        <Building2 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-        <h2 className="text-2xl font-bold mb-2">Venue not found</h2>
-        <p className="text-muted-foreground mb-4">
+        <Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+        <h2 className="mb-2 text-2xl font-bold">Venue not found</h2>
+        <p className="mb-4 text-muted-foreground">
           The venue you&apos;re looking for doesn&apos;t exist
         </p>
         <Link href="/venues">
@@ -109,14 +108,14 @@ export default function VenuePage() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-4">
+    <div className="container mx-auto space-y-4 py-8">
       {/* Venue Header */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-start justify-between">
-            <div className="space-y-4 flex-1">
+            <div className="flex-1 space-y-4">
               <div>
-                <div className="flex items-center gap-3 mb-2">
+                <div className="mb-2 flex items-center gap-3">
                   <Building2 className="h-8 w-8" />
                   <h1 className="text-3xl font-bold">{venue.name}</h1>
                 </div>
@@ -158,7 +157,7 @@ export default function VenuePage() {
 
               <div className="flex items-center gap-4">
                 <Badge variant="outline">
-                  <Heart className="h-3 w-3 mr-1" />
+                  <Heart className="mr-1 h-3 w-3" />
                   {(venue as any).follows?.length || 0} followers
                 </Badge>
                 <Badge variant="outline">
@@ -176,7 +175,7 @@ export default function VenuePage() {
                 }
               >
                 <Heart
-                  className={`h-4 w-4 mr-2 ${
+                  className={`mr-2 h-4 w-4 ${
                     isFollowing ? "fill-current" : ""
                   }`}
                 />
@@ -188,7 +187,7 @@ export default function VenuePage() {
       </Card>
 
       {/* Upcoming Events */}
-      <Card className={'bg-background border-none'}>
+      <Card className={"border-none bg-background"}>
         <CardHeader>
           <CardTitle>Upcoming Events</CardTitle>
         </CardHeader>
@@ -196,11 +195,11 @@ export default function VenuePage() {
           {(venue as any).events && (venue as any).events.length > 0 ? (
             <EventCardGrid
               events={(venue as any).events}
-              columns={{ mobile: 2, desktop: 4 }}
+              columns={{ mobile: 1, tablet: 3, desktop: 4 }}
               gap="md"
             />
           ) : (
-            <div className="text-center py-8">
+            <div className="py-8 text-center">
               <p className="text-muted-foreground">
                 No upcoming events scheduled
               </p>

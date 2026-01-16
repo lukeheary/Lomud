@@ -1,7 +1,13 @@
 import { z } from "zod";
-import { router, publicProcedure, protectedProcedure, adminProcedure } from "../init";
-import { venues, venueMembers, venueFollows, events, users } from "../../db/schema";
-import { eq, and, desc, or, like, gte, asc, sql } from "drizzle-orm";
+import { protectedProcedure, publicProcedure, router } from "../init";
+import {
+  events,
+  users,
+  venueFollows,
+  venueMembers,
+  venues,
+} from "../../db/schema";
+import { and, asc, desc, eq, gte, ilike, or, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 export const venueRouter = router({
@@ -21,15 +27,10 @@ export const venueRouter = router({
       if (input.city) conditions.push(eq(venues.city, input.city));
       if (input.state) conditions.push(eq(venues.state, input.state));
       if (input.search) {
-        conditions.push(
-          or(
-            like(venues.name, `%${input.search}%`),
-            like(venues.description, `%${input.search}%`)
-          )!
-        );
+        conditions.push(ilike(venues.name, `%${input.search}%`));
       }
 
-      const results = await ctx.db.query.venues.findMany({
+      return await ctx.db.query.venues.findMany({
         where: conditions.length > 0 ? and(...conditions) : undefined,
         limit: input.limit,
         offset: input.offset,
@@ -39,8 +40,6 @@ export const venueRouter = router({
           members: true,
         },
       });
-
-      return results;
     }),
 
   getVenueBySlug: publicProcedure

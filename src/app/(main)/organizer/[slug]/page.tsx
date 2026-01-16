@@ -180,7 +180,7 @@ export default function OrganizerPage() {
           {(organizer as any).events && (organizer as any).events.length > 0 ? (
             <EventCardGrid
               events={(organizer as any).events}
-              columns={{ mobile: 2, desktop: 4 }}
+              columns={{ mobile: 1, tablet: 3, desktop: 4 }}
               gap="md"
             />
           ) : (

@@ -1,24 +1,17 @@
 import { z } from "zod";
-import {
-  router,
-  publicProcedure,
-  protectedProcedure,
-  adminProcedure,
-} from "../init";
+import { protectedProcedure, publicProcedure, router } from "../init";
 import {
   events,
-  venues,
-  organizers,
-  venueMembers,
+  follows,
+  friends,
+  organizerFollows,
   organizerMembers,
   rsvps,
-  follows,
-  venueFollows,
-  organizerFollows,
-  friends,
   users,
+  venueFollows,
+  venueMembers,
 } from "../../db/schema";
-import { eq, and, or, desc, gte, lte, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, inArray, lte, or } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 export const eventRouter = router({
@@ -140,6 +133,7 @@ export const eventRouter = router({
           .optional(),
         city: z.string().optional(),
         state: z.string().optional(),
+        search: z.string().optional(),
         limit: z.number().min(1).max(100).default(50),
         offset: z.number().min(0).default(0),
       })
@@ -163,6 +157,16 @@ export const eventRouter = router({
       }
       if (input.state) {
         conditions.push(eq(events.state, input.state));
+      }
+
+      // Add search filter
+      if (input.search) {
+        conditions.push(
+          or(
+            ilike(events.title, `%${input.search}%`),
+            ilike(events.venueName, `%${input.search}%`)
+          )!
+        );
       }
 
       // Filter by followed businesses, venues, and organizers
@@ -322,13 +326,12 @@ export const eventRouter = router({
       }
 
       // Attach user RSVP and friends going to each event
-      const eventsWithData = eventList.map((event) => ({
+
+      return eventList.map((event) => ({
         ...event,
         userRsvp: rsvpMap.get(event.id) || null,
         friendsGoing: attendeesMap.get(event.id) || [],
       }));
-
-      return eventsWithData;
     }),
 
   getEventById: publicProcedure
@@ -421,15 +424,13 @@ export const eventRouter = router({
         conditions.push(eq(rsvps.status, input.statusFilter));
       }
 
-      const attendees = await ctx.db.query.rsvps.findMany({
+      return await ctx.db.query.rsvps.findMany({
         where: and(...conditions),
         with: {
           user: true,
         },
         orderBy: [desc(rsvps.createdAt)],
       });
-
-      return attendees;
     }),
 
   getUserRsvp: protectedProcedure
@@ -555,12 +556,11 @@ export const eventRouter = router({
 
   getAvailableCities: publicProcedure.query(async ({ ctx }) => {
     // Get unique cities that have public events
-    const result = await ctx.db
+
+    return await ctx.db
       .selectDistinct({ city: events.city, state: events.state })
       .from(events)
       .where(eq(events.visibility, "public"))
       .orderBy(events.city);
-
-    return result;
   }),
 });

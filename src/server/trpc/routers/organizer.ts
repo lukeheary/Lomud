@@ -1,7 +1,13 @@
 import { z } from "zod";
-import { router, publicProcedure, protectedProcedure } from "../init";
-import { organizers, organizerMembers, organizerFollows, events, users } from "../../db/schema";
-import { eq, and, desc, or, like, gte, asc, sql } from "drizzle-orm";
+import { protectedProcedure, publicProcedure, router } from "../init";
+import {
+  events,
+  organizerFollows,
+  organizerMembers,
+  organizers,
+  users,
+} from "../../db/schema";
+import { and, asc, desc, eq, gte, ilike, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 export const organizerRouter = router({
@@ -17,15 +23,10 @@ export const organizerRouter = router({
       const conditions = [];
 
       if (input.search) {
-        conditions.push(
-          or(
-            like(organizers.name, `%${input.search}%`),
-            like(organizers.description, `%${input.search}%`)
-          )!
-        );
+        conditions.push(ilike(organizers.name, `%${input.search}%`));
       }
 
-      const results = await ctx.db.query.organizers.findMany({
+      return await ctx.db.query.organizers.findMany({
         where: conditions.length > 0 ? and(...conditions) : undefined,
         limit: input.limit,
         offset: input.offset,
@@ -35,8 +36,6 @@ export const organizerRouter = router({
           members: true,
         },
       });
-
-      return results;
     }),
 
   getOrganizerBySlug: publicProcedure

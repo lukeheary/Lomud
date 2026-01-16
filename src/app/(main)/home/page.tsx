@@ -47,14 +47,19 @@ import {
 import { cn, formatTime } from "@/lib/utils";
 import { EventFilterTabs } from "@/components/events/event-filter-tabs";
 import { EventFilterTab } from "@/types/events";
+import { useQueryState } from "nuqs";
 
 type ViewMode = "week" | "month";
 
 export default function HomePage() {
   const { toast } = useToast();
   const [activeFilter, setActiveFilter] = useState<EventFilterTab>("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCity, setSelectedCity] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useQueryState("search", {
+    defaultValue: "",
+  });
+  const [selectedCity, setSelectedCity] = useQueryState("city", {
+    defaultValue: "all",
+  });
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -67,9 +72,9 @@ export default function HomePage() {
   // Set default city to user's city on load
   useEffect(() => {
     if (currentUser?.city && selectedCity === "all") {
-      setSelectedCity(currentUser.city);
+      void setSelectedCity(currentUser.city);
     }
-  }, [currentUser, selectedCity]);
+  }, [currentUser, selectedCity, setSelectedCity]);
 
   // Calculate date range based on view mode
   const dateRange = useMemo(() => {
@@ -97,6 +102,7 @@ export default function HomePage() {
     followedOnly: activeFilter === "followed",
     friendsGoingOnly: activeFilter === "friends",
     city: selectedCity !== "all" ? selectedCity : undefined,
+    search: searchQuery || undefined,
   });
 
   // Group events by day
@@ -115,30 +121,6 @@ export default function HomePage() {
 
     return grouped;
   }, [events]);
-
-  // Filter events by search query (client-side)
-  const filteredEventsByDay = useMemo(() => {
-    if (!searchQuery.trim()) return eventsByDay;
-
-    const query = searchQuery.toLowerCase();
-    const filtered: Record<string, typeof events> = {};
-
-    Object.entries(eventsByDay).forEach(([dateKey, dayEvents]) => {
-      const matchingEvents = dayEvents.filter(
-        (event) =>
-          event.title.toLowerCase().includes(query) ||
-          event.description?.toLowerCase().includes(query) ||
-          event.venueName?.toLowerCase().includes(query) ||
-          event.city.toLowerCase().includes(query)
-      );
-
-      if (matchingEvents.length > 0) {
-        filtered[dateKey] = matchingEvents;
-      }
-    });
-
-    return filtered;
-  }, [eventsByDay, searchQuery]);
 
   const handlePrevious = () => {
     if (viewMode === "week") {
@@ -290,7 +272,7 @@ export default function HomePage() {
         <div className="space-y-8">
           {daysToDisplay.map((date, index) => {
             const dateKey = format(date, "yyyy-MM-dd");
-            const dayEvents = filteredEventsByDay[dateKey] || [];
+            const dayEvents = eventsByDay[dateKey] || [];
             const isToday = isSameDay(date, new Date());
 
             return (
@@ -348,7 +330,7 @@ export default function HomePage() {
                     ) : (
                       <EventCardGrid
                         events={dayEvents}
-                        columns={{ mobile: 1, desktop: 4 }}
+                        columns={{ mobile: 1, tablet: 3, desktop: 4 }}
                         gap="md"
                       />
                     )}
@@ -380,7 +362,7 @@ export default function HomePage() {
             <div className="grid grid-cols-7 gap-2">
               {daysToDisplay.map((date) => {
                 const dateKey = format(date, "yyyy-MM-dd");
-                const dayEvents = filteredEventsByDay[dateKey] || [];
+                const dayEvents = eventsByDay[dateKey] || [];
                 const isToday = isSameDay(date, new Date());
                 const isCurrentMonth = isSameMonth(date, currentDate);
 
