@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
 import Image from "next/image";
 import {
   format,
@@ -220,12 +220,14 @@ export default function HomePage() {
       {/* Search and Filters */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         {/* Search Input */}
-        <SearchInput
-          placeholder="Search events..."
-          value={searchQuery}
-          onChange={setSearchQuery}
-          className="w-full"
-        />
+        <Suspense fallback={null}>
+          <SearchInput
+            placeholder="Search events..."
+            value={searchQuery}
+            onChange={setSearchQuery}
+            className="w-full"
+          />
+        </Suspense>
 
         {/* City Filter */}
         <Select value={selectedCity} onValueChange={setSelectedCity}>

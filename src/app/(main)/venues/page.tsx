@@ -6,6 +6,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, MapPin, Heart, Loader2, Users } from "lucide-react";
 import { useQueryState } from "nuqs";
+import { Suspense } from "react";
 
 export default function VenuesAndOrganizersPage() {
   const [venueSearch, setVenueSearch] = useQueryState("venue", {
@@ -43,13 +44,14 @@ export default function VenuesAndOrganizersPage() {
           </div>
         </div>
 
-        {/* Search */}
-        <SearchInput
-          placeholder="Search venues..."
-          value={venueSearch}
-          onChange={setVenueSearch}
-          className="max-w-lg"
-        />
+        <Suspense fallback={null}>
+          <SearchInput
+            placeholder="Search venues..."
+            value={venueSearch}
+            onChange={setVenueSearch}
+            className="max-w-lg"
+          />
+        </Suspense>
 
         {/* Loading State */}
         {venuesLoading && (
@@ -127,13 +129,14 @@ export default function VenuesAndOrganizersPage() {
           </div>
         </div>
 
-        {/* Search */}
-        <SearchInput
-          placeholder="Search organizers..."
-          value={organizerSearch}
-          onChange={setOrganizerSearch}
-          className="max-w-lg"
-        />
+        <Suspense fallback={null}>
+          <SearchInput
+            placeholder="Search organizers..."
+            value={organizerSearch}
+            onChange={setOrganizerSearch}
+            className="max-w-lg"
+          />
+        </Suspense>
 
         {/* Loading State */}
         {organizersLoading && (

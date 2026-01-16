@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Search, UserPlus, Check, X, Loader2, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryState } from "nuqs";
+import { Suspense } from "react";
 
 export default function FriendsPage() {
   const { toast } = useToast();
@@ -313,11 +314,13 @@ export default function FriendsPage() {
               <CardTitle>Find Friends</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <SearchInput
-                placeholder="Search by name, username, or email..."
-                value={searchQuery}
-                onChange={setSearchQuery}
-              />
+              <Suspense fallback={null}>
+                <SearchInput
+                  placeholder="Search by name, username, or email..."
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                />
+              </Suspense>
 
               {searchQuery.length < 2 ? (
                 <div className="py-8 text-center text-muted-foreground">
