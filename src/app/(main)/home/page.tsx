@@ -21,6 +21,7 @@ import {
   isBefore,
   startOfISOWeek,
   endOfISOWeek,
+  isSameWeek,
 } from "date-fns";
 import { trpc } from "@/lib/trpc";
 import { EventCardGrid } from "@/components/events/event-card-grid";
@@ -52,7 +53,8 @@ import {
 import { cn, formatTime } from "@/lib/utils";
 import { EventFilterSelect } from "@/components/events/event-filter-select";
 import { EventFilterTab } from "@/types/events";
-import { useQueryState } from "nuqs";
+import { useQueryState, parseAsString, parseAsIsoDate } from "nuqs";
+import { parseISO, subDays } from "date-fns";
 
 type ViewMode = "week" | "month";
 
@@ -65,17 +67,30 @@ function HomePageContent() {
   const [selectedCity, setSelectedCity] = useQueryState("city", {
     defaultValue: "all",
   });
-  const [viewMode, setViewMode] = useState<ViewMode>("week");
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [viewMode, setViewMode] = useQueryState<ViewMode>("view", {
+    defaultValue: "week",
+    parse: (value) => (value === "month" ? "month" : "week"),
+    serialize: (value) => value,
+  });
+  const [dateParam, setDateParam] = useQueryState("date", {
+    defaultValue: format(new Date(), "yyyy-MM-dd"),
+  });
   const [hasSetInitialCity, setHasSetInitialCity] = useState(false);
+
+  const currentDate = useMemo(() => {
+    try {
+      return startOfDay(parseISO(dateParam));
+    } catch (e) {
+      return startOfDay(new Date());
+    }
+  }, [dateParam]);
 
   const isCurrentWeek = useMemo(() => {
     if (viewMode !== "week") return false;
     const today = startOfDay(new Date());
-    const startOfCurrentView = startOfDay(currentDate);
     return (
-      isSameDay(startOfCurrentView, today) ||
-      isBefore(startOfCurrentView, today)
+      isSameWeek(currentDate, today, { weekStartsOn: 1 }) ||
+      isBefore(currentDate, today)
     );
   }, [viewMode, currentDate]);
 
@@ -95,36 +110,24 @@ function HomePageContent() {
 
   // Calculate date range based on view mode
   const dateRange = useMemo(() => {
+    const today = startOfDay(new Date());
     if (viewMode === "week") {
-      const today = startOfDay(new Date());
-      const startOfCurrentWeek = startOfDay(currentDate);
-
-      // Check if we're viewing the current week (the week that contains today)
-      const isCurrentWeek =
-        isSameDay(startOfCurrentWeek, today) ||
-        (isAfter(today, startOfCurrentWeek) &&
-          isBefore(today, addDays(startOfCurrentWeek, 7)));
-
-      let start: Date;
-      let end: Date;
-
       if (isCurrentWeek) {
-        // Current week: start from today (Friday) and go to next Sunday
-        start = today;
-        end = getDay(start) === 0 ? start : nextSunday(start);
+        // Current week: start from today and go to Sunday
+        const end = endOfWeek(today, { weekStartsOn: 1 });
+        return { startDate: today, endDate: end };
       } else {
         // Any other week: show full week from Monday to Sunday
-        start = startOfWeek(startOfCurrentWeek, { weekStartsOn: 1 }); // 1 = Monday
-        end = endOfWeek(startOfCurrentWeek, { weekStartsOn: 1 });
+        const start = startOfWeek(currentDate, { weekStartsOn: 1 });
+        const end = endOfWeek(start, { weekStartsOn: 1 });
+        return { startDate: start, endDate: end };
       }
-
-      return { startDate: start, endDate: end };
     } else {
       const start = startOfMonth(currentDate);
       const end = endOfMonth(currentDate);
       return { startDate: start, endDate: end };
     }
-  }, [viewMode, currentDate]);
+  }, [viewMode, currentDate, isCurrentWeek]);
 
   // Fetch events with current filters
   const {
@@ -157,48 +160,46 @@ function HomePageContent() {
     return grouped;
   }, [events]);
 
-  const handlePrevious = () => {
+  const handlePrevious = async () => {
     if (viewMode === "week") {
       const today = startOfDay(new Date());
-      const newDate = addDays(currentDate, -7);
+      if (isCurrentWeek) return;
 
-      // Don't allow going before today
-      if (newDate < today) {
-        setCurrentDate(today);
+      const prevWeekStart = addDays(currentDate, -7);
+      // If going back takes us into the current week (or before it), jump to today
+      if (
+        isSameWeek(prevWeekStart, today, { weekStartsOn: 1 }) ||
+        isBefore(prevWeekStart, today)
+      ) {
+        await setDateParam(format(today, "yyyy-MM-dd"));
       } else {
-        setCurrentDate(newDate);
+        await setDateParam(format(startOfWeek(prevWeekStart, { weekStartsOn: 1 }), "yyyy-MM-dd"));
       }
     } else {
-      setCurrentDate(subMonths(currentDate, 1));
+      await setDateParam(format(subMonths(currentDate, 1), "yyyy-MM-dd"));
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (viewMode === "week") {
       const today = startOfDay(new Date());
-      const nextWeekStart = addDays(currentDate, 7);
-
-      // When moving to next week, jump to Monday of next week
-      const isCurrentWeek =
-        isSameDay(currentDate, today) ||
-        (isAfter(today, currentDate) &&
-          isBefore(today, addDays(currentDate, 7)));
+      let nextDate: Date;
 
       if (isCurrentWeek) {
-        // From current week (Friday start), go to Monday of next week
-        const nextMonday = startOfWeek(addDays(today, 7), { weekStartsOn: 1 });
-        setCurrentDate(nextMonday);
+        // From current week, go to next Monday
+        nextDate = startOfWeek(addDays(today, 7), { weekStartsOn: 1 });
       } else {
-        // From any other week, just add 7 days (next Monday)
-        setCurrentDate(nextWeekStart);
+        // From any other week, go to next Monday
+        nextDate = addDays(startOfWeek(currentDate, { weekStartsOn: 1 }), 7);
       }
+      await setDateParam(format(nextDate, "yyyy-MM-dd"));
     } else {
-      setCurrentDate(addMonths(currentDate, 1));
+      await setDateParam(format(addMonths(currentDate, 1), "yyyy-MM-dd"));
     }
   };
 
-  const handleToday = () => {
-    setCurrentDate(new Date());
+  const handleToday = async () => {
+    await setDateParam(format(new Date(), "yyyy-MM-dd"));
   };
 
   // Get days to display based on view mode
@@ -241,8 +242,8 @@ function HomePageContent() {
             <p className="text-muted-foreground">
               {viewMode === "week"
                 ? format(dateRange.startDate, "MMMM d") +
-                  " - " +
-                  format(dateRange.endDate, "MMMM d, yyyy")
+                " - " +
+                format(dateRange.endDate, "MMMM d, yyyy")
                 : format(currentDate, "MMMM yyyy")}
             </p>
           </div>
