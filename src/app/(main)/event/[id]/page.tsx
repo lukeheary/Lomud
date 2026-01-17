@@ -73,8 +73,31 @@ export default function EventPage() {
     },
   });
 
+  const deleteRsvpMutation = trpc.event.deleteRsvp.useMutation({
+    onSuccess: () => {
+      toast({
+        title: "RSVP Removed",
+        description: "Your RSVP has been removed",
+      });
+      utils.event.getEventById.invalidate();
+      utils.event.listEventAttendees.invalidate();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleRsvp = (status: RsvpStatus) => {
-    rsvpMutation.mutate({ eventId, status });
+    // If clicking the same status button again, remove the RSVP
+    if (event?.userRsvp?.status === status) {
+      deleteRsvpMutation.mutate({ eventId });
+    } else {
+      rsvpMutation.mutate({ eventId, status });
+    }
   };
 
   if (isLoading) {
@@ -257,7 +280,9 @@ export default function EventPage() {
                 className="flex-1 text-base font-medium"
                 size="lg"
                 onClick={() => handleRsvp("interested")}
-                disabled={rsvpMutation.isPending}
+                disabled={
+                  rsvpMutation.isPending || deleteRsvpMutation.isPending
+                }
               >
                 Interested
               </Button>
@@ -268,7 +293,9 @@ export default function EventPage() {
                 })}
                 size="lg"
                 onClick={() => handleRsvp("going")}
-                disabled={rsvpMutation.isPending}
+                disabled={
+                  rsvpMutation.isPending || deleteRsvpMutation.isPending
+                }
               >
                 {event.userRsvp?.status === "going" ? "Going" : "I'm Going"}
               </Button>
@@ -402,7 +429,9 @@ export default function EventPage() {
                       className="flex-1 text-base font-medium"
                       size="lg"
                       onClick={() => handleRsvp("interested")}
-                      disabled={rsvpMutation.isPending}
+                      disabled={
+                        rsvpMutation.isPending || deleteRsvpMutation.isPending
+                      }
                     >
                       Interested
                     </Button>
@@ -414,7 +443,9 @@ export default function EventPage() {
                       })}
                       size="lg"
                       onClick={() => handleRsvp("going")}
-                      disabled={rsvpMutation.isPending}
+                      disabled={
+                        rsvpMutation.isPending || deleteRsvpMutation.isPending
+                      }
                     >
                       {event.userRsvp?.status === "going"
                         ? "Going"

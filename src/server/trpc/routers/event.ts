@@ -410,6 +410,21 @@ export const eventRouter = router({
       return rsvp;
     }),
 
+  deleteRsvp: protectedProcedure
+    .input(z.object({ eventId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .delete(rsvps)
+        .where(
+          and(
+            eq(rsvps.eventId, input.eventId),
+            eq(rsvps.userId, ctx.auth.userId)
+          )
+        );
+
+      return { success: true };
+    }),
+
   listEventAttendees: publicProcedure
     .input(
       z.object({
