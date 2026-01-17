@@ -7,7 +7,7 @@ import { EventCard } from "@/components/calendar/event-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Users, Building2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { EventFilterTabs } from "@/components/events/event-filter-tabs";
+import { EventFilterSelect } from "@/components/events/event-filter-select";
 
 type FilterTab = "all" | "followed" | "friends";
 
@@ -76,7 +76,11 @@ export default function HomePage() {
         </div>
       </div>
 
-      <EventFilterTabs value={activeFilter} onValueChange={setActiveFilter} />
+      <EventFilterSelect
+        value={activeFilter}
+        onValueChange={setActiveFilter}
+        className="w-full sm:w-[200px]"
+      />
 
       {/* Loading State */}
       {isLoading && (

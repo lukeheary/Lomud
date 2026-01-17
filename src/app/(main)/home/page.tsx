@@ -50,7 +50,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { cn, formatTime } from "@/lib/utils";
-import { EventFilterTabs } from "@/components/events/event-filter-tabs";
+import { EventFilterSelect } from "@/components/events/event-filter-select";
 import { EventFilterTab } from "@/types/events";
 import { useQueryState } from "nuqs";
 
@@ -227,7 +227,7 @@ function HomePageContent() {
               <span className="text-muted-foreground"> in {selectedCity}</span>
             )}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground">
             {viewMode === "week"
               ? format(dateRange.startDate, "MMMM d") +
                 " - " +
@@ -277,22 +277,31 @@ function HomePageContent() {
           />
         </Suspense>
 
-        {/* City Filter */}
-        <Select value={selectedCity} onValueChange={setSelectedCity}>
-          <SelectTrigger className="w-full shrink-0 md:w-fit">
-            <SelectValue placeholder="Select city" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Cities</SelectItem>
-            {cities?.map((city) => (
-              <SelectItem key={`${city.city}-${city.state}`} value={city.city}>
-                {city.city}, {city.state}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex w-full gap-2 sm:w-fit">
+          {/* City Filter */}
+          <Select value={selectedCity} onValueChange={setSelectedCity}>
+            <SelectTrigger className="flex-1 shrink-0 sm:w-[160px]">
+              <SelectValue placeholder="Select city" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Cities</SelectItem>
+              {cities?.map((city) => (
+                <SelectItem
+                  key={`${city.city}-${city.state}`}
+                  value={city.city}
+                >
+                  {city.city}, {city.state}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <EventFilterTabs value={activeFilter} onValueChange={setActiveFilter} />
+          <EventFilterSelect
+            value={activeFilter}
+            onValueChange={setActiveFilter}
+            className="flex-1 shrink-0 sm:w-[160px]"
+          />
+        </div>
       </div>
 
       {/*  <Tabs*/}
