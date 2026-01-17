@@ -69,6 +69,16 @@ function HomePageContent() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [hasSetInitialCity, setHasSetInitialCity] = useState(false);
 
+  const isCurrentWeek = useMemo(() => {
+    if (viewMode !== "week") return false;
+    const today = startOfDay(new Date());
+    const startOfCurrentView = startOfDay(currentDate);
+    return (
+      isSameDay(startOfCurrentView, today) ||
+      isBefore(startOfCurrentView, today)
+    );
+  }, [viewMode, currentDate]);
+
   // Get current user to show their city
   const { data: currentUser } = trpc.user.getCurrentUser.useQuery();
 
@@ -235,24 +245,6 @@ function HomePageContent() {
                   format(dateRange.endDate, "MMMM d, yyyy")
                 : format(currentDate, "MMMM yyyy")}
             </p>
-            <div className="absolute right-4 flex items-center rounded-md border">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="padding-0 h-4 w-8 border-0 md:h-8"
-                onClick={handlePrevious}
-              >
-                <ChevronLeft className="h-4 w-8" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="padding-0 h-4 w-8 border-0 md:h-8"
-                onClick={handleNext}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
           </div>
         </div>
 
@@ -288,14 +280,35 @@ function HomePageContent() {
       {/* Search and Filters */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         {/* Search Input */}
-        <Suspense fallback={null}>
-          <SearchInput
-            placeholder="Search events..."
-            value={searchQuery}
-            onChange={setSearchQuery}
-            className="w-full"
-          />
-        </Suspense>
+        <div className={"flex w-full flex-row gap-2"}>
+          <Suspense fallback={null}>
+            <SearchInput
+              placeholder="Search events..."
+              value={searchQuery}
+              onChange={setSearchQuery}
+              className="w-full"
+            />
+          </Suspense>
+          <div className="flex h-12 items-center overflow-hidden rounded-full border border-input bg-background shadow-sm md:hidden">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-full w-14 rounded-none border-r bg-muted px-0"
+              onClick={handlePrevious}
+              disabled={isCurrentWeek}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-full w-14 rounded-none bg-muted px-0"
+              onClick={handleNext}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
 
         <div className="flex w-full gap-2 sm:w-fit">
           {/* City Filter */}
@@ -321,6 +334,27 @@ function HomePageContent() {
             onValueChange={setActiveFilter}
             className="flex-1 shrink-0 sm:w-[160px]"
           />
+
+          {/* Navigation Controls */}
+          <div className="hidden h-12 items-center overflow-hidden rounded-full border border-input bg-background shadow-sm md:flex">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-full w-9 rounded-none border-r bg-muted px-0"
+              onClick={handlePrevious}
+              disabled={isCurrentWeek}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-full w-9 rounded-none bg-muted px-0"
+              onClick={handleNext}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
