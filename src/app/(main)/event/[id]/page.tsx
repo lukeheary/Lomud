@@ -171,309 +171,202 @@ export default function EventPage() {
         </div>
       )}
 
-      {/* Mobile Image - Full Width at Top */}
-      <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted lg:hidden">
-        {event.imageUrl ? (
-          <div
-            className="relative h-full w-full cursor-pointer"
-            onClick={() => setIsImageModalOpen(true)}
-          >
-            <Image
-              src={event.imageUrl}
-              alt={event.title}
-              fill
-              className="object-cover"
-              priority
-            />
-          </div>
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
-            <Calendar className="h-24 w-24 text-muted-foreground/40" />
-          </div>
-        )}
-
-        {/* Action Icons - Top Right on Mobile */}
-        <div className="absolute right-4 top-4 flex gap-2">
-          {canEdit && (
-            <Link href={`/event/${eventId}/edit`}>
-              <Button size="icon" variant="secondary" className="h-10 w-10">
-                <Edit className="h-4 w-4" />
-              </Button>
-            </Link>
+      {/* Cover Image - Banner style on all screens */}
+      <div className="mx-auto w-full max-w-4xl lg:px-4 lg:pt-4">
+        <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted lg:aspect-auto lg:h-[400px] lg:rounded-2xl">
+          {event.imageUrl ? (
+            <div
+              className="relative h-full w-full cursor-pointer"
+              onClick={() => setIsImageModalOpen(true)}
+            >
+              <Image
+                src={event.imageUrl}
+                alt={event.title}
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
+              <Calendar className="h-24 w-24 text-muted-foreground/40" />
+            </div>
           )}
-          <Button size="icon" variant="secondary" className="h-10 w-10">
-            <Heart className="h-4 w-4" />
-          </Button>
-          <Button size="icon" variant="secondary" className="h-10 w-10">
-            <Share2 className="h-4 w-4" />
-          </Button>
-        </div>
 
-        {/* Avatars - Bottom Right on Mobile */}
-        {goingUsers.length > 0 && (
-          <div className="absolute bottom-4 right-4">
-            <AvatarStack users={goingUsers} maxDisplay={5} size="md" />
+          {/* Action Icons - Overlay on top right */}
+          <div className="absolute right-4 top-4 flex gap-2">
+            {canEdit && (
+              <Link href={`/event/${eventId}/edit`}>
+                <Button size="icon" variant="secondary" className="h-10 w-10">
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </Link>
+            )}
+            <Button size="icon" variant="secondary" className="h-10 w-10">
+              <Heart className="h-4 w-4" />
+            </Button>
+            <Button size="icon" variant="secondary" className="h-10 w-10">
+              <Share2 className="h-4 w-4" />
+            </Button>
           </div>
-        )}
+
+          {/* Avatars - Overlay on bottom right (Hidden on desktop as sidebar/lineup covers it) */}
+          {goingUsers.length > 0 && (
+            <div className="absolute bottom-4 right-4 lg:hidden">
+              <AvatarStack users={goingUsers} maxDisplay={5} size="md" />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Content */}
-      <div className="container mx-auto p-4 pb-8">
-        <div className="grid gap-8 lg:grid-cols-3">
-          {/* Left Column - Main Content */}
-          <div className="lg:col-span-2">
-            {/* Title & Basic Info */}
-            <div className={"pb-4"}>
-              <div className="mb-2 flex items-start justify-between">
-                <h1 className="text-4xl font-bold">{event.title}</h1>
-                {/* Desktop Action Icons */}
-                <div className="hidden gap-2 lg:flex">
-                  {canEdit && (
-                    <Link href={`/event/${eventId}/edit`}>
-                      <Button size="icon" variant="outline">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                  )}
-                  <Button size="icon" variant="outline">
-                    <Heart className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="outline">
-                    <Share2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+      <div className="mx-auto max-w-4xl p-4 pb-8">
+        {/* Main Content */}
+        <div>
+          {/* Title & Basic Info */}
+          <div className="mb-2">
+            <h1 className="text-4xl font-bold">{event.title}</h1>
+          </div>
 
-              {event.venueName && (
-                <div className="flex items-center gap-2 text-lg">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">{event.venueName}</span>
-                </div>
-              )}
+          {event.venueName && (
+            <div className="flex items-center gap-2 text-lg">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium">{event.venueName}</span>
+            </div>
+          )}
 
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Calendar className="h-4 w-4" />
-                <span>
-                  {dayOfWeek}, {monthDay}, {time}
-                </span>
-              </div>
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Calendar className="h-4 w-4" />
+            <span>
+              {dayOfWeek}, {monthDay}, {time}
+            </span>
+          </div>
 
-              {event.organizer && (
-                <Link
-                  href={`/organizer/${event.organizer.slug}`}
-                  className="mt-1 flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary"
-                >
-                  <Users className="h-4 w-4" />
-                  <span>Hosted by {event.organizer.name}</span>
-                </Link>
-              )}
+          {event.organizer && (
+            <Link
+              href={`/organizer/${event.organizer.slug}`}
+              className="mt-1 flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary"
+            >
+              <Users className="h-4 w-4" />
+              <span>Hosted by {event.organizer.name}</span>
+            </Link>
+          )}
+
+          {/* RSVP Buttons - Shared across mobile and desktop */}
+          <div className="flex gap-2 py-4">
+            <Button
+              variant={
+                event.userRsvp?.status === "interested"
+                  ? "secondary"
+                  : "outline"
+              }
+              className="flex-1 text-base font-medium"
+              size="lg"
+              onClick={() => handleRsvp("interested")}
+              disabled={rsvpMutation.isPending || deleteRsvpMutation.isPending}
+            >
+              Interested
+            </Button>
+            <Button
+              variant={"outline"}
+              className={cn("flex-1 text-base font-medium", {
+                "border-transparent bg-green-500 text-black":
+                  event.userRsvp?.status === "going",
+              })}
+              size="lg"
+              onClick={() => handleRsvp("going")}
+              disabled={rsvpMutation.isPending || deleteRsvpMutation.isPending}
+            >
+              {event.userRsvp?.status === "going" ? "Going" : "I'm Going"}
+            </Button>
+          </div>
+
+          <Separator />
+
+          {/* About Section */}
+          <div className={"pt-4"}>
+            <h2 className="mb-2 text-2xl font-bold">About</h2>
+
+            {/* Event Date */}
+            <div className="mb-6">
+              <p className="text-muted-foreground">{event.title}</p>
             </div>
 
-            {/* Mobile RSVP Buttons */}
-            <div className="flex gap-2 pb-4 lg:hidden">
-              <Button
-                variant={
-                  event.userRsvp?.status === "interested"
-                    ? "secondary"
-                    : "outline"
-                }
-                className="flex-1 text-base font-medium"
-                size="lg"
-                onClick={() => handleRsvp("interested")}
-                disabled={
-                  rsvpMutation.isPending || deleteRsvpMutation.isPending
-                }
-              >
-                Interested
-              </Button>
-              <Button
-                variant={"outline"}
-                className={cn("flex-1 text-base font-medium", {
-                  "bg-green-500 text-black": event.userRsvp?.status === "going",
-                })}
-                size="lg"
-                onClick={() => handleRsvp("going")}
-                disabled={
-                  rsvpMutation.isPending || deleteRsvpMutation.isPending
-                }
-              >
-                {event.userRsvp?.status === "going" ? "Going" : "I'm Going"}
-              </Button>
-            </div>
-
-            <Separator />
-
-            {/* About Section */}
-            <div className={"pt-4"}>
-              <h2 className="mb-2 text-2xl font-bold">About</h2>
-
-              {/* Event Date */}
+            {/* Description */}
+            {event.description && (
               <div className="mb-6">
-                <p className="text-muted-foreground">{event.title}</p>
-              </div>
-
-              {/* Description */}
-              {event.description && (
-                <div className="mb-6">
-                  <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">
-                    {event.description}
-                  </p>
-                </div>
-              )}
-
-              {/* Location Details */}
-              <div className="space-y-2">
-                {event.address && (
-                  <p className="text-muted-foreground">{event.address}</p>
-                )}
-                <p className="text-muted-foreground">
-                  {event.city}, {event.state}
+                <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">
+                  {event.description}
                 </p>
               </div>
+            )}
 
-              {/* Additional Info */}
-              <div className="mt-6 rounded-lg bg-muted p-4">
-                <div className="flex items-start gap-2">
-                  <span className="text-sm">ℹ️</span>
-                  <div className="text-sm text-muted-foreground">
-                    <p className="mb-1 font-medium">
-                      This is a {event.category} event
-                    </p>
-                    {event.createdBy && (
-                      <p>
-                        Organized by {event.createdBy.firstName}{" "}
-                        {event.createdBy.lastName}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
+            {/* Location Details */}
+            <div className="space-y-2">
+              {event.address && (
+                <p className="text-muted-foreground">{event.address}</p>
+              )}
+              <p className="text-muted-foreground">
+                {event.city}, {event.state}
+              </p>
             </div>
 
-            {/* Lineup / Attendees Section */}
-            {attendees && attendees.length > 0 && (
-              <div className={"pt-4"}>
-                <h2 className="mb-4 text-2xl font-bold">Who&apos;s Going</h2>
-                <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-                  {attendees
-                    .filter((a) => a.status === "going")
-                    .slice(0, 9)
-                    .map((attendee) => (
-                      <div
-                        key={attendee.user.id}
-                        className="flex items-center gap-3 rounded-lg border bg-card p-3"
-                      >
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage
-                            src={attendee.user.imageUrl || undefined}
-                          />
-                          <AvatarFallback>
-                            {attendee.user.firstName?.[0]}
-                            {attendee.user.lastName?.[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="text-sm">
-                          <p className="font-medium">
-                            {attendee.user.firstName} {attendee.user.lastName}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-                {goingCount > 9 && (
-                  <p className="mt-4 text-sm text-muted-foreground">
-                    And {goingCount - 9} others are going
+            {/* Additional Info */}
+            <div className="mt-6 rounded-lg bg-muted p-4">
+              <div className="flex items-start gap-2">
+                <span className="text-sm">ℹ️</span>
+                <div className="text-sm text-muted-foreground">
+                  <p className="mb-1 font-medium">
+                    This is a {event.category} event
                   </p>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Sidebar - Sticky Card with Image and RSVP (Desktop Only) */}
-          <div className="hidden lg:col-span-1 lg:block">
-            <div className="sticky top-4">
-              <Card className="overflow-hidden">
-                {/* Event Image - Square on Top */}
-                <div className="relative w-full overflow-hidden bg-muted">
-                  {event.imageUrl ? (
-                    <div
-                      className="relative w-full cursor-pointer transition-all hover:brightness-75"
-                      onClick={() => setIsImageModalOpen(true)}
-                    >
-                      <Image
-                        src={event.imageUrl}
-                        alt={event.title}
-                        width={500}
-                        height={500}
-                        className="h-auto w-full object-contain"
-                        priority
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
-                      <Calendar className="h-24 w-24 text-muted-foreground/40" />
-                    </div>
+                  {event.createdBy && (
+                    <p>
+                      Organized by {event.createdBy.firstName}{" "}
+                      {event.createdBy.lastName}
+                    </p>
                   )}
                 </div>
-
-                {/* Card Content Below Image */}
-                <CardContent className="p-6">
-                  {/* RSVP Buttons */}
-                  <div className="flex gap-2 pb-4">
-                    <Button
-                      variant={
-                        event.userRsvp?.status === "interested"
-                          ? "secondary"
-                          : "outline"
-                      }
-                      className="flex-1 text-base font-medium"
-                      size="lg"
-                      onClick={() => handleRsvp("interested")}
-                      disabled={
-                        rsvpMutation.isPending || deleteRsvpMutation.isPending
-                      }
-                    >
-                      Interested
-                    </Button>
-                    <Button
-                      variant={"outline"}
-                      className={cn("flex-1 text-base font-medium", {
-                        "bg-green-500 text-black":
-                          event.userRsvp?.status === "going",
-                      })}
-                      size="lg"
-                      onClick={() => handleRsvp("going")}
-                      disabled={
-                        rsvpMutation.isPending || deleteRsvpMutation.isPending
-                      }
-                    >
-                      {event.userRsvp?.status === "going"
-                        ? "Going"
-                        : "I'm Going"}
-                    </Button>
-                  </div>
-
-                  <Separator />
-
-                  {/* Attendee Count */}
-                  <div className="space-y-2 pt-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        Going
-                      </span>
-                      <span className="font-semibold">{goingCount}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        Interested
-                      </span>
-                      <span className="font-semibold">{interestedCount}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              </div>
             </div>
           </div>
+
+          {/* Lineup / Attendees Section */}
+          {attendees && attendees.length > 0 && (
+            <div className={"pt-4"}>
+              <h2 className="mb-4 text-2xl font-bold">Who&apos;s Going</h2>
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+                {attendees
+                  .filter((a) => a.status === "going")
+                  .slice(0, 9)
+                  .map((attendee) => (
+                    <div
+                      key={attendee.user.id}
+                      className="flex items-center gap-3 rounded-lg border bg-card p-3"
+                    >
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage
+                          src={attendee.user.imageUrl || undefined}
+                        />
+                        <AvatarFallback>
+                          {attendee.user.firstName?.[0]}
+                          {attendee.user.lastName?.[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="text-sm">
+                        <p className="font-medium">
+                          {attendee.user.firstName} {attendee.user.lastName}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+              {goingCount > 9 && (
+                <p className="mt-4 text-sm text-muted-foreground">
+                  And {goingCount - 9} others are going
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
