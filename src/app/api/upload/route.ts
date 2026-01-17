@@ -14,6 +14,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const folder = (formData.get("folder") as string) || "uploads";
+    const filename = formData.get("filename") as string | undefined;
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Upload to S3
-    const url = await uploadToS3(file, folder);
+    const url = await uploadToS3(file, folder, filename);
 
     return NextResponse.json({
       success: true,

@@ -10,6 +10,7 @@ import Image from "next/image";
 interface S3UploaderProps {
   onUploadComplete: (url: string) => void;
   folder?: string;
+  fileName?: string;
   currentImageUrl?: string;
   onRemoveImage?: () => void;
   variant?: "button" | "dropzone";
@@ -21,6 +22,7 @@ interface S3UploaderProps {
 export function S3Uploader({
   onUploadComplete,
   folder = "uploads",
+  fileName,
   currentImageUrl,
   onRemoveImage,
   variant = "dropzone",
@@ -62,6 +64,9 @@ export function S3Uploader({
       const formData = new FormData();
       formData.append("file", file);
       formData.append("folder", folder);
+      if (fileName) {
+        formData.append("filename", fileName);
+      }
 
       // Upload to API
       const response = await fetch("/api/upload", {

@@ -11,6 +11,62 @@ import { and, asc, desc, eq, gte, ilike, or, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 export const venueRouter = router({
+  searchVenues: publicProcedure
+    .input(z.object({ query: z.string().optional() }))
+    .query(async ({ ctx, input }) => {
+      const conditions = [];
+      if (input.query) {
+        conditions.push(ilike(venues.name, `%${input.query}%`));
+      }
+
+      return await ctx.db.query.venues.findMany({
+        where: conditions.length > 0 ? and(...conditions) : undefined,
+        limit: 10,
+        orderBy: [asc(venues.name)],
+      });
+    }),
+
+  createVenue: protectedProcedure
+    .input(
+      z.object({
+        name: z.string().min(1).max(255),
+        description: z.string().optional(),
+        address: z.string().optional(),
+        city: z.string().min(1).max(100),
+        state: z.string().length(2),
+        website: z.string().url().optional().or(z.literal("")),
+        instagram: z.string().max(100).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Generate initial slug
+      let slug = input.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+
+      if (slug.length < 3) slug = `venue-${slug}`;
+
+      // Check for collision
+      const existing = await ctx.db.query.venues.findFirst({
+        where: eq(venues.slug, slug),
+      });
+
+      if (existing) {
+        slug = `${slug}-${Math.random().toString(36).substring(2, 7)}`;
+      }
+
+      const [venue] = await ctx.db
+        .insert(venues)
+        .values({
+          ...input,
+          slug,
+        })
+        .returning();
+
+      return venue;
+    }),
+
   listVenues: publicProcedure
     .input(
       z.object({
@@ -59,6 +115,23 @@ export const venueRouter = router({
             orderBy: [asc(events.startAt)],
           },
         },
+      });
+
+      if (!venue) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Venue not found",
+        });
+      }
+
+      return venue;
+    }),
+
+  getVenueById: publicProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const venue = await ctx.db.query.venues.findFirst({
+        where: eq(venues.id, input.id),
       });
 
       if (!venue) {

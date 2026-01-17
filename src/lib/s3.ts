@@ -39,9 +39,10 @@ export function getS3Url(key: string): string {
  */
 export async function uploadToS3(
   file: File,
-  folder: string = "uploads"
+  folder: string = "uploads",
+  fileName?: string
 ): Promise<string> {
-  const filename = generateUniqueFilename(file.name);
+  const filename = fileName || generateUniqueFilename(file.name);
   const fullPath = getStoragePath(folder);
   const key = `${fullPath}/${filename}`;
 
