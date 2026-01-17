@@ -217,23 +217,43 @@ function HomePageContent() {
   }, [error, toast]);
 
   return (
-    <div className="container mx-auto space-y-4 py-8">
+    <div className="container relative mx-auto space-y-4 py-8">
       {/* Header with Navigation */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
+      <div className="flex w-full flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className={"w-full"}>
           <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
             Upcoming Events
             {selectedCity !== "all" && (
               <span className="text-muted-foreground"> in {selectedCity}</span>
             )}
           </h1>
-          <p className="text-muted-foreground">
-            {viewMode === "week"
-              ? format(dateRange.startDate, "MMMM d") +
-                " - " +
-                format(dateRange.endDate, "MMMM d, yyyy")
-              : format(currentDate, "MMMM yyyy")}
-          </p>
+          <div className={"flex w-full flex-row items-center justify-between"}>
+            <p className="text-muted-foreground">
+              {viewMode === "week"
+                ? format(dateRange.startDate, "MMMM d") +
+                  " - " +
+                  format(dateRange.endDate, "MMMM d, yyyy")
+                : format(currentDate, "MMMM yyyy")}
+            </p>
+            <div className="absolute right-4 flex items-center rounded-md border">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="padding-0 h-4 w-8 border-0 md:h-8"
+                onClick={handlePrevious}
+              >
+                <ChevronLeft className="h-4 w-8" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="padding-0 h-4 w-8 border-0 md:h-8"
+                onClick={handleNext}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Navigation Controls */}
@@ -280,7 +300,7 @@ function HomePageContent() {
         <div className="flex w-full gap-2 sm:w-fit">
           {/* City Filter */}
           <Select value={selectedCity} onValueChange={setSelectedCity}>
-            <SelectTrigger className="flex-1 shrink-0 sm:w-[160px]">
+            <SelectTrigger className="flex-1 shrink-0 sm:w-[200px]">
               <SelectValue placeholder="Select city" />
             </SelectTrigger>
             <SelectContent>
@@ -354,24 +374,24 @@ function HomePageContent() {
                         {/*  Today*/}
                         {/*</Button>*/}
 
-                        <div className="flex items-center rounded-md border">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={handlePrevious}
-                          >
-                            <ChevronLeft className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={handleNext}
-                          >
-                            <ChevronRight className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        {/*<div className="flex items-center rounded-md border">*/}
+                        {/*  <Button*/}
+                        {/*    variant="ghost"*/}
+                        {/*    size="icon"*/}
+                        {/*    className="h-8 w-8"*/}
+                        {/*    onClick={handlePrevious}*/}
+                        {/*  >*/}
+                        {/*    <ChevronLeft className="h-4 w-4" />*/}
+                        {/*  </Button>*/}
+                        {/*  <Button*/}
+                        {/*    variant="ghost"*/}
+                        {/*    size="icon"*/}
+                        {/*    className="h-8 w-8"*/}
+                        {/*    onClick={handleNext}*/}
+                        {/*  >*/}
+                        {/*    <ChevronRight className="h-4 w-4" />*/}
+                        {/*  </Button>*/}
+                        {/*</div>*/}
                       </div>
                     )}
                   </div>

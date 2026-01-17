@@ -255,11 +255,11 @@ export const eventRouter = router({
       const userRsvps =
         eventIds.length > 0
           ? await ctx.db.query.rsvps.findMany({
-              where: and(
-                eq(rsvps.userId, ctx.auth.userId),
-                inArray(rsvps.eventId, eventIds)
-              ),
-            })
+            where: and(
+              eq(rsvps.userId, ctx.auth.userId),
+              inArray(rsvps.eventId, eventIds)
+            ),
+          })
           : [];
 
       // Create a map of event IDs to RSVPs
@@ -289,15 +289,15 @@ export const eventRouter = router({
       const friendsRsvps =
         eventIds.length > 0 && friendIds.length > 0
           ? await ctx.db.query.rsvps.findMany({
-              where: and(
-                inArray(rsvps.eventId, eventIds),
-                inArray(rsvps.userId, friendIds),
-                eq(rsvps.status, "going")
-              ),
-              with: {
-                user: true,
-              },
-            })
+            where: and(
+              inArray(rsvps.eventId, eventIds),
+              inArray(rsvps.userId, friendIds),
+              eq(rsvps.status, "going")
+            ),
+            with: {
+              user: true,
+            },
+          })
           : [];
 
       // Create a map of event IDs to attendees (current user + friends)
@@ -486,6 +486,8 @@ export const eventRouter = router({
           ])
           .optional(),
         visibility: z.enum(["public", "private"]).optional(),
+        venueId: z.string().uuid().optional(),
+        organizerId: z.string().uuid().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -551,6 +553,10 @@ export const eventRouter = router({
         updateData.category = updates.category;
       if (updates.visibility !== undefined)
         updateData.visibility = updates.visibility;
+      if (updates.venueId !== undefined)
+        updateData.venueId = updates.venueId;
+      if (updates.organizerId !== undefined)
+        updateData.organizerId = updates.organizerId;
 
       // Update the event
       const [updatedEvent] = await ctx.db

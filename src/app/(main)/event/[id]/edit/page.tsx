@@ -21,6 +21,7 @@ import { US_STATES } from "@/lib/utils";
 import { S3Uploader } from "@/components/ui/s3-uploader";
 import Link from "next/link";
 import { format } from "date-fns";
+import { VenueSelector, VenueData } from "@/components/events/venue-selector";
 
 const EVENT_CATEGORIES = [
   "music",
@@ -61,6 +62,11 @@ export default function EditEventPage() {
     state: "",
   });
 
+  const [selectedVenue, setSelectedVenue] = useState<VenueData | null>(null);
+  const [isCreatingNewVenue, setIsCreatingNewVenue] = useState(false);
+
+  const createVenueMutation = trpc.venue.createVenue.useMutation();
+
   const updateMutation = trpc.event.updateEvent.useMutation({
     onSuccess: () => {
       toast({
@@ -95,6 +101,17 @@ export default function EditEventPage() {
         city: event.city || "",
         state: event.state || "",
       });
+      setSelectedVenue({
+        id: event.venueId || undefined,
+        name: event.venueName || "",
+        address: event.address || "",
+        city: event.city || "",
+        state: event.state || "",
+      });
+      // If no venue ID, it was a manual entry, so we show it as "creating new" mode
+      if (!event.venueId) {
+        setIsCreatingNewVenue(true);
+      }
     }
   }, [event]);
 
@@ -116,7 +133,6 @@ export default function EditEventPage() {
       return;
     }
 
-    // Validate dates
     const startDate = new Date(formData.startAt);
     const endDate = formData.endAt ? new Date(formData.endAt) : null;
 
@@ -129,19 +145,54 @@ export default function EditEventPage() {
       return;
     }
 
-    updateMutation.mutate({
-      eventId,
-      title: formData.title,
-      description: formData.description || undefined,
-      imageUrl: formData.imageUrl || undefined,
-      category: formData.category,
-      startAt: startDate,
-      endAt: endDate || undefined,
-      venueName: formData.venueName,
-      address: formData.address || undefined,
-      city: formData.city,
-      state: formData.state,
-    });
+    const performUpdate = async () => {
+      let finalVenueId = selectedVenue?.id;
+
+      if (isCreatingNewVenue && selectedVenue) {
+        try {
+          const newVenue = await createVenueMutation.mutateAsync({
+            name: selectedVenue.name,
+            address: selectedVenue.address || undefined,
+            city: selectedVenue.city,
+            state: selectedVenue.state,
+          });
+          finalVenueId = newVenue.id;
+        } catch (error: any) {
+          toast({
+            title: "Venue Creation Error",
+            description: error.message,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      if (!finalVenueId && !isCreatingNewVenue) {
+        toast({
+          title: "Validation Error",
+          description: "Please select a venue",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      updateMutation.mutate({
+        eventId,
+        title: formData.title,
+        description: formData.description || undefined,
+        imageUrl: formData.imageUrl || undefined,
+        category: formData.category,
+        startAt: startDate,
+        endAt: endDate || undefined,
+        venueName: selectedVenue?.name || formData.venueName,
+        address: selectedVenue?.address || formData.address || undefined,
+        city: selectedVenue?.city || formData.city,
+        state: selectedVenue?.state || formData.state,
+        venueId: finalVenueId,
+      });
+    };
+
+    performUpdate();
   };
 
   if (eventLoading) {
@@ -288,71 +339,13 @@ export default function EditEventPage() {
               </div>
             </div>
 
-            {/* Venue Name */}
-            <div className="space-y-2">
-              <Label htmlFor="venueName">Venue Name</Label>
-              <Input
-                id="venueName"
-                value={formData.venueName}
-                onChange={(e) =>
-                  setFormData({ ...formData, venueName: e.target.value })
-                }
-                placeholder="Enter venue name"
-              />
-            </div>
-
-            {/* Address */}
-            <div className="space-y-2">
-              <Label htmlFor="address">Street Address</Label>
-              <Input
-                id="address"
-                value={formData.address}
-                onChange={(e) =>
-                  setFormData({ ...formData, address: e.target.value })
-                }
-                placeholder="Enter street address"
-              />
-            </div>
-
-            {/* City & State */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="city">
-                  City <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="city"
-                  value={formData.city}
-                  onChange={(e) =>
-                    setFormData({ ...formData, city: e.target.value })
-                  }
-                  placeholder="Enter city"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="state">
-                  State <span className="text-destructive">*</span>
-                </Label>
-                <Select
-                  value={formData.state}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, state: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {US_STATES.map((state) => (
-                      <SelectItem key={state.value} value={state.value}>
-                        {state.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            {/* Venue Details */}
+            <VenueSelector
+              selectedVenue={selectedVenue}
+              onVenueSelect={setSelectedVenue}
+              isCreatingNew={isCreatingNewVenue}
+              setIsCreatingNew={setIsCreatingNewVenue}
+            />
 
             {/* Submit Button */}
             <div className="flex gap-3">

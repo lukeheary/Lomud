@@ -19,12 +19,8 @@ import { Calendar, Loader2, ArrowLeft, Search, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { US_STATES } from "@/lib/utils";
 import { S3Uploader } from "@/components/ui/s3-uploader";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import Link from "next/link";
+import { VenueSelector, VenueData } from "@/components/events/venue-selector";
 
 const EVENT_CATEGORIES = [
   "music",
@@ -57,16 +53,8 @@ function NewEventPageContent() {
     state: "",
   });
 
-  const [venueSearch, setVenueSearch] = useState("");
-  const [selectedVenue, setSelectedVenue] = useState<any>(null);
+  const [selectedVenue, setSelectedVenue] = useState<VenueData | null>(null);
   const [isCreatingNewVenue, setIsCreatingNewVenue] = useState(false);
-  const [isVenuePopoverOpen, setIsVenuePopoverOpen] = useState(false);
-
-  const { data: searchResults, isLoading: isSearchingVenues } =
-    trpc.venue.searchVenues.useQuery(
-      { query: venueSearch },
-      { enabled: !venueId && venueSearch.length > 2 }
-    );
 
   const { data: venue, isLoading: isLoadingVenue } = trpc.venue.getVenueById.useQuery(
     { id: venueId as string },
@@ -75,13 +63,13 @@ function NewEventPageContent() {
 
   useEffect(() => {
     if (venue) {
-      setFormData((prev) => ({
-        ...prev,
-        venueName: venue.name,
+      setSelectedVenue({
+        id: venue.id,
+        name: venue.name,
         address: venue.address || "",
         city: venue.city,
         state: venue.state,
-      }));
+      });
     }
   }, [venue]);
 
@@ -118,10 +106,7 @@ function NewEventPageContent() {
     if (
       !formData.title ||
       !formData.category ||
-      !formData.startAt ||
-      (!venueId && !selectedVenue && !isCreatingNewVenue) ||
-      ((isCreatingNewVenue || (!venueId && !selectedVenue)) &&
-        (!formData.venueName || !formData.city || !formData.state))
+      !formData.startAt
     ) {
       toast({
         title: "Validation Error",
@@ -147,13 +132,13 @@ function NewEventPageContent() {
     let finalVenueId = venueId || selectedVenue?.id;
 
     // If creating a new venue, do that first
-    if (isCreatingNewVenue) {
+    if (isCreatingNewVenue && selectedVenue) {
       try {
         const newVenue = await createVenueMutation.mutateAsync({
-          name: formData.venueName,
-          address: formData.address || undefined,
-          city: formData.city,
-          state: formData.state,
+          name: selectedVenue.name,
+          address: selectedVenue.address || undefined,
+          city: selectedVenue.city,
+          state: selectedVenue.state,
         });
         finalVenueId = newVenue.id;
       } catch (error: any) {
@@ -166,6 +151,15 @@ function NewEventPageContent() {
       }
     }
 
+    if (!finalVenueId && !isCreatingNewVenue) {
+      toast({
+        title: "Validation Error",
+        description: "Please select a venue",
+        variant: "destructive",
+      });
+      return;
+    }
+
     createMutation.mutate({
       venueId: finalVenueId,
       organizerId,
@@ -175,10 +169,10 @@ function NewEventPageContent() {
       category: formData.category,
       startAt: startDate,
       endAt: endDate || undefined,
-      venueName: formData.venueName,
-      address: formData.address || undefined,
-      city: formData.city,
-      state: formData.state,
+      venueName: selectedVenue?.name || formData.venueName,
+      address: selectedVenue?.address || formData.address || undefined,
+      city: selectedVenue?.city || formData.city,
+      state: selectedVenue?.state || formData.state,
     });
   };
 
@@ -221,7 +215,7 @@ function NewEventPageContent() {
               <S3Uploader
                 folder="events"
                 currentImageUrl={formData.imageUrl}
-                onUploadComplete={(url) =>
+                onUploadComplete={(url: string) =>
                   setFormData({ ...formData, imageUrl: url })
                 }
                 onRemoveImage={() =>
@@ -318,197 +312,12 @@ function NewEventPageContent() {
 
             {/* Venue Details - Hidden if venueId is provided */}
             {!venueId && (
-              <div className="space-y-6 rounded-lg border bg-muted/30 p-4">
-                <div className="flex items-center justify-between">
-                  <Label className="text-base font-semibold">Venue</Label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setIsCreatingNewVenue(!isCreatingNewVenue);
-                      setSelectedVenue(null);
-                      if (!isCreatingNewVenue) {
-                        setFormData({
-                          ...formData,
-                          venueName: "",
-                          address: "",
-                          city: "",
-                          state: "",
-                        });
-                      }
-                    }}
-                  >
-                    {isCreatingNewVenue ? "Select Existing" : "Add New Venue"}
-                  </Button>
-                </div>
-
-                {!isCreatingNewVenue ? (
-                  <div className="space-y-4">
-                    <Popover
-                      open={isVenuePopoverOpen}
-                      onOpenChange={setIsVenuePopoverOpen}
-                    >
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={isVenuePopoverOpen}
-                          className="w-full justify-between"
-                        >
-                          {selectedVenue
-                            ? selectedVenue.name
-                            : "Search for a venue..."}
-                          <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                        <div className="flex flex-col">
-                          <div className="flex items-center border-b px-3 py-2">
-                            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                            <input
-                              className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
-                              placeholder="Type to search..."
-                              value={venueSearch}
-                              onChange={(e) => setVenueSearch(e.target.value)}
-                            />
-                          </div>
-                          <div className="max-h-[300px] overflow-auto p-1">
-                            {isSearchingVenues && (
-                              <div className="flex items-center justify-center py-6">
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              </div>
-                            )}
-                            {!isSearchingVenues &&
-                              searchResults?.map((v: any) => (
-                                <button
-                                  key={v.id}
-                                  type="button"
-                                  className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
-                                  onClick={() => {
-                                    setSelectedVenue(v);
-                                    setFormData({
-                                      ...formData,
-                                      venueName: v.name,
-                                      address: v.address || "",
-                                      city: v.city,
-                                      state: v.state,
-                                    });
-                                    setIsVenuePopoverOpen(false);
-                                  }}
-                                >
-                                  <div className="font-medium">{v.name}</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {v.city}, {v.state}
-                                  </div>
-                                </button>
-                              ))}
-                            {!isSearchingVenues &&
-                              venueSearch.length > 2 &&
-                              searchResults?.length === 0 && (
-                                <div className="py-6 text-center text-sm text-muted-foreground">
-                                  No venues found.
-                                </div>
-                              )}
-                            {venueSearch.length <= 2 && (
-                              <div className="py-6 text-center text-sm text-muted-foreground">
-                                Type at least 3 characters...
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-
-                    {selectedVenue && (
-                      <div className="rounded-md bg-background p-3 text-sm shadow-sm">
-                        <div className="font-semibold text-primary">
-                          {selectedVenue.name}
-                        </div>
-                        <div className="text-muted-foreground">
-                          {selectedVenue.address && (
-                            <div className="flex items-center gap-1">
-                              {selectedVenue.address}
-                            </div>
-                          )}
-                          <div>
-                            {selectedVenue.city}, {selectedVenue.state}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {/* Venue Name */}
-                    <div className="space-y-2">
-                      <Label htmlFor="venueName">Venue Name</Label>
-                      <Input
-                        id="venueName"
-                        value={formData.venueName}
-                        onChange={(e) =>
-                          setFormData({ ...formData, venueName: e.target.value })
-                        }
-                        placeholder="The Grand Theater"
-                        required
-                      />
-                    </div>
-
-                    {/* Address */}
-                    <div className="space-y-2">
-                      <Label htmlFor="address">Street Address</Label>
-                      <Input
-                        id="address"
-                        value={formData.address}
-                        onChange={(e) =>
-                          setFormData({ ...formData, address: e.target.value })
-                        }
-                        placeholder="123 Main St"
-                      />
-                    </div>
-
-                    {/* City & State */}
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="city">
-                          City <span className="text-destructive">*</span>
-                        </Label>
-                        <Input
-                          id="city"
-                          value={formData.city}
-                          onChange={(e) =>
-                            setFormData({ ...formData, city: e.target.value })
-                          }
-                          placeholder="San Francisco"
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="state">
-                          State <span className="text-destructive">*</span>
-                        </Label>
-                        <Select
-                          value={formData.state}
-                          onValueChange={(value) =>
-                            setFormData({ ...formData, state: value })
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a state" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {US_STATES.map((state) => (
-                              <SelectItem key={state.value} value={state.value}>
-                                {state.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <VenueSelector
+                selectedVenue={selectedVenue}
+                onVenueSelect={setSelectedVenue}
+                isCreatingNew={isCreatingNewVenue}
+                setIsCreatingNew={setIsCreatingNewVenue}
+              />
             )}
 
             {/* Action Buttons */}
