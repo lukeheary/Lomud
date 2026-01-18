@@ -31,6 +31,7 @@ export const venueRouter = router({
       z.object({
         name: z.string().min(1).max(255),
         description: z.string().optional(),
+        imageUrl: z.string().url().optional().or(z.literal("")),
         address: z.string().optional(),
         city: z.string().min(1).max(100),
         state: z.string().length(2),
@@ -260,7 +261,7 @@ export const venueRouter = router({
           .optional(),
         name: z.string().min(1).max(255).optional(),
         description: z.string().optional(),
-        imageUrl: z.string().url().optional(),
+        imageUrl: z.string().url().optional().or(z.literal("")),
         address: z.string().optional(),
         city: z.string().min(1).max(100).optional(),
         state: z.string().length(2).optional(),

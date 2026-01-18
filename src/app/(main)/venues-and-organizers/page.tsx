@@ -120,39 +120,39 @@ function VenuesAndOrganizersPageContent() {
           {/* Venue Grid */}
           {!venuesLoading && venues && venues.length > 0 && (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {venues.map((venue) => (
-              <Link key={venue.id} href={`/venue/${venue.slug}`}>
-                <Card className="h-full cursor-pointer transition-colors hover:bg-accent/50">
-                  <CardHeader className={"pb-2"}>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2">
-                        {/*<Building2 className="h-5 w-5" />*/}
-                        <CardTitle className="text-lg">{venue.name}</CardTitle>
+              {venues.map((venue) => (
+                <Link key={venue.id} href={`/venue/${venue.slug}`}>
+                  <Card className="h-full cursor-pointer transition-colors hover:bg-accent/50">
+                    <CardHeader className={"pb-2"}>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          {/*<Building2 className="h-5 w-5" />*/}
+                          <CardTitle className="text-lg">{venue.name}</CardTitle>
+                        </div>
                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {venue.description && (
-                      <p className="line-clamp-2 text-sm text-muted-foreground">
-                        {venue.description}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <MapPin className="h-4 w-4" />
-                      <span>
-                        {venue.city}, {venue.state}
-                      </span>
-                    </div>
-                    {/*<div className="flex items-center gap-2">*/}
-                    {/*  <Badge variant="outline">*/}
-                    {/*    <Heart className="mr-1 h-3 w-3" />*/}
-                    {/*    {(venue as any).follows?.length || 0} followers*/}
-                    {/*  </Badge>*/}
-                    {/*</div>*/}
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {venue.description && (
+                        <p className="line-clamp-2 text-sm text-muted-foreground">
+                          {venue.description}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <MapPin className="h-4 w-4" />
+                        <span>
+                          {venue.city}, {venue.state}
+                        </span>
+                      </div>
+                      {/*<div className="flex items-center gap-2">*/}
+                      {/*  <Badge variant="outline">*/}
+                      {/*    <Heart className="mr-1 h-3 w-3" />*/}
+                      {/*    {(venue as any).follows?.length || 0} followers*/}
+                      {/*  </Badge>*/}
+                      {/*</div>*/}
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
             </div>
           )}
 
@@ -186,35 +186,43 @@ function VenuesAndOrganizersPageContent() {
           {/* Organizer Grid */}
           {!organizersLoading && organizers && organizers.length > 0 && (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {organizers.map((organizer) => (
-              <Link key={organizer.id} href={`/organizer/${organizer.slug}`}>
-                <Card className="h-full cursor-pointer transition-colors hover:bg-accent/50">
-                  <CardHeader className={"pb-2"}>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-5 w-5" />
-                        <CardTitle className="text-lg">
-                          {organizer.name}
-                        </CardTitle>
+              {organizers.map((organizer) => (
+                <Link key={organizer.id} href={`/organizer/${organizer.slug}`}>
+                  <Card className="h-full cursor-pointer transition-colors hover:bg-accent/50">
+                    <CardHeader className={"pb-2"}>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-5 w-5" />
+                          <CardTitle className="text-lg">
+                            {organizer.name}
+                          </CardTitle>
+                        </div>
                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {organizer.description && (
-                      <p className="line-clamp-2 text-sm text-muted-foreground">
-                        {organizer.description}
-                      </p>
-                    )}
-                    {/*<div className="flex items-center gap-2">*/}
-                    {/*  <Badge variant="outline">*/}
-                    {/*    <Heart className="mr-1 h-3 w-3" />*/}
-                    {/*    {(organizer as any).follows?.length || 0} followers*/}
-                    {/*  </Badge>*/}
-                    {/*</div>*/}
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {organizer.description && (
+                        <p className="line-clamp-2 text-sm text-muted-foreground">
+                          {organizer.description}
+                        </p>
+                      )}
+                      {organizer.city && organizer.state && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <MapPin className="h-4 w-4" />
+                          <span>
+                            {organizer.city}, {organizer.state}
+                          </span>
+                        </div>
+                      )}
+                      {/*<div className="flex items-center gap-2">*/}
+                      {/*  <Badge variant="outline">*/}
+                      {/*    <Heart className="mr-1 h-3 w-3" />*/}
+                      {/*    {(organizer as any).follows?.length || 0} followers*/}
+                      {/*  </Badge>*/}
+                      {/*</div>*/}
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
             </div>
           )}
 

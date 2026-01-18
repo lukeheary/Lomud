@@ -15,13 +15,12 @@ import {
 // ============================================================================
 
 export const eventCategoryEnum = pgEnum("event_category", [
-  "music",
-  "food",
-  "art",
-  "sports",
-  "community",
-  "nightlife",
-  "other",
+  "clubs",
+  "bars",
+  "concerts",
+  "comedy",
+  "theater",
+  "social",
 ]);
 
 export const eventVisibilityEnum = pgEnum("event_visibility", [
@@ -123,6 +122,8 @@ export const organizers = pgTable(
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
     imageUrl: text("image_url"),
+    city: varchar("city", { length: 100 }),
+    state: varchar("state", { length: 2 }),
     website: text("website"),
     instagram: varchar("instagram", { length: 100 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -130,6 +131,7 @@ export const organizers = pgTable(
   },
   (table) => ({
     slugIdx: uniqueIndex("organizers_slug_idx").on(table.slug),
+    locationIdx: index("organizers_location_idx").on(table.city, table.state),
   })
 );
 
@@ -338,7 +340,7 @@ export const events = pgTable(
     address: text("address"),
     city: varchar("city", { length: 100 }).notNull(),
     state: varchar("state", { length: 2 }).notNull(),
-    category: eventCategoryEnum("category").notNull().default("other"),
+    category: eventCategoryEnum("category").notNull().default("social"),
     visibility: eventVisibilityEnum("visibility").notNull().default("public"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),

@@ -210,9 +210,9 @@ export default function EventPage() {
             </Button>
           </div>
 
-          {/* Avatars - Overlay on bottom right (Hidden on desktop as sidebar/lineup covers it) */}
+          {/* Avatars - Overlay on bottom right */}
           {goingUsers.length > 0 && (
-            <div className="absolute bottom-4 right-4 lg:hidden">
+            <div className="absolute bottom-4 right-4">
               <AvatarStack users={goingUsers} maxDisplay={5} size="md" />
             </div>
           )}
@@ -251,6 +251,12 @@ export default function EventPage() {
               <span>Hosted by {event.organizer.name}</span>
             </Link>
           )}
+
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Badge variant="secondary" className="capitalize">
+              {event.category}
+            </Badge>
+          </div>
 
           {/* RSVP Buttons - Shared across mobile and desktop */}
           <div className="flex gap-2 py-4">
@@ -311,23 +317,15 @@ export default function EventPage() {
               </p>
             </div>
 
-            {/* Additional Info */}
-            <div className="mt-6 rounded-lg bg-muted p-4">
-              <div className="flex items-start gap-2">
-                <span className="text-sm">ℹ️</span>
-                <div className="text-sm text-muted-foreground">
-                  <p className="mb-1 font-medium">
-                    This is a {event.category} event
-                  </p>
-                  {event.createdBy && (
-                    <p>
-                      Organized by {event.createdBy.firstName}{" "}
-                      {event.createdBy.lastName}
-                    </p>
-                  )}
-                </div>
+            {/* Organizer Info (if creator is different from organizer) */}
+            {event.createdBy && (
+              <div className="mt-6 border-t pt-4">
+                <p className="text-sm text-muted-foreground">
+                  Organized by {event.createdBy.firstName}{" "}
+                  {event.createdBy.lastName}
+                </p>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Lineup / Attendees Section */}

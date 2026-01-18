@@ -24,10 +24,8 @@ export const organizerRouter = router({
     .query(async ({ ctx, input }) => {
       const conditions = [];
 
-      // Note: Organizers don't have city/state fields in the schema yet
-      // When they're added, uncomment these lines:
-      // if (input.city) conditions.push(eq(organizers.city, input.city));
-      // if (input.state) conditions.push(eq(organizers.state, input.state));
+      if (input.city) conditions.push(eq(organizers.city, input.city));
+      if (input.state) conditions.push(eq(organizers.state, input.state));
 
       if (input.search) {
         conditions.push(ilike(organizers.name, `%${input.search}%`));
@@ -190,7 +188,9 @@ export const organizerRouter = router({
           .optional(),
         name: z.string().min(1).max(255).optional(),
         description: z.string().optional(),
-        imageUrl: z.string().url().optional(),
+        imageUrl: z.string().url().optional().or(z.literal("")),
+        city: z.string().max(100).optional(),
+        state: z.string().length(2).optional(),
         website: z.string().url().optional().or(z.literal("")),
         instagram: z.string().max(100).optional(),
       })

@@ -23,13 +23,12 @@ import Link from "next/link";
 import { VenueSelector, VenueData } from "@/components/events/venue-selector";
 
 const EVENT_CATEGORIES = [
-  "music",
-  "food",
-  "art",
-  "sports",
-  "nightlife",
-  "community",
-  "other",
+  "clubs",
+  "bars",
+  "concerts",
+  "comedy",
+  "theater",
+  "social",
 ] as const;
 
 function NewEventPageContent() {

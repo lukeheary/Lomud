@@ -173,7 +173,9 @@ function HomePageContent() {
       ) {
         await setDateParam(format(today, "yyyy-MM-dd"));
       } else {
-        await setDateParam(format(startOfWeek(prevWeekStart, { weekStartsOn: 1 }), "yyyy-MM-dd"));
+        await setDateParam(
+          format(startOfWeek(prevWeekStart, { weekStartsOn: 1 }), "yyyy-MM-dd")
+        );
       }
     } else {
       await setDateParam(format(subMonths(currentDate, 1), "yyyy-MM-dd"));
@@ -239,13 +241,17 @@ function HomePageContent() {
             )}
           </h1>
           <div className={"flex w-full flex-row items-center justify-between"}>
-            <p className="text-muted-foreground">
-              {viewMode === "week"
-                ? format(dateRange.startDate, "MMMM d") +
-                " - " +
-                format(dateRange.endDate, "MMMM d, yyyy")
-                : format(currentDate, "MMMM yyyy")}
-            </p>
+            {isCurrentWeek ? (
+              <p className={"text-muted-foreground"}>This Week</p>
+            ) : (
+              <p className="text-muted-foreground">
+                {viewMode === "week"
+                  ? format(dateRange.startDate, "MMMM d") +
+                    " - " +
+                    format(dateRange.endDate, "MMMM d, yyyy")
+                  : format(currentDate, "MMMM yyyy")}
+              </p>
+            )}
           </div>
         </div>
 

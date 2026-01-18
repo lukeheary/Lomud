@@ -1,11 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
@@ -13,638 +8,108 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { Building2, Users, Loader2, X, Plus } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Building2, Users, Calendar } from "lucide-react";
+import Link from "next/link";
 
 export default function AdminPage() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const utils = trpc.useUtils();
+  const { data: venues } = trpc.admin.listAllVenues.useQuery({});
+  const { data: organizers } = trpc.admin.listAllOrganizers.useQuery({});
+  // const { data: events } = trpc.event.list.useQuery({});
 
-  // Check if user is admin
-  const { data: adminCheck, isLoading: adminCheckLoading } =
-    trpc.user.isAdmin.useQuery();
-  const isAdmin = adminCheck?.isAdmin ?? false;
-
-  // Venue form state
-  const [venueForm, setVenueForm] = useState({
-    slug: "",
-    name: "",
-    description: "",
-    imageUrl: "",
-    address: "",
-    city: "",
-    state: "",
-    website: "",
-    instagram: "",
-  });
-
-  // Organizer form state
-  const [organizerForm, setOrganizerForm] = useState({
-    slug: "",
-    name: "",
-    description: "",
-    imageUrl: "",
-    website: "",
-    instagram: "",
-  });
-
-  // Member management state
-  const [selectedVenue, setSelectedVenue] = useState<string>("");
-  const [selectedOrganizer, setSelectedOrganizer] = useState<string>("");
-  const [userSearch, setUserSearch] = useState("");
-
-  // Fetch data
-  const { data: venues } = trpc.admin.listAllVenues.useQuery(
-    {},
-    { enabled: isAdmin }
-  );
-  const { data: organizers } = trpc.admin.listAllOrganizers.useQuery(
-    {},
-    { enabled: isAdmin }
-  );
-
-  const { data: venueMembers } = trpc.venue.getVenueMembers.useQuery(
-    { venueId: selectedVenue },
-    { enabled: !!selectedVenue && isAdmin }
-  );
-
-  const { data: organizerMembers } =
-    trpc.organizer.getOrganizerMembers.useQuery(
-      { organizerId: selectedOrganizer },
-      { enabled: !!selectedOrganizer && isAdmin }
-    );
-
-  const { data: searchedUsers } = trpc.admin.searchUsers.useQuery(
-    { query: userSearch },
-    { enabled: userSearch.length >= 2 && isAdmin }
-  );
-
-  // Mutations
-  const createVenueMutation = trpc.admin.createVenue.useMutation({
-    onSuccess: () => {
-      toast({ title: "Success", description: "Venue created successfully" });
-      setVenueForm({
-        slug: "",
-        name: "",
-        description: "",
-        imageUrl: "",
-        address: "",
-        city: "",
-        state: "",
-        website: "",
-        instagram: "",
-      });
-      utils.admin.listAllVenues.invalidate();
+  const stats = [
+    {
+      label: "Total Venues",
+      value: venues?.length ?? 0,
+      icon: Building2,
+      href: "/admin/venues",
+      description: "Manage physical locations",
     },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+    {
+      label: "Total Organizers",
+      value: organizers?.length ?? 0,
+      icon: Users,
+      href: "/admin/organizers",
+      description: "Manage event creators",
     },
-  });
-
-  const createOrganizerMutation = trpc.admin.createOrganizer.useMutation({
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Organizer created successfully",
-      });
-      setOrganizerForm({
-        slug: "",
-        name: "",
-        description: "",
-        imageUrl: "",
-        website: "",
-        instagram: "",
-      });
-      utils.admin.listAllOrganizers.invalidate();
+    /*
+    {
+      label: "Total Events",
+      value: events?.length ?? 0,
+      icon: Calendar,
+      href: "/calendar",
+      description: "View all scheduled events",
     },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const addVenueMemberMutation = trpc.admin.addVenueMember.useMutation({
-    onSuccess: () => {
-      toast({ title: "Success", description: "Member added to venue" });
-      utils.venue.getVenueMembers.invalidate();
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const removeVenueMemberMutation = trpc.admin.removeVenueMember.useMutation({
-    onSuccess: () => {
-      toast({ title: "Success", description: "Member removed from venue" });
-      utils.venue.getVenueMembers.invalidate();
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const addOrganizerMemberMutation = trpc.admin.addOrganizerMember.useMutation({
-    onSuccess: () => {
-      toast({ title: "Success", description: "Member added to organizer" });
-      utils.organizer.getOrganizerMembers.invalidate();
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const removeOrganizerMemberMutation =
-    trpc.admin.removeOrganizerMember.useMutation({
-      onSuccess: () => {
-        toast({
-          title: "Success",
-          description: "Member removed from organizer",
-        });
-        utils.organizer.getOrganizerMembers.invalidate();
-      },
-      onError: (error) => {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
-      },
-    });
-
-  // Redirect if not admin
-  if (!adminCheckLoading && !isAdmin) {
-    router.push("/");
-    return null;
-  }
-
-  if (adminCheckLoading) {
-    return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+    */
+  ];
 
   return (
-    <div className="container mx-auto space-y-8 py-8">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Admin Settings</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Admin Overview</h1>
         <p className="text-muted-foreground">
-          Manage venues, organizers, and their members
+          A high-level view of your platform's data
         </p>
       </div>
 
-      {/* Create Venue */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5" />
-            Create Venue
-          </CardTitle>
-          <CardDescription>Add a new venue to the platform</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="venue-slug">Slug *</Label>
-              <Input
-                id="venue-slug"
-                placeholder="big-night-live"
-                value={venueForm.slug}
-                onChange={(e) =>
-                  setVenueForm({ ...venueForm, slug: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label htmlFor="venue-name">Name *</Label>
-              <Input
-                id="venue-name"
-                placeholder="Big Night Live"
-                value={venueForm.name}
-                onChange={(e) =>
-                  setVenueForm({ ...venueForm, name: e.target.value })
-                }
-              />
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="venue-description">Description</Label>
-            <Textarea
-              id="venue-description"
-              placeholder="A premier entertainment venue..."
-              value={venueForm.description}
-              onChange={(e) =>
-                setVenueForm({ ...venueForm, description: e.target.value })
-              }
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="venue-address">Address</Label>
-              <Input
-                id="venue-address"
-                placeholder="110 Causeway St"
-                value={venueForm.address}
-                onChange={(e) =>
-                  setVenueForm({ ...venueForm, address: e.target.value })
-                }
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label htmlFor="venue-city">City *</Label>
-                <Input
-                  id="venue-city"
-                  placeholder="Boston"
-                  value={venueForm.city}
-                  onChange={(e) =>
-                    setVenueForm({ ...venueForm, city: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="venue-state">State *</Label>
-                <Input
-                  id="venue-state"
-                  placeholder="MA"
-                  maxLength={2}
-                  value={venueForm.state}
-                  onChange={(e) =>
-                    setVenueForm({
-                      ...venueForm,
-                      state: e.target.value.toUpperCase(),
-                    })
-                  }
-                />
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="venue-website">Website</Label>
-              <Input
-                id="venue-website"
-                placeholder="https://example.com"
-                value={venueForm.website}
-                onChange={(e) =>
-                  setVenueForm({ ...venueForm, website: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label htmlFor="venue-instagram">Instagram</Label>
-              <Input
-                id="venue-instagram"
-                placeholder="bignightlive"
-                value={venueForm.instagram}
-                onChange={(e) =>
-                  setVenueForm({ ...venueForm, instagram: e.target.value })
-                }
-              />
-            </div>
-          </div>
-          <Button
-            onClick={() => createVenueMutation.mutate(venueForm)}
-            disabled={
-              createVenueMutation.isPending ||
-              !venueForm.slug ||
-              !venueForm.name ||
-              !venueForm.city ||
-              !venueForm.state
-            }
-          >
-            {createVenueMutation.isPending && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
-            Create Venue
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="grid gap-4 md:grid-cols-3">
+        {stats.map((stat) => (
+          <Link key={stat.label} href={stat.href}>
+            <Card className="transition-colors hover:bg-accent/50">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {stat.label}
+                </CardTitle>
+                <stat.icon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stat.value}</div>
+                <p className="text-xs text-muted-foreground">
+                  {stat.description}
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
 
-      {/* Create Organizer */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Create Organizer
-          </CardTitle>
-          <CardDescription>
-            Add a new event organizer to the platform
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="organizer-slug">Slug *</Label>
-              <Input
-                id="organizer-slug"
-                placeholder="after-brunch"
-                value={organizerForm.slug}
-                onChange={(e) =>
-                  setOrganizerForm({ ...organizerForm, slug: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label htmlFor="organizer-name">Name *</Label>
-              <Input
-                id="organizer-name"
-                placeholder="After Brunch"
-                value={organizerForm.name}
-                onChange={(e) =>
-                  setOrganizerForm({ ...organizerForm, name: e.target.value })
-                }
-              />
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="organizer-description">Description</Label>
-            <Textarea
-              id="organizer-description"
-              placeholder="Boston's premier social events..."
-              value={organizerForm.description}
-              onChange={(e) =>
-                setOrganizerForm({
-                  ...organizerForm,
-                  description: e.target.value,
-                })
-              }
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="organizer-website">Website</Label>
-              <Input
-                id="organizer-website"
-                placeholder="https://example.com"
-                value={organizerForm.website}
-                onChange={(e) =>
-                  setOrganizerForm({
-                    ...organizerForm,
-                    website: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div>
-              <Label htmlFor="organizer-instagram">Instagram</Label>
-              <Input
-                id="organizer-instagram"
-                placeholder="afterbrunch"
-                value={organizerForm.instagram}
-                onChange={(e) =>
-                  setOrganizerForm({
-                    ...organizerForm,
-                    instagram: e.target.value,
-                  })
-                }
-              />
-            </div>
-          </div>
-          <Button
-            onClick={() => createOrganizerMutation.mutate(organizerForm)}
-            disabled={
-              createOrganizerMutation.isPending ||
-              !organizerForm.slug ||
-              !organizerForm.name
-            }
-          >
-            {createOrganizerMutation.isPending && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
-            Create Organizer
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Manage Venue Members */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Manage Venue Members</CardTitle>
-          <CardDescription>Add or remove members from venues</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="select-venue">Select Venue</Label>
-            <Select value={selectedVenue} onValueChange={setSelectedVenue}>
-              <SelectTrigger id="select-venue">
-                <SelectValue placeholder="Choose a venue" />
-              </SelectTrigger>
-              <SelectContent>
-                {venues?.map((venue) => (
-                  <SelectItem key={venue.id} value={venue.id}>
-                    {venue.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {selectedVenue && (
-            <>
-              <div>
-                <Label>Current Members</Label>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {venueMembers?.map((member) => (
-                    <Badge
-                      key={member.id}
-                      variant="secondary"
-                      className="flex items-center gap-2"
-                    >
-                      {member.user.username || member.user.email}
-                      <button
-                        onClick={() =>
-                          removeVenueMemberMutation.mutate({
-                            venueId: selectedVenue,
-                            userId: member.userId,
-                          })
-                        }
-                        className="hover:text-destructive"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                  {!venueMembers?.length && (
-                    <p className="text-sm text-muted-foreground">
-                      No members yet
-                    </p>
-                  )}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+            <CardDescription>Common administrative tasks</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-2">
+            <Link href="/admin/venues">
+              <Card className="p-4 hover:bg-accent">
+                <div className="flex items-center gap-3">
+                  <Building2 className="h-4 w-4" />
+                  <div className="text-sm font-medium">Add a new Venue</div>
                 </div>
-              </div>
-
-              <div>
-                <Label htmlFor="user-search">Add Member</Label>
-                <Input
-                  id="user-search"
-                  placeholder="Search users by username or email..."
-                  value={userSearch}
-                  onChange={(e) => setUserSearch(e.target.value)}
-                />
-                {searchedUsers && searchedUsers.length > 0 && (
-                  <div className="mt-2 divide-y rounded-md border">
-                    {searchedUsers.map((user) => (
-                      <div
-                        key={user.id}
-                        className="flex items-center justify-between p-2"
-                      >
-                        <span className="text-sm">
-                          {user.username || user.email}
-                        </span>
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            addVenueMemberMutation.mutate({
-                              venueId: selectedVenue,
-                              userId: user.id,
-                            });
-                            setUserSearch("");
-                          }}
-                        >
-                          <Plus className="mr-1 h-4 w-4" />
-                          Add
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Manage Organizer Members */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Manage Organizer Members</CardTitle>
-          <CardDescription>
-            Add or remove members from organizers
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="select-organizer">Select Organizer</Label>
-            <Select
-              value={selectedOrganizer}
-              onValueChange={setSelectedOrganizer}
-            >
-              <SelectTrigger id="select-organizer">
-                <SelectValue placeholder="Choose an organizer" />
-              </SelectTrigger>
-              <SelectContent>
-                {organizers?.map((organizer) => (
-                  <SelectItem key={organizer.id} value={organizer.id}>
-                    {organizer.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {selectedOrganizer && (
-            <>
-              <div>
-                <Label>Current Members</Label>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {organizerMembers?.map((member) => (
-                    <Badge
-                      key={member.id}
-                      variant="secondary"
-                      className="flex items-center gap-2"
-                    >
-                      {member.user.username || member.user.email}
-                      <button
-                        onClick={() =>
-                          removeOrganizerMemberMutation.mutate({
-                            organizerId: selectedOrganizer,
-                            userId: member.userId,
-                          })
-                        }
-                        className="hover:text-destructive"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                  {!organizerMembers?.length && (
-                    <p className="text-sm text-muted-foreground">
-                      No members yet
-                    </p>
-                  )}
+              </Card>
+            </Link>
+            <Link href="/admin/organizers">
+              <Card className="p-4 hover:bg-accent">
+                <div className="flex items-center gap-3">
+                  <Users className="h-4 w-4" />
+                  <div className="text-sm font-medium">Add a new Organizer</div>
                 </div>
-              </div>
+              </Card>
+            </Link>
+          </CardContent>
+        </Card>
 
-              <div>
-                <Label htmlFor="organizer-user-search">Add Member</Label>
-                <Input
-                  id="organizer-user-search"
-                  placeholder="Search users by username or email..."
-                  value={userSearch}
-                  onChange={(e) => setUserSearch(e.target.value)}
-                />
-                {searchedUsers && searchedUsers.length > 0 && (
-                  <div className="mt-2 divide-y rounded-md border">
-                    {searchedUsers.map((user) => (
-                      <div
-                        key={user.id}
-                        className="flex items-center justify-between p-2"
-                      >
-                        <span className="text-sm">
-                          {user.username || user.email}
-                        </span>
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            addOrganizerMemberMutation.mutate({
-                              organizerId: selectedOrganizer,
-                              userId: user.id,
-                            });
-                            setUserSearch("");
-                          }}
-                        >
-                          <Plus className="mr-1 h-4 w-4" />
-                          Add
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+            <CardDescription>Latest updates on the platform</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Recent activity logging coming soon...
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -24,13 +24,12 @@ import { format } from "date-fns";
 import { VenueSelector, VenueData } from "@/components/events/venue-selector";
 
 const EVENT_CATEGORIES = [
-  "music",
-  "food",
-  "art",
-  "sports",
-  "nightlife",
-  "community",
-  "other",
+  "clubs",
+  "bars",
+  "concerts",
+  "comedy",
+  "theater",
+  "social",
 ] as const;
 
 export default function EditEventPage() {
@@ -350,6 +349,13 @@ export default function EditEventPage() {
             {/* Submit Button */}
             <div className="flex gap-3">
               <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.push(`/event/${eventId}`)}
+              >
+                Cancel
+              </Button>
+              <Button
                 type="submit"
                 disabled={updateMutation.isPending}
                 className="flex-1"
@@ -358,13 +364,6 @@ export default function EditEventPage() {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 Update Event
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.push(`/event/${eventId}`)}
-              >
-                Cancel
               </Button>
             </div>
           </form>

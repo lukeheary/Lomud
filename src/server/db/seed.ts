@@ -362,7 +362,7 @@ async function main() {
       address: "279 Tremont St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
-      category: "nightlife" as const,
+      category: "clubs" as const,
       visibility: "public" as const,
     },
     {
@@ -379,7 +379,7 @@ async function main() {
       address: "51 Stuart St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
-      category: "nightlife" as const,
+      category: "clubs" as const,
       visibility: "public" as const,
     },
     // REMOVED: The Grand Boston event(s) because venue was removed
@@ -397,7 +397,7 @@ async function main() {
       address: "14 Massachusetts Ave, Cambridge, MA 02139",
       city: "Cambridge",
       state: "MA",
-      category: "nightlife" as const,
+      category: "bars" as const,
       visibility: "public" as const,
     },
 
@@ -416,7 +416,7 @@ async function main() {
       address: "279 Tremont St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
-      category: "nightlife" as const,
+      category: "clubs" as const,
       visibility: "public" as const,
     },
     {
@@ -433,7 +433,7 @@ async function main() {
       address: "51 Stuart St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
-      category: "nightlife" as const,
+      category: "bars" as const,
       visibility: "public" as const,
     },
 
@@ -454,7 +454,7 @@ async function main() {
       address: "599 Johnson Ave, Brooklyn, NY 11237",
       city: "Brooklyn",
       state: "NY",
-      category: "nightlife" as const,
+      category: "social" as const,
       visibility: "public" as const,
     },
     {
@@ -471,7 +471,7 @@ async function main() {
       address: "98 Meserole Ave, Brooklyn, NY 11222",
       city: "Brooklyn",
       state: "NY",
-      category: "nightlife" as const,
+      category: "clubs" as const,
       visibility: "public" as const,
     },
 
@@ -490,7 +490,7 @@ async function main() {
       address: "599 Johnson Ave, Brooklyn, NY 11237",
       city: "Brooklyn",
       state: "NY",
-      category: "music" as const,
+      category: "concerts" as const,
       visibility: "public" as const,
     },
     {
@@ -507,7 +507,7 @@ async function main() {
       address: "98 Meserole Ave, Brooklyn, NY 11222",
       city: "Brooklyn",
       state: "NY",
-      category: "nightlife" as const,
+      category: "bars" as const,
       visibility: "public" as const,
     },
   ];
