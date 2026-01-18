@@ -13,6 +13,7 @@ import {
 } from "../../db/schema";
 import { and, desc, eq, gte, ilike, inArray, lte, or } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
+import { logActivity } from "../../utils/activity-logger";
 
 export const eventRouter = router({
   createEvent: protectedProcedure
@@ -108,6 +109,16 @@ export const eventRouter = router({
           imageUrl: input.imageUrl ?? null,
         } as any)
         .returning();
+
+      if (event) {
+        void logActivity({
+          actorUserId: ctx.auth.userId,
+          type: "created_event",
+          entityType: "event",
+          entityId: event.id,
+          metadata: {},
+        });
+      }
 
       return event;
     }),
@@ -404,6 +415,16 @@ export const eventRouter = router({
           },
         })
         .returning();
+
+      if (rsvp && (input.status === "going" || input.status === "interested")) {
+        void logActivity({
+          actorUserId: ctx.auth.userId,
+          type: input.status === "going" ? "rsvp_going" : "rsvp_interested",
+          entityType: "event",
+          entityId: input.eventId,
+          metadata: { status: input.status },
+        });
+      }
 
       return rsvp;
     }),

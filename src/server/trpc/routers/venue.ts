@@ -9,6 +9,7 @@ import {
 } from "../../db/schema";
 import { and, asc, desc, eq, gte, ilike, or, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
+import { logActivity } from "../../utils/activity-logger";
 
 export const venueRouter = router({
   searchVenues: publicProcedure
@@ -170,6 +171,16 @@ export const venueRouter = router({
           venueId: input.venueId,
         })
         .returning();
+
+      if (follow) {
+        void logActivity({
+          actorUserId: ctx.auth.userId,
+          type: "follow_venue",
+          entityType: "venue",
+          entityId: input.venueId,
+          metadata: {},
+        });
+      }
 
       return follow;
     }),

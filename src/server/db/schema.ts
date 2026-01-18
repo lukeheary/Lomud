@@ -8,6 +8,7 @@ import {
   index,
   uniqueIndex,
   pgEnum,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 // ============================================================================
@@ -44,6 +45,22 @@ export const userRoleEnum = pgEnum("user_role", [
   "admin",
 ]);
 
+export const activityTypeEnum = pgEnum("activity_type", [
+  "rsvp_going",
+  "rsvp_interested",
+  "follow_venue",
+  "follow_organizer",
+  "created_event",
+  "checked_in",
+]);
+
+export const activityEntityTypeEnum = pgEnum("activity_entity_type", [
+  "event",
+  "venue",
+  "organizer",
+  "user",
+]);
+
 // ============================================================================
 // USERS TABLE
 // ============================================================================
@@ -78,6 +95,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   rsvps: many(rsvps),
   sentFriendRequests: many(friends, { relationName: "sentRequests" }),
   receivedFriendRequests: many(friends, { relationName: "receivedRequests" }),
+  activities: many(activityEvents),
 }));
 
 // ============================================================================
@@ -465,5 +483,48 @@ export const friendsRelations = relations(friends, ({ one }) => ({
     fields: [friends.friendUserId],
     references: [users.id],
     relationName: "receivedRequests",
+  }),
+}));
+
+// ============================================================================
+// ACTIVITY EVENTS TABLE (Append-only)
+// ============================================================================
+export const activityEvents = pgTable(
+  "activity_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    actorUserId: text("actor_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: activityTypeEnum("type").notNull(),
+    entityType: activityEntityTypeEnum("entity_type").notNull(),
+    entityId: uuid("entity_id").notNull(),
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    actorCreatedAtIdx: index("activity_events_actor_created_at_idx").on(
+      table.actorUserId,
+      table.createdAt
+    ),
+  })
+);
+
+export const activityEventsRelations = relations(activityEvents, ({ one }) => ({
+  actor: one(users, {
+    fields: [activityEvents.actorUserId],
+    references: [users.id],
+  }),
+  event: one(events, {
+    fields: [activityEvents.entityId],
+    references: [events.id],
+  }),
+  venue: one(venues, {
+    fields: [activityEvents.entityId],
+    references: [venues.id],
+  }),
+  organizer: one(organizers, {
+    fields: [activityEvents.entityId],
+    references: [organizers.id],
   }),
 }));

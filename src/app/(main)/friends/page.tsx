@@ -3,11 +3,12 @@
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Users, Search, UserPlus, Check, X, Loader2, Mail } from "lucide-react";
+import { Users, Search, UserPlus, Check, X, Loader2, Mail, Activity } from "lucide-react";
+import { ActivityFeed } from "@/components/friends/activity-feed";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryState } from "nuqs";
 import { Suspense } from "react";
@@ -105,8 +106,12 @@ function FriendsPageContent() {
         </p>
       </div>
 
-      <Tabs defaultValue="friends" className="space-y-6">
+      <Tabs defaultValue="activity" className="space-y-6">
         <TabsList>
+          <TabsTrigger value="activity" className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            Activity
+          </TabsTrigger>
           <TabsTrigger value="friends" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             My Friends
@@ -130,6 +135,21 @@ function FriendsPageContent() {
             Find Friends
           </TabsTrigger>
         </TabsList>
+
+        {/* Activity Tab */}
+        <TabsContent value="activity">
+          <Card>
+            <CardHeader>
+              <CardTitle>Friend Activity</CardTitle>
+              <CardDescription>
+                See what your friends are up to
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ActivityFeed />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* My Friends Tab */}
         <TabsContent value="friends">

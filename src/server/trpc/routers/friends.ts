@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { router, protectedProcedure } from "../init";
-import { users, friends } from "../../db/schema";
-import { eq, and, or, ne, like, sql } from "drizzle-orm";
+import { users, friends, activityEvents } from "../../db/schema";
+import { eq, and, or, ne, like, sql, inArray, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 export const friendsRouter = router({
@@ -274,4 +274,48 @@ export const friendsRouter = router({
 
     return pendingRequests;
   }),
+
+  getFriendFeed: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).default(50),
+        offset: z.number().min(0).default(0),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      // 1. Get all accepted friends
+      const userFriendships = await ctx.db.query.friends.findMany({
+        where: and(
+          or(
+            eq(friends.userId, ctx.auth.userId),
+            eq(friends.friendUserId, ctx.auth.userId)
+          ),
+          eq(friends.status, "accepted")
+        ),
+      });
+
+      const friendIds = userFriendships.map((f) =>
+        f.userId === ctx.auth.userId ? f.friendUserId : f.userId
+      );
+
+      if (friendIds.length === 0) {
+        return [];
+      }
+
+      // 2. Fetch activity for these friends
+      const activities = await ctx.db.query.activityEvents.findMany({
+        where: inArray(activityEvents.actorUserId, friendIds),
+        orderBy: [desc(activityEvents.createdAt)],
+        limit: input.limit,
+        offset: input.offset,
+        with: {
+          actor: true,
+          event: true,
+          venue: true,
+          organizer: true,
+        },
+      });
+
+      return activities;
+    }),
 });

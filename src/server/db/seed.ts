@@ -13,6 +13,7 @@ import {
   organizerMembers,
   venueFollows,
   organizerFollows,
+  activityEvents,
 } from "./schema";
 import { inArray } from "drizzle-orm";
 
@@ -38,6 +39,7 @@ async function main() {
   await db.delete(venueFollows);
   await db.delete(organizerMembers);
   await db.delete(organizerFollows);
+  await db.delete(activityEvents);
 
   // Then core tables
   await db.delete(events);

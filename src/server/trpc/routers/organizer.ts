@@ -9,6 +9,7 @@ import {
 } from "../../db/schema";
 import { and, asc, desc, eq, gte, ilike, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
+import { logActivity } from "../../utils/activity-logger";
 
 export const organizerRouter = router({
   listOrganizers: publicProcedure
@@ -97,6 +98,16 @@ export const organizerRouter = router({
           organizerId: input.organizerId,
         })
         .returning();
+
+      if (follow) {
+        void logActivity({
+          actorUserId: ctx.auth.userId,
+          type: "follow_organizer",
+          entityType: "organizer",
+          entityId: input.organizerId,
+          metadata: {},
+        });
+      }
 
       return follow;
     }),
