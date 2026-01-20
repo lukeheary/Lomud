@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, Suspense } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   format,
   addDays,
@@ -55,6 +56,7 @@ import { EventFilterSelect } from "@/components/events/event-filter-select";
 import { EventFilterTab } from "@/types/events";
 import { useQueryState, parseAsString, parseAsIsoDate } from "nuqs";
 import { parseISO, subDays } from "date-fns";
+import { ActivityFeed } from "@/components/friends/activity-feed";
 
 type ViewMode = "week" | "month";
 
@@ -231,6 +233,22 @@ function HomePageContent() {
 
   return (
     <div className="container relative mx-auto space-y-4 py-8">
+      {/* Friend Activity Feed */}
+      <div className="mb-4">
+        <div className="flex items-center gap-2 pb-4">
+          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+            Friend Activity
+          </h1>
+          <Link
+            href="/friends"
+            className="text-muted-foreground transition-colors hover:text-primary"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </Link>
+        </div>
+        <ActivityFeed limit={3} compact={true} />
+      </div>
+
       {/* Header with Navigation */}
       <div className="flex w-full flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className={"w-full"}>

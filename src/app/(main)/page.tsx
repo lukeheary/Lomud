@@ -76,6 +76,7 @@ export default function HomePage() {
         </div>
       </div>
 
+
       <EventFilterSelect
         value={activeFilter}
         onValueChange={setActiveFilter}
