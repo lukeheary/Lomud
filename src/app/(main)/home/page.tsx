@@ -65,17 +65,25 @@ function HomePageContent() {
   const [activeFilter, setActiveFilter] = useState<EventFilterTab>("all");
   const [searchQuery, setSearchQuery] = useQueryState("search", {
     defaultValue: "",
+    scroll: false,
+    shallow: true,
   });
   const [selectedCity, setSelectedCity] = useQueryState("city", {
     defaultValue: "all",
+    scroll: false,
+    shallow: true,
   });
   const [viewMode, setViewMode] = useQueryState<ViewMode>("view", {
     defaultValue: "week",
     parse: (value) => (value === "month" ? "month" : "week"),
     serialize: (value) => value,
+    scroll: false,
+    shallow: true,
   });
   const [dateParam, setDateParam] = useQueryState("date", {
     defaultValue: format(new Date(), "yyyy-MM-dd"),
+    scroll: false,
+    shallow: true,
   });
   const [hasSetInitialCity, setHasSetInitialCity] = useState(false);
 
@@ -105,7 +113,7 @@ function HomePageContent() {
   // Set default city to user's city on initial load only
   useEffect(() => {
     if (currentUser?.city && selectedCity === "all" && !hasSetInitialCity) {
-      void setSelectedCity(currentUser.city);
+      void setSelectedCity(currentUser.city, { scroll: false, shallow: true });
       setHasSetInitialCity(true);
     }
   }, [currentUser, selectedCity, hasSetInitialCity, setSelectedCity]);
@@ -135,15 +143,21 @@ function HomePageContent() {
   const {
     data: events,
     isLoading,
+    isFetching,
     error,
-  } = trpc.event.listEventsByRange.useQuery({
-    startDate: dateRange.startDate,
-    endDate: dateRange.endDate,
-    followedOnly: activeFilter === "followed",
-    friendsGoingOnly: activeFilter === "friends",
-    city: selectedCity !== "all" ? selectedCity : undefined,
-    search: searchQuery || undefined,
-  });
+  } = trpc.event.listEventsByRange.useQuery(
+    {
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate,
+      followedOnly: activeFilter === "followed",
+      friendsGoingOnly: activeFilter === "friends",
+      city: selectedCity !== "all" ? selectedCity : undefined,
+      search: searchQuery || undefined,
+    },
+    {
+      placeholderData: (previousData) => previousData,
+    }
+  );
 
   // Group events by day
   const eventsByDay = useMemo(() => {
@@ -173,14 +187,21 @@ function HomePageContent() {
         isSameWeek(prevWeekStart, today, { weekStartsOn: 1 }) ||
         isBefore(prevWeekStart, today)
       ) {
-        await setDateParam(format(today, "yyyy-MM-dd"));
+        await setDateParam(format(today, "yyyy-MM-dd"), {
+          scroll: false,
+          shallow: true,
+        });
       } else {
         await setDateParam(
-          format(startOfWeek(prevWeekStart, { weekStartsOn: 1 }), "yyyy-MM-dd")
+          format(startOfWeek(prevWeekStart, { weekStartsOn: 1 }), "yyyy-MM-dd"),
+          { scroll: false, shallow: true }
         );
       }
     } else {
-      await setDateParam(format(subMonths(currentDate, 1), "yyyy-MM-dd"));
+      await setDateParam(format(subMonths(currentDate, 1), "yyyy-MM-dd"), {
+        scroll: false,
+        shallow: true,
+      });
     }
   };
 
@@ -196,14 +217,23 @@ function HomePageContent() {
         // From any other week, go to next Monday
         nextDate = addDays(startOfWeek(currentDate, { weekStartsOn: 1 }), 7);
       }
-      await setDateParam(format(nextDate, "yyyy-MM-dd"));
+      await setDateParam(format(nextDate, "yyyy-MM-dd"), {
+        scroll: false,
+        shallow: true,
+      });
     } else {
-      await setDateParam(format(addMonths(currentDate, 1), "yyyy-MM-dd"));
+      await setDateParam(format(addMonths(currentDate, 1), "yyyy-MM-dd"), {
+        scroll: false,
+        shallow: true,
+      });
     }
   };
 
   const handleToday = async () => {
-    await setDateParam(format(new Date(), "yyyy-MM-dd"));
+    await setDateParam(format(new Date(), "yyyy-MM-dd"), {
+      scroll: false,
+      shallow: true,
+    });
   };
 
   // Get days to display based on view mode
@@ -232,7 +262,7 @@ function HomePageContent() {
   }, [error, toast]);
 
   return (
-    <div className="container relative mx-auto space-y-4 py-8">
+    <div className="container relative mx-auto min-h-screen space-y-4 py-8">
       {/* Friend Activity Feed */}
       <div className="mb-4">
         <div className="flex items-center gap-2 pb-4">
@@ -394,15 +424,23 @@ function HomePageContent() {
       {/*  </Tabs>*/}
       {/*</div>*/}
 
-      {/* Loading State */}
-      {isLoading && (
+      {/* Loading Indicator */}
+      {/*{isFetching && (*/}
+      {/*  <div className="absolute right-0 top-0 flex items-center gap-2 p-4 md:relative md:p-0 md:pt-4">*/}
+      {/*    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />*/}
+      {/*    <span className="text-sm text-muted-foreground">Updating events...</span>*/}
+      {/*  </div>*/}
+      {/*)}*/}
+
+      {/* Initial Loading State */}
+      {isLoading && !events && (
         <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       )}
 
       {/* Week View */}
-      {!isLoading && viewMode === "week" && (
+      {viewMode === "week" && events && (
         <div className="space-y-8">
           {daysToDisplay.map((date, index) => {
             const dateKey = format(date, "yyyy-MM-dd");
@@ -478,7 +516,7 @@ function HomePageContent() {
       )}
 
       {/* Month View */}
-      {!isLoading && viewMode === "month" && (
+      {viewMode === "month" && events && (
         <Card>
           <CardContent className="p-4">
             {/* Day of week headers */}
@@ -653,7 +691,7 @@ export default function HomePage() {
   return (
     <Suspense
       fallback={
-        <div className="container mx-auto py-8">
+        <div className="container mx-auto min-h-screen py-8">
           <div className="flex justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
