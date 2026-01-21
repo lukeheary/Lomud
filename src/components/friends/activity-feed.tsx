@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 interface ActivityItemProps {
   activity: any;
@@ -174,14 +175,37 @@ export function ActivityFeed({
 
   if (!activities || activities.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="mb-4 rounded-full bg-muted/30 p-4">
-          <Users className="h-8 w-8 text-muted-foreground/60" />
+      <div
+        className={cn(
+          "flex flex-col items-center justify-center text-center",
+          compact ? "rounded-2xl border border-dashed py-6" : "py-16"
+        )}
+      >
+        <div
+          className={cn(
+            "rounded-full bg-muted/30",
+            compact ? "mb-2 p-2" : "mb-4 p-4"
+          )}
+        >
+          <Users
+            className={cn(
+              "text-muted-foreground/60",
+              compact ? "h-5 w-5" : "h-8 w-8"
+            )}
+          />
         </div>
-        <p className="text-lg font-medium">No recent activity</p>
-        <p className="max-w-[250px] text-sm text-muted-foreground">
-          When your friends RSVP to events or follow venues, you'll see it here.
+        <p className={cn("font-medium", compact ? "text-sm" : "text-lg")}>
+          No recent activity
         </p>
+        {/*<p*/}
+        {/*  className={cn(*/}
+        {/*    "text-muted-foreground",*/}
+        {/*    compact ? "text-xs" : "text-sm",*/}
+        {/*    !compact && "max-w-[250px]"*/}
+        {/*  )}*/}
+        {/*>*/}
+        {/*  When your friends RSVP to events or follow venues, you'll see it here.*/}
+        {/*</p>*/}
       </div>
     );
   }
