@@ -122,7 +122,7 @@ function ActivityItem({ activity, compact = false }: ActivityItemProps) {
         compact ? "flex gap-3 pb-4 last:pb-0" : "flex gap-4 pb-2 last:pb-0"
       }
     >
-      <div className="relative flex flex-col items-center">
+      <div className="relative flex flex-col items-center pt-2">
         <Avatar
           className={
             compact
