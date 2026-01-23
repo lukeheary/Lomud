@@ -288,7 +288,7 @@ function HomePageContent() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-full w-14 rounded-none bg-muted px-0"
+              className="h-full w-14 rounded-none bg-muted px-0 focus:bg-muted/80"
               onClick={handleNext}
             >
               <ChevronRight className="h-4 w-4" />
@@ -346,19 +346,20 @@ function HomePageContent() {
 
       {/* Friend Activity Feed */}
       <div className="mb-4">
-        <div className="flex items-center gap-2 pb-2">
-          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-            Friend Activity
-          </h1>
-          <Link
-            href="/friends"
-            className="text-muted-foreground transition-colors hover:text-primary"
-          >
-            <ChevronRight className="h-6 w-6" />
-          </Link>
-        </div>
+        <Link href="/friends" className="transition-colors hover:text-primary">
+          <div className="flex items-center gap-1 pb-2">
+            <h1 className="text-xl font-bold tracking-tight md:text-3xl">
+              Recent Activity
+            </h1>
+            <ChevronRight className="h-4 w-4" />
+          </div>
+        </Link>
+
         <ActivityFeed limit={3} compact={true} />
       </div>
+
+      {/* add a divider line*/}
+      <hr className="my-4 border-t" />
 
       {/*  <Tabs*/}
       {/*    value={viewMode}*/}
