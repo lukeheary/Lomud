@@ -63,34 +63,34 @@ function ActivityItem({ activity, compact = false }: ActivityItemProps) {
             {actorName} is going to{" "}
             {compact ? (
               <>
-                <span className="md:hidden">
-                  <Link
-                    href={`/event/${entityId}`}
-                    className="font-medium text-primary hover:underline"
-                  >
-                    {activity.event?.venueName || entityName}
-                  </Link>
-                </span>
-                <span className="hidden md:inline">
-                  <Link
-                    href={`/event/${entityId}`}
-                    className="font-medium text-primary hover:underline"
-                  >
-                    {entityName}
-                  </Link>
-                  {activity.event?.venueName && (
-                    <>
-                      {" "}
-                      at{" "}
-                      <Link
-                        href={`/event/${entityId}`}
-                        className="font-medium text-primary hover:underline"
-                      >
-                        {activity.event.venueName}
-                      </Link>
-                    </>
-                  )}
-                </span>
+                {/*<span className="md:hidden">*/}
+                {/*  <Link*/}
+                {/*    href={`/event/${entityId}`}*/}
+                {/*    className="font-medium text-primary hover:underline"*/}
+                {/*  >*/}
+                {/*    {activity.event?.venueName || entityName}*/}
+                {/*  </Link>*/}
+                {/*</span>*/}
+                {/*<span className="hidden md:inline">*/}
+                <Link
+                  href={`/event/${entityId}`}
+                  className="font-medium text-primary hover:underline"
+                >
+                  {entityName}
+                </Link>
+                {activity.event?.venueName && (
+                  <>
+                    {" "}
+                    at{" "}
+                    <Link
+                      href={`/event/${entityId}`}
+                      className="font-medium text-primary hover:underline"
+                    >
+                      {activity.event.venueName}
+                    </Link>
+                  </>
+                )}
+                {/*</span>*/}
               </>
             ) : (
               <Link
@@ -174,9 +174,7 @@ function ActivityItem({ activity, compact = false }: ActivityItemProps) {
         </div>
       </div>
       <div className="flex-1">
-        <p className="text-base leading-relaxed text-muted-foreground">
-          {renderContent()}
-        </p>
+        <p className="text-base text-muted-foreground">{renderContent()}</p>
         <p className="text-xs text-muted-foreground/60">
           {formatDistanceToNow(new Date(createdAt), { addSuffix: true })}
         </p>
@@ -247,7 +245,7 @@ export function ActivityFeed({
     <div className="space-y-4">
       <div className="flex flex-col">
         {activities.map((activity: any, index: number) => (
-          <div key={activity.id} className="relative pb-4 last:pb-0">
+          <div key={activity.id} className="relative pb-3 last:pb-0">
             <ActivityItem activity={activity} compact={compact} />
             {!compact && index !== activities.length - 1 && (
               <div className="absolute left-[19px] top-10 h-full w-px bg-muted" />

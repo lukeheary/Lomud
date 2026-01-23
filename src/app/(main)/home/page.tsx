@@ -348,7 +348,7 @@ function HomePageContent() {
       <div className="mb-4">
         <Link href="/friends" className="transition-colors hover:text-primary">
           <div className="flex items-center gap-1 pb-2">
-            <h1 className="text-xl font-bold tracking-tight md:text-3xl">
+            <h1 className="text-xl font-bold tracking-tight md:text-2xl">
               Recent Activity
             </h1>
             <ChevronRight className="h-4 w-4" />

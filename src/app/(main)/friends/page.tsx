@@ -3,11 +3,26 @@
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Users, Search, UserPlus, Check, X, Loader2, Mail, Activity } from "lucide-react";
+import {
+  Users,
+  Search,
+  UserPlus,
+  Check,
+  X,
+  Loader2,
+  Mail,
+  Activity,
+} from "lucide-react";
 import { ActivityFeed } from "@/components/friends/activity-feed";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryState } from "nuqs";
@@ -115,11 +130,11 @@ function FriendsPageContent() {
           <TabsTrigger value="friends" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             My Friends
-            {acceptedFriends.length > 0 && (
-              <Badge variant="secondary" className="ml-1">
-                {acceptedFriends.length}
-              </Badge>
-            )}
+            {/*{acceptedFriends.length > 0 && (*/}
+            {/*  <Badge variant="secondary" className="ml-1">*/}
+            {/*    {acceptedFriends.length}*/}
+            {/*  </Badge>*/}
+            {/*)}*/}
           </TabsTrigger>
           <TabsTrigger value="requests" className="flex items-center gap-2">
             <Mail className="h-4 w-4" />
@@ -140,10 +155,8 @@ function FriendsPageContent() {
         <TabsContent value="activity">
           <Card>
             <CardHeader>
-              <CardTitle>Friend Activity</CardTitle>
-              <CardDescription>
-                See what your friends are up to
-              </CardDescription>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>See what your friends are up to</CardDescription>
             </CardHeader>
             <CardContent>
               <ActivityFeed />
