@@ -105,6 +105,10 @@ function FriendsPageContent() {
     },
   });
 
+  const [activeTab, setActiveTab] = useQueryState("tab", {
+    defaultValue: "activity",
+  });
+
   const acceptedFriends = friends?.filter((f) => f.status === "accepted") || [];
   const sentRequests = pendingRequests?.filter((f) => f.isSender) || [];
   const receivedRequests = pendingRequests?.filter((f) => !f.isSender) || [];
@@ -121,35 +125,7 @@ function FriendsPageContent() {
         </p>
       </div>
 
-      <Tabs defaultValue="activity" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="activity" className="flex items-center gap-2">
-            <Activity className="h-4 w-4" />
-            Activity
-          </TabsTrigger>
-          <TabsTrigger value="friends" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            My Friends
-            {/*{acceptedFriends.length > 0 && (*/}
-            {/*  <Badge variant="secondary" className="ml-1">*/}
-            {/*    {acceptedFriends.length}*/}
-            {/*  </Badge>*/}
-            {/*)}*/}
-          </TabsTrigger>
-          <TabsTrigger value="requests" className="flex items-center gap-2">
-            <Mail className="h-4 w-4" />
-            Requests
-            {receivedRequests.length > 0 && (
-              <Badge variant="default" className="ml-1">
-                {receivedRequests.length}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="search" className="flex items-center gap-2">
-            <Search className="h-4 w-4" />
-            Find Friends
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
 
         {/* Activity Tab */}
         <TabsContent value="activity">

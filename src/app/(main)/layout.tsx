@@ -11,6 +11,9 @@ import {
   User,
   LogOut,
   Menu,
+  Activity,
+  Search,
+  Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OnboardingCheck } from "@/components/onboarding-check";
@@ -47,6 +50,12 @@ export default function MainLayout({
   const { data: user } = trpc.user.getCurrentUser.useQuery();
   const { data: hasVenues } = trpc.user.hasVenues.useQuery();
   const { data: hasOrganizers } = trpc.user.hasOrganizers.useQuery();
+  const { data: pendingRequests } = trpc.friends.listFriends.useQuery({
+    statusFilter: "pending",
+  });
+
+  const receivedRequestsCount =
+    pendingRequests?.filter((f) => !f.isSender).length ?? 0;
 
   const handleSignOut = async () => {
     await signOut();
@@ -61,7 +70,7 @@ export default function MainLayout({
     <div className="flex min-h-screen flex-col">
       <OnboardingCheck />
       {/* Navigation Bar */}
-      <header className="sticky top-0 z-50 border-b bg-background">
+      <header className="sticky top-0 z-40 border-b bg-background">
         <div className="container mx-auto flex h-16 items-center px-4">
           {/* Left Side - Logo */}
           <div className="flex items-center">
@@ -85,11 +94,67 @@ export default function MainLayout({
                 Venues & Organizers
               </Button>
             </Link>
-            <Link href="/friends">
-              <Button variant="ghost" size="sm">
-                Friends
-              </Button>
-            </Link>
+            <div className="group relative">
+              <Link href="/friends">
+                <Button variant="ghost" size="sm" className="gap-1">
+                  Friends
+                  {receivedRequestsCount > 0 && (
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
+                      {receivedRequestsCount}
+                    </span>
+                  )}
+                </Button>
+              </Link>
+              <div className="absolute left-0 top-full hidden w-52 pt-2 group-hover:block">
+                <div className="rounded-2xl border bg-popover p-2 shadow-md">
+                  <Link href="/friends?tab=activity">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start gap-4 rounded-xl px-2 py-2.5 font-normal"
+                    >
+                      <Activity className="h-4 w-4" />
+                      Activity
+                    </Button>
+                  </Link>
+                  <Link href="/friends?tab=friends">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start gap-4 rounded-xl px-2 py-2.5 font-normal"
+                    >
+                      <Users className="h-4 w-4" />
+                      My Friends
+                    </Button>
+                  </Link>
+                  <Link href="/friends?tab=requests">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start gap-4 rounded-xl px-2 py-2.5 font-normal"
+                    >
+                      <Mail className="h-4 w-4" />
+                      Requests
+                      {receivedRequestsCount > 0 && (
+                        <span className="ml-auto flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
+                          {receivedRequestsCount}
+                        </span>
+                      )}
+                    </Button>
+                  </Link>
+                  <Link href="/friends?tab=search">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start gap-4 rounded-xl px-2 py-2.5 font-normal"
+                    >
+                      <Search className="h-4 w-4" />
+                      Find Friends
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
           </nav>
 
           {/* Right Side - Spacer for mobile */}
@@ -113,9 +178,9 @@ export default function MainLayout({
                 <DropdownMenuItem asChild>
                   <Link
                     href="/profile"
-                    className="flex cursor-pointer items-center"
+                    className="flex cursor-pointer items-center gap-4"
                   >
-                    <User className="mr-2 h-4 w-4" />
+                    <User className="h-4 w-4" />
                     My Profile
                   </Link>
                 </DropdownMenuItem>
@@ -123,9 +188,9 @@ export default function MainLayout({
                   <DropdownMenuItem asChild>
                     <Link
                       href="/my-venues"
-                      className="flex cursor-pointer items-center"
+                      className="flex cursor-pointer items-center gap-4"
                     >
-                      <Building2 className="mr-2 h-4 w-4" />
+                      <Building2 className="h-4 w-4" />
                       My Venues
                     </Link>
                   </DropdownMenuItem>
@@ -134,9 +199,9 @@ export default function MainLayout({
                   <DropdownMenuItem asChild>
                     <Link
                       href="/my-organizers"
-                      className="flex cursor-pointer items-center"
+                      className="flex cursor-pointer items-center gap-4"
                     >
-                      <Users className="mr-2 h-4 w-4" />
+                      <Users className="h-4 w-4" />
                       My Organizers
                     </Link>
                   </DropdownMenuItem>
@@ -145,9 +210,9 @@ export default function MainLayout({
                   <DropdownMenuItem asChild>
                     <Link
                       href="/admin"
-                      className="flex cursor-pointer items-center"
+                      className="flex cursor-pointer items-center gap-4"
                     >
-                      <Plus className="mr-2 h-4 w-4" />
+                      <Plus className="h-4 w-4" />
                       Admin Settings
                     </Link>
                   </DropdownMenuItem>
@@ -155,9 +220,9 @@ export default function MainLayout({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={handleSignOut}
-                  className="cursor-pointer text-red-500"
+                  className="cursor-pointer gap-4 text-red-500"
                 >
-                  <LogOut className="mr-2 h-4 w-4" />
+                  <LogOut className="h-4 w-4" />
                   Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -267,16 +332,78 @@ export default function MainLayout({
                       Venues & Organizers
                     </Button>
                   </Link>
-                  <Link href="/friends" onClick={closeMobileMenu}>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start px-4 text-base"
-                      size="lg"
-                    >
-                      <Users className="mr-3 h-5 w-5" />
-                      Friends
-                    </Button>
-                  </Link>
+                  <div className="flex flex-col">
+                    <Link href="/friends" onClick={closeMobileMenu}>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start px-4 text-base"
+                        size="lg"
+                      >
+                        <Users className="mr-3 h-5 w-5" />
+                        Friends
+                        {receivedRequestsCount > 0 && (
+                          <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] text-primary-foreground">
+                            {receivedRequestsCount}
+                          </span>
+                        )}
+                      </Button>
+                    </Link>
+                    <div className="ml-8 flex flex-col gap-1 border-l pl-2">
+                      <Link
+                        href="/friends?tab=activity"
+                        onClick={closeMobileMenu}
+                      >
+                        <Button
+                          variant="ghost"
+                          className="h-9 w-full justify-start px-4 text-sm font-normal"
+                        >
+                          <Activity className="mr-2 h-4 w-4" />
+                          Activity
+                        </Button>
+                      </Link>
+                      <Link
+                        href="/friends?tab=friends"
+                        onClick={closeMobileMenu}
+                      >
+                        <Button
+                          variant="ghost"
+                          className="h-9 w-full justify-start px-4 text-sm font-normal"
+                        >
+                          <Users className="mr-2 h-4 w-4" />
+                          My Friends
+                        </Button>
+                      </Link>
+                      <Link
+                        href="/friends?tab=requests"
+                        onClick={closeMobileMenu}
+                      >
+                        <Button
+                          variant="ghost"
+                          className="h-9 w-full justify-start px-4 text-sm font-normal"
+                        >
+                          <Mail className="mr-2 h-4 w-4" />
+                          Requests
+                          {receivedRequestsCount > 0 && (
+                            <span className="ml-auto flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
+                              {receivedRequestsCount}
+                            </span>
+                          )}
+                        </Button>
+                      </Link>
+                      <Link
+                        href="/friends?tab=search"
+                        onClick={closeMobileMenu}
+                      >
+                        <Button
+                          variant="ghost"
+                          className="h-9 w-full justify-start px-4 text-sm font-normal"
+                        >
+                          <Search className="mr-2 h-4 w-4" />
+                          Find Friends
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
 
                   <div className="mt-4 flex flex-col gap-2 border-t pt-4">
                     <Link href="/profile" onClick={closeMobileMenu}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, Suspense } from "react";
+import { useState, useMemo, useEffect, Suspense, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -63,6 +63,8 @@ type ViewMode = "week" | "month";
 function HomePageContent() {
   const { toast } = useToast();
   const [activeFilter, setActiveFilter] = useState<EventFilterTab>("all");
+  const [isSticky, setIsSticky] = useState(false);
+  const stickySentinelRef = useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = useQueryState("search", {
     defaultValue: "",
     scroll: false,
@@ -261,6 +263,31 @@ function HomePageContent() {
     }
   }, [error, toast]);
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsSticky(!entry.isIntersecting);
+      },
+      {
+        threshold: [1],
+        // Root margin needs to account for the sticky offset (top-0 on mobile, top-16 on md)
+        // But since we want to know when it hits the top, we can use a sentinel just above it.
+        rootMargin: "-1px 0px 0px 0px",
+      }
+    );
+
+    const sentinel = stickySentinelRef.current;
+    if (sentinel) {
+      observer.observe(sentinel);
+    }
+
+    return () => {
+      if (sentinel) {
+        observer.unobserve(sentinel);
+      }
+    };
+  }, []);
+
   return (
     <div className="container relative mx-auto min-h-screen py-4 md:py-4">
       {/* Friend Activity Feed */}
@@ -278,10 +305,20 @@ function HomePageContent() {
       </div>
 
       {/* add a divider line*/}
-      <hr className="my-4 border-t" />
+      {/*<hr className="my-4 border-t" />*/}
+
+      {/* Sentinel for sticky detection */}
+      <div ref={stickySentinelRef} className="h-px w-full" />
 
       {/* Search and Filters */}
-      <div className="sticky top-0 z-[60] -mx-4 -mt-4 bg-background px-4 pb-4 pt-4 border-b shadow-sm md:top-16 md:z-30 md:-mx-8 md:-mt-8 md:px-8 md:pb-6 md:pt-4 md:border-none md:shadow-none md:bg-background/95 md:backdrop-blur md:supports-[backdrop-filter]:bg-background">
+      <div
+        className={cn(
+          "sticky top-0 z-[45] -mx-4 -mt-4 bg-background px-4 pb-4 pt-4 transition-shadow md:top-16 md:z-30 md:-mx-8 md:bg-background/95 md:px-8 md:pt-4 md:backdrop-blur md:supports-[backdrop-filter]:bg-background",
+          isSticky
+            ? "border-b shadow-sm md:border-none md:shadow-none"
+            : "border-none shadow-none"
+        )}
+      >
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           {/* Search Input */}
           <div className={"flex w-full flex-row gap-2"}>
