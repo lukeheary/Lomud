@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { cn, formatRelativeEventDate } from "@/lib/utils";
 
 interface ActivityItemProps {
   activity: any;
@@ -22,7 +22,12 @@ interface ActivityItemProps {
 }
 
 function ActivityItem({ activity, compact = false }: ActivityItemProps) {
-  const { actor, type, entityType, entityId, metadata, createdAt } = activity;
+  const { actor, type, entityType, entityId, metadata, createdAt, event } =
+    activity;
+
+  const eventRelativeDate = event?.startAt
+    ? formatRelativeEventDate(new Date(event.startAt))
+    : null;
 
   const renderIcon = () => {
     switch (type) {
@@ -149,13 +154,15 @@ function ActivityItem({ activity, compact = false }: ActivityItemProps) {
     }
   };
 
+  const content = renderContent();
+
   return (
     <div
       className={
         compact ? "flex gap-3 pb-4 last:pb-0" : "flex gap-4 pb-2 last:pb-0"
       }
     >
-      <div className="relative flex flex-col items-center pt-2">
+      <div className="relative flex flex-col items-center pt-1.5">
         <Avatar
           className={
             compact
@@ -174,7 +181,14 @@ function ActivityItem({ activity, compact = false }: ActivityItemProps) {
         </div>
       </div>
       <div className="flex-1">
-        <p className="text-base text-muted-foreground">{renderContent()}</p>
+        <p className="text-base text-muted-foreground">
+          {content}
+          {eventRelativeDate && (
+            <span className="ml-1.5 font-medium text-foreground/80">
+              {eventRelativeDate}
+            </span>
+          )}
+        </p>
         <p className="text-xs text-muted-foreground/60">
           {formatDistanceToNow(new Date(createdAt), { addSuffix: true })}
         </p>

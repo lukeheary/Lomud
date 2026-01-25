@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { format } from "date-fns";
+import { format, isToday, isTomorrow, differenceInCalendarDays, startOfDay } from "date-fns";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -16,6 +16,19 @@ export function formatTime(date: Date): string {
 
 export function formatDateTime(date: Date): string {
   return format(date, "MMM d, yyyy 'at' h:mm a");
+}
+
+export function formatRelativeEventDate(date: Date): string {
+  const now = startOfDay(new Date());
+  const eventDate = startOfDay(date);
+  const diff = differenceInCalendarDays(eventDate, now);
+
+  if (diff === 0) return "tonight";
+  if (diff === 1) return "tomorrow";
+  if (diff > 1 && diff < 7) return `on ${format(date, "EEEE").toLowerCase()}`;
+  if (diff >= 7 && diff < 14) return `next ${format(date, "EEEE").toLowerCase()}`;
+
+  return `on ${format(date, "MMM d")}`;
 }
 
 export function generateSlug(text: string): string {
