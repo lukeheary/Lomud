@@ -25,8 +25,8 @@ export function formatRelativeEventDate(date: Date): string {
 
   if (diff === 0) return "tonight";
   if (diff === 1) return "tomorrow";
-  if (diff > 1 && diff < 7) return `on ${format(date, "EEEE").toLowerCase()}`;
-  if (diff >= 7 && diff < 14) return `next ${format(date, "EEEE").toLowerCase()}`;
+  if (diff > 1 && diff < 7) return `on ${format(date, "EEEE")}`;
+  if (diff >= 7 && diff < 14) return `next ${format(date, "EEEE")}`;
 
   return `on ${format(date, "MMM d")}`;
 }

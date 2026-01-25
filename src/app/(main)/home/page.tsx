@@ -281,7 +281,7 @@ function HomePageContent() {
       <hr className="my-4 border-t" />
 
       {/* Search and Filters */}
-      <div className="sticky top-16 z-30 -mx-4 -mt-4 bg-background/95 px-4 pb-4 pt-4 backdrop-blur supports-[backdrop-filter]:bg-background md:-mx-8 md:-mt-8 md:px-8 md:pb-6 md:pt-4">
+      <div className="sticky top-0 z-[60] -mx-4 -mt-4 bg-background px-4 pb-4 pt-4 border-b shadow-sm md:top-16 md:z-30 md:-mx-8 md:-mt-8 md:px-8 md:pb-6 md:pt-4 md:border-none md:shadow-none md:bg-background/95 md:backdrop-blur md:supports-[backdrop-filter]:bg-background">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           {/* Search Input */}
           <div className={"flex w-full flex-row gap-2"}>

@@ -189,7 +189,7 @@ function ActivityItem({ activity, compact = false }: ActivityItemProps) {
             </span>
           )}
         </p>
-        <p className="text-xs text-muted-foreground/60">
+        <p className="text-xs text-muted-foreground/60 md:text-sm">
           {formatDistanceToNow(new Date(createdAt), { addSuffix: true })}
         </p>
       </div>
@@ -259,7 +259,7 @@ export function ActivityFeed({
     <div className="space-y-4">
       <div className="flex flex-col">
         {activities.map((activity: any, index: number) => (
-          <div key={activity.id} className="relative pb-3 last:pb-0">
+          <div key={activity.id} className="relative pb-3 last:pb-0 md:pb-4">
             <ActivityItem activity={activity} compact={compact} />
             {!compact && index !== activities.length - 1 && (
               <div className="absolute left-[19px] top-10 h-full w-px bg-muted" />
