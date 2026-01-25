@@ -262,88 +262,7 @@ function HomePageContent() {
   }, [error, toast]);
 
   return (
-    <div className="container relative mx-auto min-h-screen space-y-4 py-4 md:py-8">
-      {/* Search and Filters */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        {/* Search Input */}
-        <div className={"flex w-full flex-row gap-2"}>
-          <Suspense fallback={null}>
-            <SearchInput
-              placeholder="Search events..."
-              value={searchQuery}
-              onChange={setSearchQuery}
-              className="w-full"
-            />
-          </Suspense>
-          <div className="flex h-12 items-center overflow-hidden rounded-full border border-input bg-background shadow-sm md:hidden">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-full w-14 rounded-none border-r bg-muted px-0"
-              onClick={handlePrevious}
-              disabled={isCurrentWeek}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-full w-14 rounded-none bg-muted px-0 focus:bg-muted/80"
-              onClick={handleNext}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex w-full gap-2 sm:w-fit">
-          {/* City Filter */}
-          <Select value={selectedCity} onValueChange={setSelectedCity}>
-            <SelectTrigger className="flex-1 shrink-0 sm:w-[200px]">
-              <SelectValue placeholder="Select city" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Cities</SelectItem>
-              {cities?.map((city) => (
-                <SelectItem
-                  key={`${city.city}-${city.state}`}
-                  value={city.city}
-                >
-                  {city.city}, {city.state}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <EventFilterSelect
-            value={activeFilter}
-            onValueChange={setActiveFilter}
-            className="w-[160px] shrink-0"
-          />
-
-          {/* Navigation Controls */}
-          <div className="hidden h-12 items-center overflow-hidden rounded-full border border-input bg-background shadow-sm md:flex">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-full w-9 rounded-none border-r bg-muted px-0"
-              onClick={handlePrevious}
-              disabled={isCurrentWeek}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-full w-9 rounded-none bg-muted px-0"
-              onClick={handleNext}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
-
+    <div className="container relative mx-auto min-h-screen py-4 md:py-4">
       {/* Friend Activity Feed */}
       <div className="mb-4">
         <Link href="/friends" className="transition-colors hover:text-primary">
@@ -360,6 +279,89 @@ function HomePageContent() {
 
       {/* add a divider line*/}
       <hr className="my-4 border-t" />
+
+      {/* Search and Filters */}
+      <div className="sticky top-16 z-30 -mx-4 -mt-4 bg-background/95 px-4 pb-4 pt-4 backdrop-blur supports-[backdrop-filter]:bg-background md:-mx-8 md:-mt-8 md:px-8 md:pb-6 md:pt-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          {/* Search Input */}
+          <div className={"flex w-full flex-row gap-2"}>
+            <Suspense fallback={null}>
+              <SearchInput
+                placeholder="Search events..."
+                value={searchQuery}
+                onChange={setSearchQuery}
+                className="w-full"
+              />
+            </Suspense>
+            <div className="flex h-12 items-center overflow-hidden rounded-full border border-input bg-background shadow-sm md:hidden">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-full w-14 rounded-none border-r bg-muted px-0"
+                onClick={handlePrevious}
+                disabled={isCurrentWeek}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-full w-14 rounded-none bg-muted px-0 focus:bg-muted/80"
+                onClick={handleNext}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex w-full gap-2 sm:w-fit">
+            {/* City Filter */}
+            <Select value={selectedCity} onValueChange={setSelectedCity}>
+              <SelectTrigger className="flex-1 shrink-0 sm:w-[200px]">
+                <SelectValue placeholder="Select city" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Cities</SelectItem>
+                {cities?.map((city) => (
+                  <SelectItem
+                    key={`${city.city}-${city.state}`}
+                    value={city.city}
+                  >
+                    {city.city}, {city.state}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <EventFilterSelect
+              value={activeFilter}
+              onValueChange={setActiveFilter}
+              className="w-[160px] shrink-0"
+            />
+
+            {/* Navigation Controls */}
+            <div className="hidden h-12 items-center overflow-hidden rounded-full border border-input bg-background shadow-sm md:flex">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-full w-9 rounded-none border-r bg-muted px-0"
+                onClick={handlePrevious}
+                disabled={isCurrentWeek}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-full w-9 rounded-none bg-muted px-0"
+                onClick={handleNext}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/*  <Tabs*/}
       {/*    value={viewMode}*/}
