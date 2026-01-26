@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { trpc } from "@/lib/trpc";
@@ -87,20 +87,20 @@ export default function OnboardingPage() {
     }
   };
 
-  const handleCitySelect = (place: {
+  const handleCitySelect = useCallback((place: {
     name: string;
     address: string;
     city: string;
     state: string;
     formattedAddress: string;
   }) => {
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       city: place.city,
       state: place.state,
-    });
+    }));
     setSearchCity(place.city);
-  };
+  }, []);
 
   if (!isLoaded) {
     return (

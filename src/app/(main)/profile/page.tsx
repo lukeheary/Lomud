@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,7 +70,7 @@ export default function ProfilePage() {
     });
   };
 
-  const handleCitySelect = (place: {
+  const handleCitySelect = useCallback((place: {
     name: string;
     address: string;
     city: string;
@@ -80,7 +80,7 @@ export default function ProfilePage() {
     setCity(place.city);
     setState(place.state);
     setSearchCity(place.city);
-  };
+  }, []);
 
   const handleSave = () => {
     updateProfileMutation.mutate({

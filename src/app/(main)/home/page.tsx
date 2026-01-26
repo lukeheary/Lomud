@@ -292,7 +292,10 @@ function HomePageContent() {
     <div className="container relative mx-auto min-h-screen py-4 md:py-4">
       {/* Friend Activity Feed */}
       <div className="mb-4">
-        <Link href="/friends" className="transition-colors hover:text-primary">
+        <Link
+          href="/friends/activity"
+          className="transition-colors hover:text-primary"
+        >
           <div className="flex items-center gap-1 pb-2 md:pb-3">
             <h1 className="text-xl font-bold tracking-tight md:text-2xl">
               Recent Activity

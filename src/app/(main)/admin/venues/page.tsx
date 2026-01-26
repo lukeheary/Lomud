@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,7 @@ import { Building2, Loader2, X, Plus, ArrowLeft, Users as UsersIcon, Search } fr
 import { Badge } from "@/components/ui/badge";
 import { S3Uploader } from "@/components/ui/s3-uploader";
 import { VenueHoursEditor, type VenueHours } from "@/components/venue-hours-editor";
+import { GooglePlacesAutocomplete } from "@/components/google-places-autocomplete";
 
 type ViewMode = "list" | "create" | "edit" | "members";
 
@@ -49,6 +50,9 @@ export default function AdminVenuesPage() {
         instagram: "",
         hours: null as VenueHours | null,
     });
+
+    // Google Places search state
+    const [placeSearch, setPlaceSearch] = useState("");
 
     // Edit mode state
     const [editingVenueId, setEditingVenueId] = useState<string | null>(null);
@@ -85,7 +89,32 @@ export default function AdminVenuesPage() {
             hours: null,
         });
         setEditingVenueId(null);
+        setPlaceSearch("");
     };
+
+    const handlePlaceSelect = useCallback((place: {
+        name: string;
+        address: string;
+        city: string;
+        state: string;
+        formattedAddress: string;
+    }) => {
+        // Generate slug from venue name
+        const slug = place.name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "");
+
+        setVenueForm(prev => ({
+            ...prev,
+            slug: slug.length >= 3 ? slug : `venue-${slug}`,
+            name: place.name,
+            address: place.address,
+            city: place.city,
+            state: place.state,
+        }));
+        setPlaceSearch(place.name);
+    }, []);
 
     const createVenueMutation = trpc.admin.createVenue.useMutation({
         onSuccess: () => {
@@ -133,6 +162,7 @@ export default function AdminVenuesPage() {
             instagram: venue.instagram || "",
             hours: venue.hours || null,
         });
+        setPlaceSearch(venue.name);
         setViewMode("edit");
     };
 
@@ -288,6 +318,20 @@ export default function AdminVenuesPage() {
 
                 <Card>
                     <CardContent className="space-y-4 pt-6">
+                        <div>
+                            <Label htmlFor="venue-search">Search Venue *</Label>
+                            <GooglePlacesAutocomplete
+                                value={placeSearch}
+                                onChange={setPlaceSearch}
+                                onPlaceSelect={handlePlaceSelect}
+                                placeholder="Search for a venue (e.g. Big Night Live Boston)..."
+                                searchType="establishment"
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Start typing the venue name to auto-fill details
+                            </p>
+                        </div>
+
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <Label htmlFor="venue-slug">Slug *</Label>

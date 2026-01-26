@@ -34,6 +34,12 @@ function AutocompleteInput({
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
+  const onPlaceSelectRef = useRef(onPlaceSelect);
+  
+  useEffect(() => {
+    onPlaceSelectRef.current = onPlaceSelect;
+  }, [onPlaceSelect]);
+
   useEffect(() => {
     if (!inputRef.current || !(window as any).google) return;
 
@@ -57,6 +63,7 @@ function AutocompleteInput({
     ).google.maps.places.Autocomplete(inputRef.current, {
       types,
       componentRestrictions: { country: "us" },
+      fields: ["address_components", "formatted_address", "name"],
     });
 
     // Add place changed listener
@@ -107,7 +114,7 @@ function AutocompleteInput({
           formattedAddress,
         });
 
-        onPlaceSelect({
+        onPlaceSelectRef.current({
           name,
           address,
           city,
@@ -139,7 +146,7 @@ function AutocompleteInput({
         autocompleteRef.current = null;
       }
     };
-  }, [onPlaceSelect, searchType]);
+  }, [searchType]);
 
   return (
     <Input
