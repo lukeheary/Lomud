@@ -107,75 +107,21 @@ export default function VenuePage() {
       {/* Venue Header */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex items-start justify-between">
-            <div className="flex-1 space-y-4">
+          <div className="space-y-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <div className="mb-2 flex items-center gap-3">
-                  {/*<Building2 className="h-8 w-8" />*/}
-                  <h1 className="text-3xl font-bold">{venue.name}</h1>
-                </div>
+                <h1 className="text-3xl font-bold">{venue.name}</h1>
                 {venue.description && (
-                  <p className="text-muted-foreground">{venue.description}</p>
+                  <p className="mt-2 text-muted-foreground">{venue.description}</p>
                 )}
               </div>
-
-              <div className="flex flex-wrap gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span>
-                    {venue.city}, {venue.state}
-                  </span>
-                </div>
-                {venue.website && (
-                  <a
-                    href={venue.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-primary hover:underline"
-                  >
-                    <Globe className="h-4 w-4" />
-                    <span>Website</span>
-                  </a>
-                )}
-                {venue.instagram && (
-                  <a
-                    href={`https://instagram.com/${venue.instagram}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-primary hover:underline"
-                  >
-                    <Instagram className="h-4 w-4" />
-                    <span>@{venue.instagram}</span>
-                  </a>
-                )}
-              </div>
-
-              <div className="flex items-center gap-4">
-                <Badge variant="outline">
-                  <Heart className="mr-1 h-3 w-3" />
-                  {(venue as any).follows?.length || 0} followers
-                </Badge>
-                <Badge variant="outline">
-                  {(venue as any).events?.length || 0} events
-                </Badge>
-              </div>
-
-              {(venue as any).hours && (
-                <div className="mt-4">
-                  <VenueHoursDisplay
-                    hours={(venue as any).hours as VenueHours}
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-2">
               <Button
                 variant={isFollowing ? "outline" : "default"}
                 onClick={handleFollowToggle}
                 disabled={
                   followMutation.isPending || unfollowMutation.isPending
                 }
+                className="w-full shrink-0 sm:w-auto"
               >
                 <Heart
                   className={`mr-2 h-4 w-4 ${
@@ -185,6 +131,53 @@ export default function VenuePage() {
                 {isFollowing ? "Following" : "Follow"}
               </Button>
             </div>
+
+            <div className="flex flex-wrap gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <span>
+                  {venue.city}, {venue.state}
+                </span>
+              </div>
+              {venue.website && (
+                <a
+                  href={venue.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-primary hover:underline"
+                >
+                  <Globe className="h-4 w-4" />
+                  <span>Website</span>
+                </a>
+              )}
+              {venue.instagram && (
+                <a
+                  href={`https://instagram.com/${venue.instagram}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-primary hover:underline"
+                >
+                  <Instagram className="h-4 w-4" />
+                  <span>@{venue.instagram}</span>
+                </a>
+              )}
+            </div>
+
+            <div className="flex items-center gap-4">
+              <Badge variant="outline">
+                <Heart className="mr-1 h-3 w-3" />
+                {(venue as any).follows?.length || 0} followers
+              </Badge>
+              <Badge variant="outline">
+                {(venue as any).events?.length || 0} events
+              </Badge>
+            </div>
+
+            {(venue as any).hours && (
+              <VenueHoursDisplay
+                hours={(venue as any).hours as VenueHours}
+              />
+            )}
           </div>
         </CardContent>
       </Card>

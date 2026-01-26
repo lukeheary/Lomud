@@ -1,4 +1,7 @@
-import { Clock } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import { Clock, ChevronDown } from "lucide-react";
 import type { VenueHours } from "@/components/venue-hours-editor";
 
 const DAYS = [
@@ -13,9 +16,12 @@ const DAYS = [
 
 interface VenueHoursDisplayProps {
   hours: VenueHours | null;
+  defaultOpen?: boolean;
 }
 
-export function VenueHoursDisplay({ hours }: VenueHoursDisplayProps) {
+export function VenueHoursDisplay({ hours, defaultOpen = false }: VenueHoursDisplayProps) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
   if (!hours) return null;
 
   const formatTime = (time: string) => {
@@ -26,34 +32,67 @@ export function VenueHoursDisplay({ hours }: VenueHoursDisplayProps) {
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2 text-sm font-medium">
-        <Clock className="h-4 w-4" />
-        Hours
-      </div>
-      <div className="space-y-1.5 text-sm">
-        {DAYS.map(({ key, label }) => {
-          const dayHours = hours[key as keyof VenueHours];
-          if (!dayHours) return null;
+  // Get today's hours for the preview
+  const today = new Date().toLocaleDateString("en-US", { weekday: "long" }).toLowerCase();
+  const todayHours = hours[today as keyof VenueHours];
+  const todayLabel = todayHours?.closed
+    ? "Closed today"
+    : todayHours
+      ? `Open today ${formatTime(todayHours.open)} - ${formatTime(todayHours.close)}`
+      : null;
 
-          return (
-            <div
-              key={key}
-              className="flex items-center justify-between border-b pb-1.5"
-            >
-              <span className="font-medium text-muted-foreground">{label}</span>
-              {dayHours.closed ? (
-                <span className="text-muted-foreground">Closed</span>
-              ) : (
-                <span>
-                  {formatTime(dayHours.open)} - {formatTime(dayHours.close)}
+  return (
+    <div className="space-y-2">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full items-center justify-between rounded-md py-1 text-left text-sm font-medium hover:bg-muted/50 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4" />
+          <span>Hours</span>
+          {todayLabel && !isOpen && (
+            <span className="text-muted-foreground font-normal">· {todayLabel}</span>
+          )}
+        </div>
+        <ChevronDown
+          className={`h-4 w-4 text-muted-foreground transition-transform ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="space-y-1.5 pl-6 text-sm">
+          {DAYS.map(({ key, label }) => {
+            const dayHours = hours[key as keyof VenueHours];
+            if (!dayHours) return null;
+
+            const isToday = key === today;
+
+            return (
+              <div
+                key={key}
+                className={`flex items-center justify-between border-b pb-1.5 ${
+                  isToday ? "font-medium" : ""
+                }`}
+              >
+                <span className={isToday ? "text-foreground" : "text-muted-foreground"}>
+                  {label}
+                  {isToday && " (Today)"}
                 </span>
-              )}
-            </div>
-          );
-        })}
-      </div>
+                {dayHours.closed ? (
+                  <span className="text-muted-foreground">Closed</span>
+                ) : (
+                  <span>
+                    {formatTime(dayHours.open)} - {formatTime(dayHours.close)}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
