@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
+import { GooglePlacesAutocomplete } from "@/components/google-places-autocomplete";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,13 +14,6 @@ import {
     CardDescription,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Users, Loader2, X, Plus, ArrowLeft, Users as UsersIcon, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +40,8 @@ export default function AdminOrganizersPage() {
         website: "",
         instagram: "",
     });
+    const [searchCity, setSearchCity] = useState("");
+    const [isSlugSynced, setIsSlugSynced] = useState(true);
 
     // Edit mode state
     const [editingOrganizerId, setEditingOrganizerId] = useState<string | null>(null);
@@ -67,6 +63,21 @@ export default function AdminOrganizersPage() {
         { enabled: userSearch.length >= 2 }
     );
 
+    const handleCitySelect = useCallback((place: {
+        name: string;
+        address: string;
+        city: string;
+        state: string;
+        formattedAddress: string;
+    }) => {
+        setOrganizerForm(prev => ({
+            ...prev,
+            city: place.city,
+            state: place.state
+        }));
+        setSearchCity(place.city);
+    }, []);
+
     // Mutations
     const clearForm = () => {
         setOrganizerForm({
@@ -79,7 +90,9 @@ export default function AdminOrganizersPage() {
             website: "",
             instagram: "",
         });
+        setSearchCity("");
         setEditingOrganizerId(null);
+        setIsSlugSynced(true);
     };
 
     const createOrganizerMutation = trpc.admin.createOrganizer.useMutation({
@@ -132,6 +145,8 @@ export default function AdminOrganizersPage() {
             website: organizer.website || "",
             instagram: organizer.instagram || "",
         });
+        setSearchCity(organizer.city || "");
+        setIsSlugSynced((organizer.slug || "") === (organizer.instagram || ""));
         setViewMode("edit");
     };
 
@@ -289,28 +304,81 @@ export default function AdminOrganizersPage() {
                 <Card>
                     <CardContent className="space-y-4 pt-6">
                         <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="organizer-slug">Slug *</Label>
-                                <Input
-                                    id="organizer-slug"
-                                    placeholder="after-brunch"
-                                    value={organizerForm.slug}
-                                    onChange={(e) =>
-                                        setOrganizerForm({ ...organizerForm, slug: e.target.value })
-                                    }
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="organizer-name">Name *</Label>
-                                <Input
-                                    id="organizer-name"
-                                    placeholder="After Brunch"
-                                    value={organizerForm.name}
-                                    onChange={(e) =>
-                                        setOrganizerForm({ ...organizerForm, name: e.target.value })
-                                    }
-                                />
-                            </div>
+                            {isSlugSynced ? (
+                                <div className="col-span-2">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <Label htmlFor="organizer-slug-insta">Slug / Instagram Handle *</Label>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-auto py-1 px-2 text-xs text-muted-foreground hover:text-foreground"
+                                            onClick={() => setIsSlugSynced(false)}
+                                        >
+                                            Separate Fields
+                                        </Button>
+                                    </div>
+                                    <Input
+                                        id="organizer-slug-insta"
+                                        placeholder="after-brunch"
+                                        value={organizerForm.slug}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setOrganizerForm({ ...organizerForm, slug: val, instagram: val.replace(/-/g, "") });
+                                        }}
+                                    />
+                                </div>
+                            ) : (
+                                <>
+                                    <div>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <Label htmlFor="organizer-slug">Slug *</Label>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-auto py-1 px-2 text-xs text-muted-foreground hover:text-foreground"
+                                                onClick={() => {
+                                                    setIsSlugSynced(true);
+                                                    setOrganizerForm({ ...organizerForm, instagram: organizerForm.slug.replace(/-/g, "") });
+                                                }}
+                                            >
+                                                Sync with Instagram
+                                            </Button>
+                                        </div>
+                                        <Input
+                                            id="organizer-slug"
+                                            placeholder="after-brunch"
+                                            value={organizerForm.slug}
+                                            onChange={(e) =>
+                                                setOrganizerForm({ ...organizerForm, slug: e.target.value })
+                                            }
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="organizer-name">Name *</Label>
+                                        <Input
+                                            id="organizer-name"
+                                            placeholder="After Brunch"
+                                            value={organizerForm.name}
+                                            onChange={(e) =>
+                                                setOrganizerForm({ ...organizerForm, name: e.target.value })
+                                            }
+                                        />
+                                    </div>
+                                </>
+                            )}
+                            {isSlugSynced && (
+                                <div className="col-span-2">
+                                    <Label htmlFor="organizer-name">Name *</Label>
+                                    <Input
+                                        id="organizer-name"
+                                        placeholder="After Brunch"
+                                        value={organizerForm.name}
+                                        onChange={(e) =>
+                                            setOrganizerForm({ ...organizerForm, name: e.target.value })
+                                        }
+                                    />
+                                </div>
+                            )}
                         </div>
                         <div>
                             <Label>Organizer Image</Label>
@@ -339,33 +407,20 @@ export default function AdminOrganizersPage() {
                                 }
                             />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="organizer-city">City (Optional)</Label>
-                                <Input
-                                    id="organizer-city"
-                                    placeholder="Boston"
-                                    value={organizerForm.city}
-                                    onChange={(e) =>
-                                        setOrganizerForm({ ...organizerForm, city: e.target.value })
-                                    }
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="organizer-state">State (Optional)</Label>
-                                <Input
-                                    id="organizer-state"
-                                    placeholder="MA"
-                                    maxLength={2}
-                                    value={organizerForm.state}
-                                    onChange={(e) =>
-                                        setOrganizerForm({
-                                            ...organizerForm,
-                                            state: e.target.value.toUpperCase(),
-                                        })
-                                    }
-                                />
-                            </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="organizer-city">City</Label>
+                            <GooglePlacesAutocomplete
+                                value={searchCity}
+                                onChange={setSearchCity}
+                                onPlaceSelect={handleCitySelect}
+                                placeholder="Search for organizer city..."
+                                searchType="cities"
+                            />
+                            {organizerForm.city && organizerForm.state && (
+                                <p className="text-xs text-muted-foreground">
+                                    Selected: {organizerForm.city}, {organizerForm.state}
+                                </p>
+                            )}
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
@@ -382,19 +437,23 @@ export default function AdminOrganizersPage() {
                                     }
                                 />
                             </div>
-                            <div>
-                                <Label htmlFor="organizer-instagram">Instagram</Label>
-                                <Input
-                                    id="organizer-instagram"
-                                    placeholder="afterbrunch"
-                                    value={organizerForm.instagram}
-                                    onChange={(e) =>
-                                        setOrganizerForm({
-                                            ...organizerForm,
-                                            instagram: e.target.value,
-                                        })
-                                    }
-                                />
+                             <div>
+                                {!isSlugSynced && (
+                                    <>
+                                        <Label htmlFor="organizer-instagram">Instagram</Label>
+                                        <Input
+                                            id="organizer-instagram"
+                                            placeholder="afterbrunch"
+                                            value={organizerForm.instagram}
+                                            onChange={(e) =>
+                                                setOrganizerForm({
+                                                    ...organizerForm,
+                                                    instagram: e.target.value,
+                                                })
+                                            }
+                                        />
+                                    </>
+                                )}
                             </div>
                         </div>
                         <div className="flex gap-2">
