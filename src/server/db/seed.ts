@@ -125,6 +125,15 @@ async function main() {
       state: "MA",
       website: "https://royaleboston.com",
       instagram: "royaleboston",
+      hours: {
+        monday: { open: "22:00", close: "02:00", closed: true },
+        tuesday: { open: "22:00", close: "02:00", closed: true },
+        wednesday: { open: "22:00", close: "02:00", closed: false },
+        thursday: { open: "22:00", close: "02:00", closed: false },
+        friday: { open: "22:00", close: "03:00", closed: false },
+        saturday: { open: "22:00", close: "03:00", closed: false },
+        sunday: { open: "22:00", close: "02:00", closed: true },
+      },
     },
     {
       slug: "bijou-boston",
@@ -137,8 +146,16 @@ async function main() {
       state: "MA",
       website: null,
       instagram: null,
+      hours: {
+        monday: { open: "21:00", close: "02:00", closed: true },
+        tuesday: { open: "21:00", close: "02:00", closed: true },
+        wednesday: { open: "21:00", close: "02:00", closed: true },
+        thursday: { open: "21:00", close: "02:00", closed: false },
+        friday: { open: "21:00", close: "03:00", closed: false },
+        saturday: { open: "21:00", close: "03:00", closed: false },
+        sunday: { open: "21:00", close: "02:00", closed: false },
+      },
     },
-    // REMOVED: the-grand-boston
     {
       slug: "middlesex-lounge-cambridge",
       name: "The Middlesex Lounge",
@@ -150,6 +167,15 @@ async function main() {
       state: "MA",
       website: null,
       instagram: null,
+      hours: {
+        monday: { open: "17:00", close: "01:00", closed: true },
+        tuesday: { open: "17:00", close: "01:00", closed: false },
+        wednesday: { open: "17:00", close: "01:00", closed: false },
+        thursday: { open: "17:00", close: "01:00", closed: false },
+        friday: { open: "17:00", close: "02:00", closed: false },
+        saturday: { open: "17:00", close: "02:00", closed: false },
+        sunday: { open: "17:00", close: "01:00", closed: false },
+      },
     },
 
     // NYC
@@ -164,8 +190,16 @@ async function main() {
       state: "NY",
       website: "https://www.elsewhere.club",
       instagram: "elsewherenyc",
+      hours: {
+        monday: { open: "19:00", close: "02:00", closed: true },
+        tuesday: { open: "19:00", close: "02:00", closed: true },
+        wednesday: { open: "19:00", close: "02:00", closed: false },
+        thursday: { open: "19:00", close: "02:00", closed: false },
+        friday: { open: "19:00", close: "04:00", closed: false },
+        saturday: { open: "19:00", close: "04:00", closed: false },
+        sunday: { open: "19:00", close: "02:00", closed: false },
+      },
     },
-    // REMOVED: brooklyn-steel
     {
       slug: "good-room-brooklyn",
       name: "Good Room",
@@ -177,8 +211,16 @@ async function main() {
       state: "NY",
       website: null,
       instagram: null,
+      hours: {
+        monday: { open: "20:00", close: "04:00", closed: true },
+        tuesday: { open: "20:00", close: "04:00", closed: true },
+        wednesday: { open: "20:00", close: "04:00", closed: true },
+        thursday: { open: "20:00", close: "04:00", closed: false },
+        friday: { open: "20:00", close: "04:00", closed: false },
+        saturday: { open: "20:00", close: "04:00", closed: false },
+        sunday: { open: "20:00", close: "04:00", closed: false },
+      },
     },
-    // REMOVED: public-records-brooklyn
   ];
 
   await db.insert(venues).values(venueData).onConflictDoNothing();

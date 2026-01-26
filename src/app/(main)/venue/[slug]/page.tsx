@@ -7,17 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EventCardGrid } from "@/components/events/event-card-grid";
-import {
-  Building2,
-  MapPin,
-  Globe,
-  Instagram,
-  Heart,
-  Loader2,
-} from "lucide-react";
+import { MapPin, Globe, Instagram, Heart, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@clerk/nextjs";
 import { VenueHoursDisplay } from "@/components/venue-hours-display";
+import { VenueHours } from "@/components/venue-hours-editor";
 
 export default function VenuePage() {
   const params = useParams();
@@ -166,9 +160,11 @@ export default function VenuePage() {
                 </Badge>
               </div>
 
-              {venue.hours && (
+              {(venue as any).hours && (
                 <div className="mt-4">
-                  <VenueHoursDisplay hours={venue.hours as any} />
+                  <VenueHoursDisplay
+                    hours={(venue as any).hours as VenueHours}
+                  />
                 </div>
               )}
             </div>
