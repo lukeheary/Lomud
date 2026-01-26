@@ -275,6 +275,49 @@ export const friendsRouter = router({
     return pendingRequests;
   }),
 
+  getRecentUsers: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(50).default(20),
+        cursor: z.number().min(0).default(0),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      // Get existing friend connections (accepted or pending) in both directions
+      const existingFriendships = await ctx.db.query.friends.findMany({
+        where: or(
+          eq(friends.userId, ctx.auth.userId),
+          eq(friends.friendUserId, ctx.auth.userId)
+        ),
+      });
+
+      const excludedUserIds = [
+        ctx.auth.userId, // Exclude self
+        ...existingFriendships.map((f) =>
+          f.userId === ctx.auth.userId ? f.friendUserId : f.userId
+        ),
+      ];
+
+      // Get recent users, excluding self and existing friends
+      const recentUsers = await ctx.db.query.users.findMany({
+        where: sql`${users.id} NOT IN (${sql.join(
+          excludedUserIds.map((id) => sql`${id}`),
+          sql`, `
+        )})`,
+        orderBy: [desc(users.createdAt)],
+        limit: input.limit + 1, // Fetch one extra to check if there are more
+        offset: input.cursor,
+      });
+
+      const hasMore = recentUsers.length > input.limit;
+      const items = hasMore ? recentUsers.slice(0, -1) : recentUsers;
+
+      return {
+        items,
+        nextCursor: hasMore ? input.cursor + input.limit : null,
+      };
+    }),
+
   getFriendFeed: protectedProcedure
     .input(
       z.object({

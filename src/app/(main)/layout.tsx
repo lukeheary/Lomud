@@ -95,19 +95,17 @@ export default function MainLayout({
               </Button>
             </Link>
             <div className="group relative">
-              <Link href="/friends">
-                <Button variant="ghost" size="sm" className="gap-1">
-                  Friends
-                  {receivedRequestsCount > 0 && (
-                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
-                      {receivedRequestsCount}
-                    </span>
-                  )}
-                </Button>
-              </Link>
+              <Button variant="ghost" size="sm" className="gap-1">
+                Friends
+                {receivedRequestsCount > 0 && (
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
+                    {receivedRequestsCount}
+                  </span>
+                )}
+              </Button>
               <div className="absolute left-0 top-full hidden w-52 pt-2 group-hover:block">
                 <div className="rounded-2xl border bg-popover p-2 shadow-md">
-                  <Link href="/friends?tab=activity">
+                  <Link href="/friends/activity">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -117,7 +115,7 @@ export default function MainLayout({
                       Activity
                     </Button>
                   </Link>
-                  <Link href="/friends?tab=friends">
+                  <Link href="/friends/list">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -127,7 +125,7 @@ export default function MainLayout({
                       My Friends
                     </Button>
                   </Link>
-                  <Link href="/friends?tab=requests">
+                  <Link href="/friends/requests">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -142,7 +140,7 @@ export default function MainLayout({
                       )}
                     </Button>
                   </Link>
-                  <Link href="/friends?tab=search">
+                  <Link href="/friends/search">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -333,26 +331,21 @@ export default function MainLayout({
                     </Button>
                   </Link>
                   <div className="flex flex-col">
-                    <Link href="/friends" onClick={closeMobileMenu}>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start px-4 text-base"
-                        size="lg"
-                      >
-                        <Users className="mr-3 h-5 w-5" />
-                        Friends
-                        {receivedRequestsCount > 0 && (
-                          <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] text-primary-foreground">
-                            {receivedRequestsCount}
-                          </span>
-                        )}
-                      </Button>
-                    </Link>
-                    <div className="ml-8 flex flex-col gap-1 border-l pl-2">
-                      <Link
-                        href="/friends?tab=activity"
-                        onClick={closeMobileMenu}
-                      >
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start px-4 text-base"
+                      size="lg"
+                    >
+                      <Users className="mr-3 h-5 w-5" />
+                      Friends
+                      {receivedRequestsCount > 0 && (
+                        <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] text-primary-foreground">
+                          {receivedRequestsCount}
+                        </span>
+                      )}
+                    </Button>
+                    <div className="ml-8 flex flex-col gap-3 border-l pl-2 pt-1">
+                      <Link href="/friends/activity" onClick={closeMobileMenu}>
                         <Button
                           variant="ghost"
                           className="h-9 w-full justify-start px-4 text-sm font-normal"
@@ -361,10 +354,7 @@ export default function MainLayout({
                           Activity
                         </Button>
                       </Link>
-                      <Link
-                        href="/friends?tab=friends"
-                        onClick={closeMobileMenu}
-                      >
+                      <Link href="/friends/list" onClick={closeMobileMenu}>
                         <Button
                           variant="ghost"
                           className="h-9 w-full justify-start px-4 text-sm font-normal"
@@ -373,10 +363,7 @@ export default function MainLayout({
                           My Friends
                         </Button>
                       </Link>
-                      <Link
-                        href="/friends?tab=requests"
-                        onClick={closeMobileMenu}
-                      >
+                      <Link href="/friends/requests" onClick={closeMobileMenu}>
                         <Button
                           variant="ghost"
                           className="h-9 w-full justify-start px-4 text-sm font-normal"
@@ -390,10 +377,7 @@ export default function MainLayout({
                           )}
                         </Button>
                       </Link>
-                      <Link
-                        href="/friends?tab=search"
-                        onClick={closeMobileMenu}
-                      >
+                      <Link href="/friends/search" onClick={closeMobileMenu}>
                         <Button
                           variant="ghost"
                           className="h-9 w-full justify-start px-4 text-sm font-normal"

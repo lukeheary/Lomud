@@ -176,7 +176,7 @@ function ActivityItem({ activity, compact = false }: ActivityItemProps) {
             {actor.lastName?.[0]}
           </AvatarFallback>
         </Avatar>
-        <div className="absolute -right-1 -top-1 rounded-full bg-background p-0.5">
+        <div className="absolute -right-[6px] -top-[1px] rounded-full bg-background p-0.5">
           {renderIcon()}
         </div>
       </div>

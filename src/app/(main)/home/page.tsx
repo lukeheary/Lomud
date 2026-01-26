@@ -293,7 +293,7 @@ function HomePageContent() {
       {/* Friend Activity Feed */}
       <div className="mb-4">
         <Link href="/friends" className="transition-colors hover:text-primary">
-          <div className="flex items-center gap-1 pb-2">
+          <div className="flex items-center gap-1 pb-2 md:pb-3">
             <h1 className="text-xl font-bold tracking-tight md:text-2xl">
               Recent Activity
             </h1>

@@ -1,0 +1,244 @@
+"use client";
+
+import { Suspense, useState } from "react";
+import { trpc } from "@/lib/trpc";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserPlus, Search, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryState } from "nuqs";
+
+function SearchPageContent() {
+  const { toast } = useToast();
+  const utils = trpc.useUtils();
+  const [searchQuery, setSearchQuery] = useQueryState("q", {
+    defaultValue: "",
+  });
+  const [cursor, setCursor] = useState(0);
+  const pageSize = 20;
+
+  const { data: searchResults, isLoading: searchLoading } =
+    trpc.friends.searchUsers.useQuery(
+      { query: searchQuery, limit: 20 },
+      { enabled: searchQuery.length >= 2 }
+    );
+
+  const { data: recentUsers, isLoading: recentLoading } =
+    trpc.friends.getRecentUsers.useQuery(
+      { limit: pageSize, cursor },
+      { enabled: searchQuery.length < 2 }
+    );
+
+  const sendRequestMutation = trpc.friends.sendFriendRequest.useMutation({
+    onSuccess: () => {
+      toast({
+        title: "Friend request sent",
+        description: "Your friend request has been sent",
+      });
+      utils.friends.searchUsers.invalidate();
+      utils.friends.getRecentUsers.invalidate();
+      utils.friends.listFriends.invalidate();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleNextPage = () => {
+    if (recentUsers?.nextCursor !== null) {
+      setCursor(recentUsers?.nextCursor ?? 0);
+    }
+  };
+
+  const handlePrevPage = () => {
+    setCursor(Math.max(0, cursor - pageSize));
+  };
+
+  const currentPage = Math.floor(cursor / pageSize) + 1;
+
+  return (
+    <div className="container mx-auto space-y-6 py-8">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+          Find Friends
+        </h1>
+        <p className="text-muted-foreground">
+          Search for people to connect with
+        </p>
+      </div>
+
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Search by name or username..."
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setCursor(0); // Reset pagination when searching
+          }}
+          className="pl-9"
+        />
+      </div>
+
+      {searchQuery.length >= 2 ? (
+        // Search Results
+        <>
+          {searchLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : !searchResults || searchResults.length === 0 ? (
+            <div className="py-12 text-center text-muted-foreground">
+              No users found
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {searchResults.length} {searchResults.length === 1 ? "result" : "results"} found
+              </p>
+              {searchResults.map((user) => (
+                <div
+                  key={user.id}
+                  className="flex items-center justify-between rounded-lg border p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar>
+                      <AvatarImage src={user.imageUrl || undefined} />
+                      <AvatarFallback>
+                        {user.firstName?.[0]}
+                        {user.lastName?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium">
+                        {user.firstName} {user.lastName}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        @{user.username}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() =>
+                      sendRequestMutation.mutate({ friendUserId: user.id })
+                    }
+                    disabled={sendRequestMutation.isPending}
+                  >
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Add Friend
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      ) : (
+        // Recent Users
+        <>
+          <div>
+            <h2 className="text-lg font-semibold">Recent Members</h2>
+            <p className="text-sm text-muted-foreground">
+              People who recently joined
+            </p>
+          </div>
+
+          {recentLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : !recentUsers?.items || recentUsers.items.length === 0 ? (
+            <div className="py-12 text-center text-muted-foreground">
+              No users to show
+            </div>
+          ) : (
+            <>
+              <div className="space-y-3">
+                {recentUsers.items.map((user) => (
+                  <div
+                    key={user.id}
+                    className="flex items-center justify-between rounded-lg border p-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Avatar>
+                        <AvatarImage src={user.imageUrl || undefined} />
+                        <AvatarFallback>
+                          {user.firstName?.[0]}
+                          {user.lastName?.[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium">
+                          {user.firstName} {user.lastName}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          @{user.username}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        sendRequestMutation.mutate({ friendUserId: user.id })
+                      }
+                      disabled={sendRequestMutation.isPending}
+                    >
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Add Friend
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              <div className="flex items-center justify-between border-t pt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePrevPage}
+                  disabled={cursor === 0}
+                >
+                  <ChevronLeft className="mr-1 h-4 w-4" />
+                  Previous
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {currentPage}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNextPage}
+                  disabled={recentUsers.nextCursor === null}
+                >
+                  Next
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container mx-auto py-8">
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        </div>
+      }
+    >
+      <SearchPageContent />
+    </Suspense>
+  );
+}
