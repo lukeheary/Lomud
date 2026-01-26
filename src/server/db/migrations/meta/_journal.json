@@ -71,6 +71,13 @@
       "when": 1768768694947,
       "tag": "0009_futuristic_calypso",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1769456639641,
+      "tag": "0010_chemical_malcolm_colcord",
+      "breakpoints": true
     }
   ]
 }

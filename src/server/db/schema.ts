@@ -114,6 +114,7 @@ export const venues = pgTable(
     state: varchar("state", { length: 2 }).notNull(),
     website: text("website"),
     instagram: varchar("instagram", { length: 100 }),
+    hours: jsonb("hours"), // Store hours as: { monday: { open: "09:00", close: "17:00", closed: false }, ... }
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },

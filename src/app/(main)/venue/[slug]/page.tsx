@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@clerk/nextjs";
+import { VenueHoursDisplay } from "@/components/venue-hours-display";
 
 export default function VenuePage() {
   const params = useParams();
@@ -164,6 +165,12 @@ export default function VenuePage() {
                   {(venue as any).events?.length || 0} events
                 </Badge>
               </div>
+
+              {venue.hours && (
+                <div className="mt-4">
+                  <VenueHoursDisplay hours={venue.hours as any} />
+                </div>
+              )}
             </div>
 
             <div className="flex gap-2">

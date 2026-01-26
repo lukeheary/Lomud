@@ -278,6 +278,7 @@ export const venueRouter = router({
         state: z.string().length(2).optional(),
         website: z.string().url().optional().or(z.literal("")),
         instagram: z.string().max(100).optional(),
+        hours: z.any().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {

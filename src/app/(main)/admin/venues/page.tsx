@@ -21,13 +21,20 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Building2, Loader2, X, Plus, ImageIcon as ImageIconLucide } from "lucide-react";
+import { Building2, Loader2, X, Plus, ArrowLeft, Users as UsersIcon, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { S3Uploader } from "@/components/ui/s3-uploader";
+import { VenueHoursEditor, type VenueHours } from "@/components/venue-hours-editor";
+
+type ViewMode = "list" | "create" | "edit" | "members";
 
 export default function AdminVenuesPage() {
     const { toast } = useToast();
     const utils = trpc.useUtils();
+
+    // View mode state
+    const [viewMode, setViewMode] = useState<ViewMode>("list");
+    const [searchQuery, setSearchQuery] = useState("");
 
     // Venue form state
     const [venueForm, setVenueForm] = useState({
@@ -40,6 +47,7 @@ export default function AdminVenuesPage() {
         state: "",
         website: "",
         instagram: "",
+        hours: null as VenueHours | null,
     });
 
     // Edit mode state
@@ -74,6 +82,7 @@ export default function AdminVenuesPage() {
             state: "",
             website: "",
             instagram: "",
+            hours: null,
         });
         setEditingVenueId(null);
     };
@@ -82,6 +91,7 @@ export default function AdminVenuesPage() {
         onSuccess: () => {
             toast({ title: "Success", description: "Venue created successfully" });
             clearForm();
+            setViewMode("list");
             utils.admin.listAllVenues.invalidate();
         },
         onError: (error) => {
@@ -97,6 +107,7 @@ export default function AdminVenuesPage() {
         onSuccess: () => {
             toast({ title: "Success", description: "Venue updated successfully" });
             clearForm();
+            setViewMode("list");
             utils.admin.listAllVenues.invalidate();
         },
         onError: (error) => {
@@ -120,8 +131,20 @@ export default function AdminVenuesPage() {
             state: venue.state,
             website: venue.website || "",
             instagram: venue.instagram || "",
+            hours: venue.hours || null,
         });
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        setViewMode("edit");
+    };
+
+    const handleBack = () => {
+        clearForm();
+        setViewMode("list");
+        setSelectedVenue("");
+    };
+
+    const handleManageMembers = (venueId: string) => {
+        setSelectedVenue(venueId);
+        setViewMode("members");
     };
 
     const addVenueMemberMutation = trpc.admin.addVenueMember.useMutation({
@@ -140,7 +163,10 @@ export default function AdminVenuesPage() {
 
     const removeVenueMemberMutation = trpc.admin.removeVenueMember.useMutation({
         onSuccess: () => {
-            toast({ title: "Success", description: "Member removed from venue" });
+            toast({
+                title: "Success",
+                description: "Member removed from venue",
+            });
             utils.venue.getVenueMembers.invalidate();
         },
         onError: (error) => {
@@ -152,345 +178,380 @@ export default function AdminVenuesPage() {
         },
     });
 
-    return (
-        <div className="space-y-8">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Venue Management</h1>
-                <p className="text-muted-foreground">
-                    Create and manage venues and their members
-                </p>
-            </div>
+    // Filter venues by search query
+    const filteredVenues = venues?.filter((venue) =>
+        venue.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        venue.city.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
-            <div className="grid gap-8 lg:grid-cols-2">
-                <div className="space-y-8">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Building2 className="h-5 w-5" />
-                                {editingVenueId ? "Edit Venue" : "Create Venue"}
-                            </CardTitle>
-                            <CardDescription>
-                                {editingVenueId
-                                    ? "Update venue information"
-                                    : "Add a new venue to the platform"}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="venue-slug">Slug *</Label>
-                                    <Input
-                                        id="venue-slug"
-                                        placeholder="big-night-live"
-                                        value={venueForm.slug}
-                                        onChange={(e) =>
-                                            setVenueForm({ ...venueForm, slug: e.target.value })
-                                        }
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="venue-name">Name *</Label>
-                                    <Input
-                                        id="venue-name"
-                                        placeholder="Big Night Live"
-                                        value={venueForm.name}
-                                        onChange={(e) =>
-                                            setVenueForm({ ...venueForm, name: e.target.value })
-                                        }
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <Label>Venue Image</Label>
-                                <S3Uploader
-                                    folder="venues"
-                                    currentImageUrl={venueForm.imageUrl}
-                                    onUploadComplete={(url) =>
-                                        setVenueForm({ ...venueForm, imageUrl: url })
-                                    }
-                                    onRemoveImage={() =>
-                                        setVenueForm({ ...venueForm, imageUrl: "" })
-                                    }
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="venue-description">Description</Label>
-                                <Textarea
-                                    id="venue-description"
-                                    placeholder="A premier entertainment venue..."
-                                    value={venueForm.description}
-                                    onChange={(e) =>
-                                        setVenueForm({ ...venueForm, description: e.target.value })
-                                    }
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="venue-address">Address</Label>
-                                    <Input
-                                        id="venue-address"
-                                        placeholder="110 Causeway St"
-                                        value={venueForm.address}
-                                        onChange={(e) =>
-                                            setVenueForm({ ...venueForm, address: e.target.value })
-                                        }
-                                    />
-                                </div>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <Label htmlFor="venue-city">City *</Label>
-                                        <Input
-                                            id="venue-city"
-                                            placeholder="Boston"
-                                            value={venueForm.city}
-                                            onChange={(e) =>
-                                                setVenueForm({ ...venueForm, city: e.target.value })
-                                            }
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="venue-state">State *</Label>
-                                        <Input
-                                            id="venue-state"
-                                            placeholder="MA"
-                                            maxLength={2}
-                                            value={venueForm.state}
-                                            onChange={(e) =>
-                                                setVenueForm({
-                                                    ...venueForm,
-                                                    state: e.target.value.toUpperCase(),
-                                                })
-                                            }
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="venue-website">Website</Label>
-                                    <Input
-                                        id="venue-website"
-                                        placeholder="https://example.com"
-                                        value={venueForm.website}
-                                        onChange={(e) =>
-                                            setVenueForm({ ...venueForm, website: e.target.value })
-                                        }
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="venue-instagram">Instagram</Label>
-                                    <Input
-                                        id="venue-instagram"
-                                        placeholder="bignightlive"
-                                        value={venueForm.instagram}
-                                        onChange={(e) =>
-                                            setVenueForm({ ...venueForm, instagram: e.target.value })
-                                        }
-                                    />
-                                </div>
-                            </div>
-                            <div className="flex gap-2">
-                                {editingVenueId ? (
-                                    <>
-                                        <Button
-                                            className="flex-1"
-                                            onClick={() =>
-                                                updateVenueMutation.mutate({
-                                                    venueId: editingVenueId,
-                                                    ...venueForm,
-                                                })
-                                            }
-                                            disabled={
-                                                updateVenueMutation.isPending ||
-                                                !venueForm.slug ||
-                                                !venueForm.name ||
-                                                !venueForm.city ||
-                                                !venueForm.state
-                                            }
-                                        >
-                                            {updateVenueMutation.isPending && (
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            )}
-                                            Update Venue
-                                        </Button>
-                                        <Button variant="outline" onClick={clearForm}>
-                                            Cancel
-                                        </Button>
-                                    </>
-                                ) : (
-                                    <Button
-                                        className="flex-1"
-                                        onClick={() => createVenueMutation.mutate(venueForm)}
-                                        disabled={
-                                            createVenueMutation.isPending ||
-                                            !venueForm.slug ||
-                                            !venueForm.name ||
-                                            !venueForm.city ||
-                                            !venueForm.state
-                                        }
-                                    >
-                                        {createVenueMutation.isPending && (
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        )}
-                                        Create Venue
-                                    </Button>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Manage Venue Members</CardTitle>
-                            <CardDescription>Add or remove members from venues</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div>
-                                <Label htmlFor="select-venue">Select Venue</Label>
-                                <Select value={selectedVenue} onValueChange={setSelectedVenue}>
-                                    <SelectTrigger id="select-venue">
-                                        <SelectValue placeholder="Choose a venue" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {venues?.map((venue) => (
-                                            <SelectItem key={venue.id} value={venue.id}>
-                                                {venue.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            {selectedVenue && (
-                                <>
-                                    <div>
-                                        <Label>Current Members</Label>
-                                        <div className="mt-2 flex flex-wrap gap-2">
-                                            {venueMembers?.map((member) => (
-                                                <Badge
-                                                    key={member.id}
-                                                    variant="secondary"
-                                                    className="flex items-center gap-2"
-                                                >
-                                                    {member.user.username || member.user.email}
-                                                    <button
-                                                        onClick={() =>
-                                                            removeVenueMemberMutation.mutate({
-                                                                venueId: selectedVenue,
-                                                                userId: member.userId,
-                                                            })
-                                                        }
-                                                        className="hover:text-destructive"
-                                                    >
-                                                        <X className="h-3 w-3" />
-                                                    </button>
-                                                </Badge>
-                                            ))}
-                                            {!venueMembers?.length && (
-                                                <p className="text-sm text-muted-foreground">
-                                                    No members yet
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <Label htmlFor="user-search">Add Member</Label>
-                                        <Input
-                                            id="user-search"
-                                            placeholder="Search users by username or email..."
-                                            value={userSearch}
-                                            onChange={(e) => setUserSearch(e.target.value)}
-                                        />
-                                        {searchedUsers && searchedUsers.length > 0 && (
-                                            <div className="mt-2 divide-y rounded-md border">
-                                                {searchedUsers.map((user) => (
-                                                    <div
-                                                        key={user.id}
-                                                        className="flex items-center justify-between p-2"
-                                                    >
-                                                        <span className="text-sm">
-                                                            {user.username || user.email}
-                                                        </span>
-                                                        <Button
-                                                            size="sm"
-                                                            onClick={() => {
-                                                                addVenueMemberMutation.mutate({
-                                                                    venueId: selectedVenue,
-                                                                    userId: user.id,
-                                                                });
-                                                                setUserSearch("");
-                                                            }}
-                                                        >
-                                                            <Plus className="mr-1 h-4 w-4" />
-                                                            Add
-                                                        </Button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </>
-                            )}
-                        </CardContent>
-                    </Card>
+    // List View
+    if (viewMode === "list") {
+        return (
+            <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">Venue Management</h1>
+                        <p className="text-muted-foreground">
+                            Create and manage venues
+                        </p>
+                    </div>
+                    <Button onClick={() => setViewMode("create")}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create Venue
+                    </Button>
                 </div>
 
-                <div className="space-y-4">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Existing Venues</CardTitle>
-                            <CardDescription>
-                                List of all venues on the platform
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                {venues?.map((venue) => (
-                                    <div
-                                        key={venue.id}
-                                        className="flex items-center justify-between rounded-lg border p-4"
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            {venue.imageUrl ? (
-                                                <div className="relative h-12 w-12 overflow-hidden rounded-md border">
-                                                    <img
-                                                        src={venue.imageUrl}
-                                                        alt={venue.name}
-                                                        className="h-full w-full object-cover"
-                                                    />
-                                                </div>
-                                            ) : (
-                                                <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-muted">
-                                                    <Building2 className="h-6 w-6 text-muted-foreground" />
-                                                </div>
-                                            )}
-                                            <div>
-                                                <div className="font-medium">{venue.name}</div>
-                                                <div className="text-sm text-muted-foreground">
-                                                    {venue.city}, {venue.state}
-                                                </div>
-                                            </div>
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                        placeholder="Search venues..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-9"
+                    />
+                </div>
+
+                <div className="space-y-3">
+                    {filteredVenues?.map((venue) => (
+                        <Card key={venue.id}>
+                            <CardContent className="flex items-center justify-between p-4">
+                                <div className="flex items-center gap-4">
+                                    {venue.imageUrl ? (
+                                        <div className="relative h-12 w-12 overflow-hidden rounded-md border">
+                                            <img
+                                                src={venue.imageUrl}
+                                                alt={venue.name}
+                                                className="h-full w-full object-cover"
+                                            />
                                         </div>
+                                    ) : (
+                                        <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-muted">
+                                            <Building2 className="h-6 w-6 text-muted-foreground" />
+                                        </div>
+                                    )}
+                                    <div>
+                                        <div className="font-medium">{venue.name}</div>
+                                        <div className="text-sm text-muted-foreground">
+                                            {venue.city}, {venue.state}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleManageMembers(venue.id)}
+                                    >
+                                        <UsersIcon className="mr-2 h-4 w-4" />
+                                        Members
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleEdit(venue)}
+                                    >
+                                        Edit
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                    {!filteredVenues?.length && (
+                        <p className="text-center text-sm text-muted-foreground py-8">
+                            No venues found
+                        </p>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    // Create/Edit View
+    if (viewMode === "create" || viewMode === "edit") {
+        return (
+            <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="icon" onClick={handleBack}>
+                        <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">
+                            {viewMode === "edit" ? "Edit Venue" : "Create Venue"}
+                        </h1>
+                        <p className="text-muted-foreground">
+                            {viewMode === "edit"
+                                ? "Update venue information"
+                                : "Add a new venue to the platform"}
+                        </p>
+                    </div>
+                </div>
+
+                <Card>
+                    <CardContent className="space-y-4 pt-6">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="venue-slug">Slug *</Label>
+                                <Input
+                                    id="venue-slug"
+                                    placeholder="big-night-live"
+                                    value={venueForm.slug}
+                                    onChange={(e) =>
+                                        setVenueForm({ ...venueForm, slug: e.target.value })
+                                    }
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="venue-name">Name *</Label>
+                                <Input
+                                    id="venue-name"
+                                    placeholder="Big Night Live"
+                                    value={venueForm.name}
+                                    onChange={(e) =>
+                                        setVenueForm({ ...venueForm, name: e.target.value })
+                                    }
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <Label>Venue Image</Label>
+                            <S3Uploader
+                                folder="venues"
+                                currentImageUrl={venueForm.imageUrl}
+                                onUploadComplete={(url) =>
+                                    setVenueForm({ ...venueForm, imageUrl: url })
+                                }
+                                onRemoveImage={() =>
+                                    setVenueForm({ ...venueForm, imageUrl: "" })
+                                }
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="venue-description">Description</Label>
+                            <Textarea
+                                id="venue-description"
+                                placeholder="Boston's premier concert venue..."
+                                value={venueForm.description}
+                                onChange={(e) =>
+                                    setVenueForm({
+                                        ...venueForm,
+                                        description: e.target.value,
+                                    })
+                                }
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="venue-address">Address</Label>
+                            <Input
+                                id="venue-address"
+                                placeholder="110 Causeway St"
+                                value={venueForm.address}
+                                onChange={(e) =>
+                                    setVenueForm({ ...venueForm, address: e.target.value })
+                                }
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="venue-city">City *</Label>
+                                <Input
+                                    id="venue-city"
+                                    placeholder="Boston"
+                                    value={venueForm.city}
+                                    onChange={(e) =>
+                                        setVenueForm({ ...venueForm, city: e.target.value })
+                                    }
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="venue-state">State *</Label>
+                                <Input
+                                    id="venue-state"
+                                    placeholder="MA"
+                                    maxLength={2}
+                                    value={venueForm.state}
+                                    onChange={(e) =>
+                                        setVenueForm({
+                                            ...venueForm,
+                                            state: e.target.value.toUpperCase(),
+                                        })
+                                    }
+                                />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="venue-website">Website</Label>
+                                <Input
+                                    id="venue-website"
+                                    placeholder="https://bignightlive.com"
+                                    value={venueForm.website}
+                                    onChange={(e) =>
+                                        setVenueForm({ ...venueForm, website: e.target.value })
+                                    }
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="venue-instagram">Instagram</Label>
+                                <Input
+                                    id="venue-instagram"
+                                    placeholder="bignightlive"
+                                    value={venueForm.instagram}
+                                    onChange={(e) =>
+                                        setVenueForm({ ...venueForm, instagram: e.target.value })
+                                    }
+                                />
+                            </div>
+                        </div>
+                        <VenueHoursEditor
+                            hours={venueForm.hours}
+                            onChange={(hours) => setVenueForm({ ...venueForm, hours })}
+                        />
+                        <div className="flex gap-2">
+                            {viewMode === "edit" ? (
+                                <Button
+                                    onClick={() =>
+                                        updateVenueMutation.mutate({
+                                            venueId: editingVenueId!,
+                                            ...venueForm,
+                                        })
+                                    }
+                                    disabled={
+                                        updateVenueMutation.isPending ||
+                                        !venueForm.slug ||
+                                        !venueForm.name ||
+                                        !venueForm.city ||
+                                        !venueForm.state
+                                    }
+                                >
+                                    {updateVenueMutation.isPending && (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    )}
+                                    Update Venue
+                                </Button>
+                            ) : (
+                                <Button
+                                    onClick={() => createVenueMutation.mutate(venueForm)}
+                                    disabled={
+                                        createVenueMutation.isPending ||
+                                        !venueForm.slug ||
+                                        !venueForm.name ||
+                                        !venueForm.city ||
+                                        !venueForm.state
+                                    }
+                                >
+                                    {createVenueMutation.isPending && (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    )}
+                                    Create Venue
+                                </Button>
+                            )}
+                            <Button variant="outline" onClick={handleBack}>
+                                Cancel
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
+    // Members View
+    if (viewMode === "members") {
+        const currentVenue = venues?.find((v) => v.id === selectedVenue);
+
+        return (
+            <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="icon" onClick={handleBack}>
+                        <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">
+                            Manage Members
+                        </h1>
+                        <p className="text-muted-foreground">
+                            {currentVenue?.name}
+                        </p>
+                    </div>
+                </div>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Current Members</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex flex-wrap gap-2">
+                            {venueMembers?.map((member) => (
+                                <Badge
+                                    key={member.id}
+                                    variant="secondary"
+                                    className="flex items-center gap-2"
+                                >
+                                    {member.user.username || member.user.email}
+                                    <button
+                                        onClick={() =>
+                                            removeVenueMemberMutation.mutate({
+                                                venueId: selectedVenue,
+                                                userId: member.userId,
+                                            })
+                                        }
+                                        className="hover:text-destructive"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                </Badge>
+                            ))}
+                            {!venueMembers?.length && (
+                                <p className="text-sm text-muted-foreground">
+                                    No members yet
+                                </p>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Add Member</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <Input
+                            placeholder="Search users by username or email..."
+                            value={userSearch}
+                            onChange={(e) => setUserSearch(e.target.value)}
+                        />
+                        {searchedUsers && searchedUsers.length > 0 && (
+                            <div className="divide-y rounded-md border">
+                                {searchedUsers.map((user) => (
+                                    <div
+                                        key={user.id}
+                                        className="flex items-center justify-between p-3"
+                                    >
+                                        <span className="text-sm">
+                                            {user.username || user.email}
+                                        </span>
                                         <Button
-                                            variant="outline"
                                             size="sm"
-                                            onClick={() => handleEdit(venue)}
+                                            onClick={() => {
+                                                addVenueMemberMutation.mutate({
+                                                    venueId: selectedVenue,
+                                                    userId: user.id,
+                                                });
+                                                setUserSearch("");
+                                            }}
                                         >
-                                            Edit
+                                            <Plus className="mr-1 h-4 w-4" />
+                                            Add
                                         </Button>
                                     </div>
                                 ))}
-                                {!venues?.length && (
-                                    <p className="text-center text-sm text-muted-foreground">
-                                        No venues found
-                                    </p>
-                                )}
                             </div>
-                        </CardContent>
-                    </Card>
-                </div>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
-        </div>
-    );
+        );
+    }
+
+    return null;
 }
