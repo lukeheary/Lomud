@@ -195,19 +195,74 @@ function FriendsPageContent() {
       {/*  </p>*/}
       {/*</div>*/}
 
-      {/* Search */}
-      <Suspense fallback={null}>
-        <SearchInput
-          ref={searchInputRef}
-          placeholder="Search friends or find new people..."
-          value={searchQuery}
-          onChange={setSearchQuery}
-          onFocus={() => setIsSearchMode(true)}
-          showBack={isSearchMode}
-          onBack={handleExitSearch}
-          className="w-full"
-        />
-      </Suspense>
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-4">
+        <div className="flex-1">
+          <Suspense fallback={null}>
+            <SearchInput
+              ref={searchInputRef}
+              placeholder="Search friends or find new people..."
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onFocus={() => setIsSearchMode(true)}
+              showBack={isSearchMode}
+              onBack={handleExitSearch}
+              className="w-full"
+            />
+          </Suspense>
+        </div>
+
+        {!isSearchMode && (
+          <div className="grid grid-cols-2 gap-2 md:flex md:w-auto">
+            <Link href="/friends/list" className="md:w-32 lg:w-40">
+              <Card className="cursor-pointer rounded-full bg-muted transition-colors hover:bg-muted/80">
+                <CardContent className="flex h-12 items-center justify-between px-3 px-4 py-0">
+                  <div className="flex items-center gap-2">
+                    <p className="flex flex-row items-baseline gap-2 text-sm font-medium">
+                      <span className="text-base lg:text-lg">
+                        {acceptedFriends.length}
+                      </span>
+                      <span className="hidden lg:inline">
+                        {pluralize("Friend", acceptedFriends.length)}
+                      </span>
+                      <span className="lg:hidden">Friends</span>
+                    </p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground lg:h-5 lg:w-5" />
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link href="/friends/requests" className="md:w-32 lg:w-40">
+              <Card className="cursor-pointer rounded-full bg-muted transition-colors hover:bg-muted/80">
+                <CardContent className="flex h-12 items-center justify-between px-3 px-4 py-0">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <p className="flex flex-row items-baseline gap-2 text-sm font-medium">
+                        <span className="text-base lg:text-lg">
+                          {receivedRequests.length}
+                        </span>
+                        <span className="hidden lg:inline">
+                          {pluralize("Request", receivedRequests.length)}
+                        </span>
+                        <span className="lg:hidden">Requests</span>
+                      </p>
+                      {receivedRequests.length > 0 && (
+                        <Badge
+                          variant="default"
+                          className="px-1 py-0 text-[10px] md:text-xs"
+                        >
+                          New
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground lg:h-5 lg:w-5" />
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
+        )}
+      </div>
 
       {isSearchMode ? (
         // Search Mode View
@@ -263,54 +318,6 @@ function FriendsPageContent() {
       ) : (
         // Default View
         <>
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 gap-4">
-            <Link href="/friends/list">
-              <Card className="cursor-pointer transition-colors hover:bg-muted/50">
-                <CardContent className="flex items-center justify-between p-3 md:p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="hidden h-10 w-10 items-center justify-center rounded-full bg-primary/10 md:flex">
-                      <Users className="h-5 w-5 text-primary" />
-                    </div>
-                    <p className="flex flex-row items-baseline gap-2 pl-2 text-base font-medium md:pl-0">
-                      <span className={"text-xl"}>
-                        {acceptedFriends.length}
-                      </span>
-                      {pluralize("Friend", acceptedFriends.length)}
-                    </p>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </CardContent>
-              </Card>
-            </Link>
-
-            <Link href="/friends/requests">
-              <Card className="cursor-pointer transition-colors hover:bg-muted/50">
-                <CardContent className="flex items-center justify-between p-3 md:p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="hidden h-10 w-10 items-center justify-center rounded-full bg-primary/10 md:flex">
-                      <Mail className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <p className="flex flex-row items-baseline gap-2 pl-2 text-base font-medium md:pl-0">
-                        <span className={"text-xl"}>
-                          {receivedRequests.length}
-                        </span>
-                        {pluralize("Request", receivedRequests.length)}
-                      </p>
-                      {receivedRequests.length > 0 && (
-                        <Badge variant="default" className="text-xs">
-                          New
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </CardContent>
-              </Card>
-            </Link>
-          </div>
-
           {/* Pending Requests Preview */}
           {receivedRequests.length > 0 && (
             <Card>
@@ -356,7 +363,9 @@ function FriendsPageContent() {
                         variant="ghost"
                         className="h-8 w-8"
                         onClick={() =>
-                          rejectMutation.mutate({ friendRequestId: request.id })
+                          rejectMutation.mutate({
+                            friendRequestId: request.id,
+                          })
                         }
                         disabled={rejectMutation.isPending}
                       >
@@ -366,7 +375,9 @@ function FriendsPageContent() {
                         size="icon"
                         className="h-8 w-8"
                         onClick={() =>
-                          acceptMutation.mutate({ friendRequestId: request.id })
+                          acceptMutation.mutate({
+                            friendRequestId: request.id,
+                          })
                         }
                         disabled={acceptMutation.isPending}
                       >
