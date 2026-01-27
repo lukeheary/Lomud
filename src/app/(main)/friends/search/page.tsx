@@ -5,7 +5,13 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UserPlus, Search, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  UserPlus,
+  Search,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryState } from "nuqs";
 
@@ -99,7 +105,8 @@ function SearchPageContent() {
           ) : (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                {searchResults.length} {searchResults.length === 1 ? "result" : "results"} found
+                {searchResults.length}{" "}
+                {searchResults.length === 1 ? "result" : "results"} found
               </p>
               {searchResults.map((user) => (
                 <div
@@ -142,10 +149,7 @@ function SearchPageContent() {
         // Recent Users
         <>
           <div>
-            <h2 className="text-lg font-semibold">Recent Members</h2>
-            <p className="text-sm text-muted-foreground">
-              People who recently joined
-            </p>
+            <h2 className="text-lg font-semibold">Recently Joined</h2>
           </div>
 
           {recentLoading ? (

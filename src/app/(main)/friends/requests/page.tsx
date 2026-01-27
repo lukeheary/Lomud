@@ -8,14 +8,16 @@ import { Badge } from "@/components/ui/badge";
 import { Check, X, Mail, Loader2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import { UserList } from "@/components/user-list";
 
 function RequestsPageContent() {
   const { toast } = useToast();
   const utils = trpc.useUtils();
 
-  const { data: pendingRequests, isLoading } = trpc.friends.listFriends.useQuery({
-    statusFilter: "pending",
-  });
+  const { data: pendingRequests, isLoading } =
+    trpc.friends.listFriends.useQuery({
+      statusFilter: "pending",
+    });
 
   const acceptMutation = trpc.friends.acceptFriendRequest.useMutation({
     onSuccess: () => {
@@ -55,7 +57,7 @@ function RequestsPageContent() {
 
   return (
     <div className="container mx-auto space-y-6 py-8">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
         <Link href="/friends">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="h-5 w-5" />
@@ -65,9 +67,6 @@ function RequestsPageContent() {
           <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
             Friend Requests
           </h1>
-          <p className="text-muted-foreground">
-            Manage your pending friend requests
-          </p>
         </div>
       </div>
 
@@ -79,7 +78,6 @@ function RequestsPageContent() {
         <>
           {/* Received Requests */}
           <div className="space-y-3">
-            <h2 className="text-lg font-semibold">Received Requests</h2>
             {receivedRequests.length === 0 ? (
               <div className="py-8 text-center">
                 <Mail className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
@@ -88,32 +86,18 @@ function RequestsPageContent() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {receivedRequests.map((request) => (
-                  <div
-                    key={request.id}
-                    className="flex items-center justify-between rounded-lg border p-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage
-                          src={request.friend?.imageUrl || undefined}
-                        />
-                        <AvatarFallback>
-                          {request.friend?.firstName?.[0]}
-                          {request.friend?.lastName?.[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">
-                          {request.friend?.firstName} {request.friend?.lastName}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          @{request.friend?.username}
-                        </p>
-                      </div>
-                    </div>
+                <UserList
+                  items={receivedRequests}
+                  getUser={(req) => ({
+                    id: req.friend?.id || "",
+                    firstName: req.friend?.firstName || null,
+                    lastName: req.friend?.lastName || null,
+                    username: req.friend?.username || null,
+                    imageUrl: req.friend?.imageUrl || null,
+                  })}
+                  renderAction={(request) => (
                     <div className="flex gap-2">
+
                       <Button
                         size="sm"
                         variant="outline"
@@ -140,9 +124,8 @@ function RequestsPageContent() {
                         Accept
                       </Button>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  )}
+                />
             )}
           </div>
 
@@ -150,35 +133,19 @@ function RequestsPageContent() {
           {sentRequests.length > 0 && (
             <div className="space-y-3">
               <h2 className="text-lg font-semibold">Sent Requests</h2>
-              <div className="space-y-3">
-                {sentRequests.map((request) => (
-                  <div
-                    key={request.id}
-                    className="flex items-center justify-between rounded-lg border p-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage
-                          src={request.friend?.imageUrl || undefined}
-                        />
-                        <AvatarFallback>
-                          {request.friend?.firstName?.[0]}
-                          {request.friend?.lastName?.[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">
-                          {request.friend?.firstName} {request.friend?.lastName}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          @{request.friend?.username}
-                        </p>
-                      </div>
-                    </div>
+                <UserList
+                  items={sentRequests}
+                  getUser={(req) => ({
+                    id: req.friend?.id || "",
+                    firstName: req.friend?.firstName || null,
+                    lastName: req.friend?.lastName || null,
+                    username: req.friend?.username || null,
+                    imageUrl: req.friend?.imageUrl || null,
+                  })}
+                  renderAction={() => (
                     <Badge variant="outline">Pending</Badge>
-                  </div>
-                ))}
-              </div>
+                  )}
+                />
             </div>
           )}
         </>

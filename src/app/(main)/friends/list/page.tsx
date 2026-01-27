@@ -5,6 +5,7 @@ import { trpc } from "@/lib/trpc";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Users, Loader2, ArrowLeft } from "lucide-react";
+import { UserList } from "@/components/user-list";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
@@ -14,7 +15,7 @@ function FriendsListContent() {
 
   return (
     <div className="container mx-auto space-y-4 py-4">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
         <Link href="/friends">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="h-5 w-5" />
@@ -24,9 +25,6 @@ function FriendsListContent() {
           <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
             My Friends
           </h1>
-          <p className="text-muted-foreground">
-            People you&apos;re connected with
-          </p>
         </div>
       </div>
 
@@ -45,33 +43,17 @@ function FriendsListContent() {
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {acceptedFriends.map((friend) => (
-            <div
-              key={friend.id}
-              className="flex items-center justify-between rounded-lg border p-4"
-            >
-              <div className="flex items-center gap-3">
-                <Avatar>
-                  <AvatarImage src={friend.friend?.imageUrl || undefined} />
-                  <AvatarFallback>
-                    {friend.friend?.firstName?.[0]}
-                    {friend.friend?.lastName?.[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-medium">
-                    {friend.friend?.firstName} {friend.friend?.lastName}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    @{friend.friend?.username}
-                  </p>
-                </div>
-              </div>
-              <Badge variant="outline">Friends</Badge>
-            </div>
-          ))}
-        </div>
+        <UserList
+          items={acceptedFriends}
+          getUser={(friend) => ({
+            id: friend.friend?.id || "",
+            firstName: friend.friend?.firstName || null,
+            lastName: friend.friend?.lastName || null,
+            username: friend.friend?.username || null,
+            imageUrl: friend.friend?.imageUrl || null,
+          })}
+          renderAction={() => <Badge variant="outline">Friends</Badge>}
+        />
       )}
     </div>
   );

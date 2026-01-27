@@ -21,6 +21,7 @@ import { ActivityFeed } from "@/components/friends/activity-feed";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryState } from "nuqs";
 import pluralize from "pluralize";
+import { UserList } from "@/components/user-list";
 
 function FriendsPageContent() {
   const { toast } = useToast();
@@ -129,61 +130,6 @@ function FriendsPageContent() {
 
   const isSearching = searchQuery.length >= 2;
 
-  // User list item component for reuse
-  const UserListItem = ({
-    user,
-    showAddButton = true,
-  }: {
-    user: {
-      id: string;
-      firstName: string | null;
-      lastName: string | null;
-      username: string | null;
-      imageUrl: string | null;
-    };
-    showAddButton?: boolean;
-  }) => {
-    const userIsFriend = isFriend(user.id);
-    return (
-      <div className="flex items-center justify-between rounded-lg border p-4">
-        <div className="flex items-center gap-3">
-          <Avatar>
-            <AvatarImage src={user.imageUrl || undefined} />
-            <AvatarFallback>
-              {user.firstName?.[0]}
-              {user.lastName?.[0]}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <div className="flex items-center gap-2">
-              <p className="font-medium">
-                {user.firstName} {user.lastName}
-              </p>
-              {userIsFriend && (
-                <Badge variant="secondary" className="text-xs">
-                  Friend
-                </Badge>
-              )}
-            </div>
-            <p className="text-sm text-muted-foreground">@{user.username}</p>
-          </div>
-        </div>
-        {showAddButton && !userIsFriend && (
-          <Button
-            size="sm"
-            onClick={() =>
-              sendRequestMutation.mutate({ friendUserId: user.id })
-            }
-            disabled={sendRequestMutation.isPending}
-          >
-            <UserPlus className="mr-2 h-4 w-4" />
-            Add
-          </Button>
-        )}
-      </div>
-    );
-  };
-
   return (
     <div className="container mx-auto space-y-4 py-4">
       {/*<div>*/}
@@ -215,16 +161,11 @@ function FriendsPageContent() {
           <div className="grid grid-cols-2 gap-2 md:flex md:w-auto">
             <Link href="/friends/list" className="md:w-32 lg:w-40">
               <Card className="cursor-pointer rounded-full bg-muted transition-colors hover:bg-muted/80">
-                <CardContent className="flex h-12 items-center justify-between px-3 px-4 py-0">
+                <CardContent className="flex h-12 items-center justify-between px-4 py-0">
                   <div className="flex items-center gap-2">
-                    <p className="flex flex-row items-baseline gap-2 text-sm font-medium">
-                      <span className="text-base lg:text-lg">
-                        {acceptedFriends.length}
-                      </span>
-                      <span className="hidden lg:inline">
-                        {pluralize("Friend", acceptedFriends.length)}
-                      </span>
-                      <span className="lg:hidden">
+                    <p className="flex flex-row items-baseline gap-1.5 text-base font-medium lg:text-lg">
+                      <span>{acceptedFriends.length}</span>
+                      <span className={"text-muted-foreground"}>
                         {pluralize("Friend", acceptedFriends.length)}
                       </span>
                     </p>
@@ -236,17 +177,12 @@ function FriendsPageContent() {
 
             <Link href="/friends/requests" className="md:w-32 lg:w-40">
               <Card className="cursor-pointer rounded-full bg-muted transition-colors hover:bg-muted/80">
-                <CardContent className="flex h-12 items-center justify-between px-3 px-4 py-0">
+                <CardContent className="flex h-12 items-center justify-between px-4 py-0">
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1.5">
-                      <p className="flex flex-row items-baseline gap-2 text-sm font-medium">
-                        <span className="text-base lg:text-lg">
-                          {receivedRequests.length}
-                        </span>
-                        <span className="hidden lg:inline">
-                          {pluralize("Request", receivedRequests.length)}
-                        </span>
-                        <span className="lg:hidden">
+                      <p className="flex flex-row items-baseline gap-1.5 text-base font-medium lg:text-lg">
+                        <span>{receivedRequests.length}</span>
+                        <span className={"text-muted-foreground"}>
                           {pluralize("Request", receivedRequests.length)}
                         </span>
                       </p>
@@ -288,9 +224,33 @@ function FriendsPageContent() {
                     {sortedSearchResults.length}{" "}
                     {pluralize("result", sortedSearchResults.length)}
                   </p>
-                  {sortedSearchResults.map((user) => (
-                    <UserListItem key={user.id} user={user} />
-                  ))}
+                  <UserList
+                    items={sortedSearchResults}
+                    getUser={(user) => user}
+                    renderBadges={(user) =>
+                      isFriend(user.id) ? (
+                        <Badge variant="secondary" className="text-xs">
+                          Friend
+                        </Badge>
+                      ) : null
+                    }
+                    renderAction={(user) =>
+                      !isFriend(user.id) ? (
+                        <Button
+                          size="sm"
+                          onClick={() =>
+                            sendRequestMutation.mutate({
+                              friendUserId: user.id,
+                            })
+                          }
+                          disabled={sendRequestMutation.isPending}
+                        >
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          Add
+                        </Button>
+                      ) : null
+                    }
+                  />
                 </>
               )}
             </>
@@ -298,10 +258,7 @@ function FriendsPageContent() {
             // Recent Users (when focused but no query)
             <>
               <div>
-                <h2 className="text-lg font-semibold">Recent Members</h2>
-                <p className="text-sm text-muted-foreground">
-                  People who recently joined
-                </p>
+                <h2 className="text-lg font-semibold">Recently Joined</h2>
               </div>
               {recentLoading ? (
                 <div className="flex justify-center py-12">
@@ -312,9 +269,31 @@ function FriendsPageContent() {
                   No recent members to show
                 </div>
               ) : (
-                recentUsers.items.map((user) => (
-                  <UserListItem key={user.id} user={user} />
-                ))
+                <UserList
+                  items={recentUsers.items}
+                  getUser={(user) => user}
+                  renderBadges={(user) =>
+                    isFriend(user.id) ? (
+                      <Badge variant="secondary" className="text-xs">
+                        Friend
+                      </Badge>
+                    ) : null
+                  }
+                  renderAction={(user) =>
+                    !isFriend(user.id) ? (
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          sendRequestMutation.mutate({ friendUserId: user.id })
+                        }
+                        disabled={sendRequestMutation.isPending}
+                      >
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Add
+                      </Button>
+                    ) : null
+                  }
+                />
               )}
             </>
           )}
@@ -337,30 +316,16 @@ function FriendsPageContent() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {receivedRequests.slice(0, 3).map((request) => (
-                  <div
-                    key={request.id}
-                    className="flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage
-                          src={request.friend?.imageUrl || undefined}
-                        />
-                        <AvatarFallback>
-                          {request.friend?.firstName?.[0]}
-                          {request.friend?.lastName?.[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-medium">
-                          {request.friend?.firstName} {request.friend?.lastName}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          @{request.friend?.username}
-                        </p>
-                      </div>
-                    </div>
+                <UserList
+                  items={receivedRequests.slice(0, 3)}
+                  getUser={(req) => ({
+                    id: req.friend?.id || "",
+                    firstName: req.friend?.firstName || null,
+                    lastName: req.friend?.lastName || null,
+                    username: req.friend?.username || null,
+                    imageUrl: req.friend?.imageUrl || null,
+                  })}
+                  renderAction={(request) => (
                     <div className="flex gap-1">
                       <Button
                         size="icon"
@@ -388,8 +353,8 @@ function FriendsPageContent() {
                         <Check className="h-4 w-4" />
                       </Button>
                     </div>
-                  </div>
-                ))}
+                  )}
+                />
               </CardContent>
             </Card>
           )}
