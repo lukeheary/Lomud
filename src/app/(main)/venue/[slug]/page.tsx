@@ -189,9 +189,9 @@ export default function VenuePage() {
           <CardTitle>Upcoming Events</CardTitle>
         </CardHeader>
         <CardContent className={"px-0 md:p-6"}>
-          {(venue as any).events && (venue as any).events.length > 0 ? (
+          {venue.events && venue.events.length > 0 ? (
             <EventCardGrid
-              events={(venue as any).events}
+              events={venue.events}
               columns={{ mobile: 1, tablet: 3, desktop: 4 }}
               gap="md"
             />
@@ -204,6 +204,22 @@ export default function VenuePage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Previous Events */}
+      {venue.pastEvents && (venue.pastEvents as any[]).length > 0 && (
+        <Card className={"border-none bg-background"}>
+          <CardHeader className={"px-0 md:px-6 md:pb-0 md:pt-6"}>
+            <CardTitle>Previous Events</CardTitle>
+          </CardHeader>
+          <CardContent className={"px-0 md:p-6"}>
+            <EventCardGrid
+              events={venue.pastEvents as any}
+              columns={{ mobile: 1, tablet: 3, desktop: 4 }}
+              gap="md"
+            />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

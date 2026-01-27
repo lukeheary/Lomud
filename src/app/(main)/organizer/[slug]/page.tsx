@@ -173,9 +173,9 @@ export default function OrganizerPage() {
           <CardTitle>Upcoming Events</CardTitle>
         </CardHeader>
         <CardContent className={"px-0 md:p-6"}>
-          {(organizer as any).events && (organizer as any).events.length > 0 ? (
+          {organizer.events && organizer.events.length > 0 ? (
             <EventCardGrid
-              events={(organizer as any).events}
+              events={organizer.events as any}
               columns={{ mobile: 1, tablet: 3, desktop: 4 }}
               gap="md"
             />
@@ -188,6 +188,22 @@ export default function OrganizerPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Previous Events */}
+      {organizer.pastEvents && (organizer.pastEvents as any[]).length > 0 && (
+        <Card className={"border-none bg-background"}>
+          <CardHeader className={"px-0 md:px-6 md:pb-0 md:pt-6"}>
+            <CardTitle>Previous Events</CardTitle>
+          </CardHeader>
+          <CardContent className={"px-0 md:p-6"}>
+            <EventCardGrid
+              events={organizer.pastEvents as any}
+              columns={{ mobile: 1, tablet: 3, desktop: 4 }}
+              gap="md"
+            />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

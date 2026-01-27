@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useState, useEffect, Suspense } from "react";
 import { trpc } from "@/lib/trpc";
 import { SearchInput } from "@/components/ui/search-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, MapPin, Loader2 } from "lucide-react";
 import { useQueryState } from "nuqs";
-import { Suspense } from "react";
 import {
   Select,
   SelectContent,
@@ -22,6 +22,18 @@ function VenuesPageContent() {
   const [selectedCity, setSelectedCity] = useQueryState("city", {
     defaultValue: "all",
   });
+  const [hasSetInitialCity, setHasSetInitialCity] = useState(false);
+
+  // Get current user to show their city
+  const { data: currentUser } = trpc.user.getCurrentUser.useQuery();
+
+  // Set default city to user's city on initial load only
+  useEffect(() => {
+    if (currentUser?.city && selectedCity === "all" && !hasSetInitialCity) {
+      void setSelectedCity(currentUser.city, { scroll: false, shallow: true });
+      setHasSetInitialCity(true);
+    }
+  }, [currentUser, selectedCity, hasSetInitialCity, setSelectedCity]);
 
   // Get available cities
   const { data: cities } = trpc.event.getAvailableCities.useQuery();

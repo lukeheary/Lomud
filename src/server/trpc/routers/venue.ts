@@ -2,12 +2,14 @@ import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../init";
 import {
   events,
+  friends,
+  rsvps,
   users,
   venueFollows,
   venueMembers,
   venues,
 } from "../../db/schema";
-import { and, asc, desc, eq, gte, ilike, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, inArray, lt, or, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { logActivity } from "../../utils/activity-logger";
 
@@ -112,10 +114,6 @@ export const venueRouter = router({
               user: true,
             },
           },
-          events: {
-            where: gte(events.startAt, new Date()),
-            orderBy: [asc(events.startAt)],
-          },
         },
       });
 
@@ -126,7 +124,94 @@ export const venueRouter = router({
         });
       }
 
-      return venue;
+      const now = new Date();
+
+      const upcomingEvents = await ctx.db.query.events.findMany({
+        where: and(eq(events.venueId, venue.id), gte(events.startAt, now)),
+        orderBy: [asc(events.startAt)],
+        with: {
+          venue: true,
+          organizer: true,
+          createdBy: true,
+        },
+      });
+
+      const pastEvents = await ctx.db.query.events.findMany({
+        where: and(eq(events.venueId, venue.id), lt(events.startAt, now)),
+        orderBy: [desc(events.startAt)],
+        limit: 12,
+        with: {
+          venue: true,
+          organizer: true,
+          createdBy: true,
+        },
+      });
+
+      // Fetch friendsGoing and userRsvp for these events if user is authenticated
+      const allEventIds = [...upcomingEvents, ...pastEvents].map((e) => e.id);
+      const attendeesMap = new Map<string, any[]>();
+      const userRsvpMap = new Map<string, any>();
+
+      if (ctx.auth.userId && allEventIds.length > 0) {
+        // Fetch user RSVPs
+        const userRsvps = await ctx.db.query.rsvps.findMany({
+          where: and(
+            inArray(rsvps.eventId, allEventIds),
+            eq(rsvps.userId, ctx.auth.userId)
+          ),
+        });
+        for (const rsvp of userRsvps) {
+          userRsvpMap.set(rsvp.eventId, rsvp);
+        }
+
+        const userFriends = await ctx.db.query.friends.findMany({
+          where: and(
+            or(
+              eq(friends.userId, ctx.auth.userId),
+              eq(friends.friendUserId, ctx.auth.userId)
+            ),
+            eq(friends.status, "accepted")
+          ),
+        });
+
+        const friendIds = userFriends.map((f) =>
+          f.userId === ctx.auth.userId ? f.friendUserId : f.userId
+        );
+
+        if (friendIds.length > 0) {
+          const friendsRsvps = await ctx.db.query.rsvps.findMany({
+            where: and(
+              inArray(rsvps.eventId, allEventIds),
+              inArray(rsvps.userId, friendIds),
+              eq(rsvps.status, "going")
+            ),
+            with: {
+              user: true,
+            },
+          });
+
+          for (const rsvp of friendsRsvps) {
+            if (!attendeesMap.has(rsvp.eventId)) {
+              attendeesMap.set(rsvp.eventId, []);
+            }
+            attendeesMap.get(rsvp.eventId)!.push(rsvp);
+          }
+        }
+      }
+
+      return {
+        ...venue,
+        events: upcomingEvents.map((e) => ({
+          ...e,
+          userRsvp: userRsvpMap.get(e.id) || null,
+          friendsGoing: attendeesMap.get(e.id) || [],
+        })),
+        pastEvents: pastEvents.map((e) => ({
+          ...e,
+          userRsvp: userRsvpMap.get(e.id) || null,
+          friendsGoing: attendeesMap.get(e.id) || [],
+        })),
+      };
     }),
 
   getVenueById: publicProcedure
