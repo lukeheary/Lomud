@@ -5,8 +5,9 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Mail, Loader2 } from "lucide-react";
+import { Check, X, Mail, Loader2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
 
 function RequestsPageContent() {
   const { toast } = useToast();
@@ -54,13 +55,20 @@ function RequestsPageContent() {
 
   return (
     <div className="container mx-auto space-y-6 py-8">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-          Friend Requests
-        </h1>
-        <p className="text-muted-foreground">
-          Manage your pending friend requests
-        </p>
+      <div className="flex items-center gap-4">
+        <Link href="/friends">
+          <Button variant="ghost" size="icon">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        </Link>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+            Friend Requests
+          </h1>
+          <p className="text-muted-foreground">
+            Manage your pending friend requests
+          </p>
+        </div>
       </div>
 
       {isLoading ? (

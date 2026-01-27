@@ -19,7 +19,10 @@ interface VenueHoursDisplayProps {
   defaultOpen?: boolean;
 }
 
-export function VenueHoursDisplay({ hours, defaultOpen = false }: VenueHoursDisplayProps) {
+export function VenueHoursDisplay({
+  hours,
+  defaultOpen = false,
+}: VenueHoursDisplayProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   if (!hours) return null;
@@ -33,7 +36,9 @@ export function VenueHoursDisplay({ hours, defaultOpen = false }: VenueHoursDisp
   };
 
   // Get today's hours for the preview
-  const today = new Date().toLocaleDateString("en-US", { weekday: "long" }).toLowerCase();
+  const today = new Date()
+    .toLocaleDateString("en-US", { weekday: "long" })
+    .toLowerCase();
   const todayHours = hours[today as keyof VenueHours];
   const todayLabel = todayHours?.closed
     ? "Closed today"
@@ -42,17 +47,19 @@ export function VenueHoursDisplay({ hours, defaultOpen = false }: VenueHoursDisp
       : null;
 
   return (
-    <div className="space-y-2">
+    <div className="w-full space-y-2 md:max-w-xs">
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between rounded-md py-1 text-left text-sm font-medium hover:bg-muted/50 transition-colors"
+        className="flex w-full items-center justify-between rounded-md py-1 text-left text-sm font-medium transition-colors hover:bg-muted/50"
       >
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4" />
           <span>Hours</span>
           {todayLabel && !isOpen && (
-            <span className="text-muted-foreground font-normal">· {todayLabel}</span>
+            <span className="font-normal text-muted-foreground">
+              · {todayLabel}
+            </span>
           )}
         </div>
         <ChevronDown
@@ -73,11 +80,15 @@ export function VenueHoursDisplay({ hours, defaultOpen = false }: VenueHoursDisp
             return (
               <div
                 key={key}
-                className={`flex items-center justify-between border-b pb-1.5 ${
+                className={`flex items-center justify-between border-b pb-1.5 last:border-0 last:pb-0 ${
                   isToday ? "font-medium" : ""
                 }`}
               >
-                <span className={isToday ? "text-foreground" : "text-muted-foreground"}>
+                <span
+                  className={
+                    isToday ? "text-foreground" : "text-muted-foreground"
+                  }
+                >
                   {label}
                   {isToday && " (Today)"}
                 </span>

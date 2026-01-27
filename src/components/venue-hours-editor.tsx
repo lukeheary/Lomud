@@ -56,7 +56,7 @@ export function VenueHoursEditor({ hours, onChange }: VenueHoursEditorProps) {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 max-w-lg">
       <Label className="text-base">Opening Hours</Label>
       <div className="space-y-2">
         {DAYS.map((day) => {
