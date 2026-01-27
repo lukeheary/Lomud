@@ -10,6 +10,7 @@ import { EventCardGrid } from "@/components/events/event-card-grid";
 import { Users, Globe, Instagram, Heart, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@clerk/nextjs";
+import pluralize from "pluralize";
 
 export default function OrganizerPage() {
   const params = useParams();
@@ -156,10 +157,10 @@ export default function OrganizerPage() {
             <div className="flex items-center gap-4">
               <Badge variant="outline">
                 <Heart className="mr-1 h-3 w-3" />
-                {(organizer as any).follows?.length || 0} followers
+                {(organizer as any).follows?.length || 0} {pluralize("follower", (organizer as any).follows?.length || 0)}
               </Badge>
               <Badge variant="outline">
-                {(organizer as any).events?.length || 0} events
+                {(organizer as any).events?.length || 0} {pluralize("event", (organizer as any).events?.length || 0)}
               </Badge>
             </div>
           </div>

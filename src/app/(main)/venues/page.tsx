@@ -1,0 +1,148 @@
+"use client";
+
+import Link from "next/link";
+import { trpc } from "@/lib/trpc";
+import { SearchInput } from "@/components/ui/search-input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Building2, MapPin, Loader2 } from "lucide-react";
+import { useQueryState } from "nuqs";
+import { Suspense } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+function VenuesPageContent() {
+  const [searchQuery, setSearchQuery] = useQueryState("search", {
+    defaultValue: "",
+  });
+  const [selectedCity, setSelectedCity] = useQueryState("city", {
+    defaultValue: "all",
+  });
+
+  // Get available cities
+  const { data: cities } = trpc.event.getAvailableCities.useQuery();
+
+  const { data: venues, isLoading } = trpc.venue.listVenues.useQuery({
+    search: searchQuery || undefined,
+    city: selectedCity !== "all" ? selectedCity : undefined,
+    limit: 50,
+  });
+
+  return (
+    <div className="container mx-auto space-y-4 py-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+          Venues
+          {selectedCity !== "all" && (
+            <span className="text-muted-foreground"> in {selectedCity}</span>
+          )}
+        </h1>
+        <p className="text-muted-foreground">
+          Discover local venues and event spaces
+        </p>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <Suspense fallback={null}>
+          <SearchInput
+            placeholder="Search venues..."
+            value={searchQuery}
+            onChange={setSearchQuery}
+            className="w-full"
+          />
+        </Suspense>
+
+        {/* City Filter */}
+        <Select value={selectedCity} onValueChange={setSelectedCity}>
+          <SelectTrigger className="w-full shrink-0 md:w-fit">
+            <SelectValue placeholder="Select city" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Cities</SelectItem>
+            {cities?.map((city) => (
+              <SelectItem key={`${city.city}-${city.state}`} value={city.city}>
+                {city.city}, {city.state}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      )}
+
+      {/* Venue Grid */}
+      {!isLoading && venues && venues.length > 0 && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {venues.map((venue) => (
+            <Link key={venue.id} href={`/venue/${venue.slug}`}>
+              <Card className="h-full cursor-pointer transition-colors hover:bg-accent/50">
+                <CardHeader className="pb-2">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-lg">{venue.name}</CardTitle>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {venue.description && (
+                    <p className="line-clamp-2 text-sm text-muted-foreground">
+                      {venue.description}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <MapPin className="h-4 w-4" />
+                    <span>
+                      {venue.city}, {venue.state}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && venues && venues.length === 0 && (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <h3 className="mb-2 text-lg font-semibold">No venues found</h3>
+            <p className="mb-4 text-muted-foreground">
+              {searchQuery
+                ? "Try adjusting your search or filters"
+                : "No venues available yet"}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+export default function VenuesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container mx-auto py-8">
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        </div>
+      }
+    >
+      <VenuesPageContent />
+    </Suspense>
+  );
+}

@@ -10,6 +10,7 @@ export const friendsRouter = router({
       z.object({
         query: z.string().min(1),
         limit: z.number().min(1).max(50).default(10),
+        includeAll: z.boolean().default(false), // If true, includes friends in results
       })
     )
     .query(async ({ ctx, input }) => {
@@ -23,12 +24,15 @@ export const friendsRouter = router({
         ),
       });
 
-      const excludedUserIds = [
-        ctx.auth.userId, // Exclude self
-        ...existingFriendships.map((f) =>
-          f.userId === ctx.auth.userId ? f.friendUserId : f.userId
-        ),
-      ];
+      // Always exclude self, optionally exclude existing friendships
+      const excludedUserIds = input.includeAll
+        ? [ctx.auth.userId]
+        : [
+            ctx.auth.userId,
+            ...existingFriendships.map((f) =>
+              f.userId === ctx.auth.userId ? f.friendUserId : f.userId
+            ),
+          ];
 
       // Search by username, email, firstName, or lastName (case insensitive)
       const results = await ctx.db.query.users.findMany({

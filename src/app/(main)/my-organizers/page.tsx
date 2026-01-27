@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Calendar, Loader2 } from "lucide-react";
+import pluralize from "pluralize";
 
 export default function MyOrganizersPage() {
   const { data: myOrganizers, isLoading } =
@@ -57,7 +58,7 @@ export default function MyOrganizersPage() {
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">
                     <Users className="mr-1 h-3 w-3" />
-                    {(organizer as any).members?.length || 0} members
+                    {(organizer as any).members?.length || 0} {pluralize("member", (organizer as any).members?.length || 0)}
                   </Badge>
                   <Badge variant="outline">
                     <Calendar className="mr-1 h-3 w-3" />

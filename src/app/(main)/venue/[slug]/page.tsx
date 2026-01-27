@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@clerk/nextjs";
 import { VenueHoursDisplay } from "@/components/venue-hours-display";
 import { VenueHours } from "@/components/venue-hours-editor";
+import pluralize from "pluralize";
 
 export default function VenuePage() {
   const params = useParams();
@@ -166,10 +167,10 @@ export default function VenuePage() {
             <div className="flex items-center gap-4">
               <Badge variant="outline">
                 <Heart className="mr-1 h-3 w-3" />
-                {(venue as any).follows?.length || 0} followers
+                {(venue as any).follows?.length || 0} {pluralize("follower", (venue as any).follows?.length || 0)}
               </Badge>
               <Badge variant="outline">
-                {(venue as any).events?.length || 0} events
+                {(venue as any).events?.length || 0} {pluralize("event", (venue as any).events?.length || 0)}
               </Badge>
             </div>
 

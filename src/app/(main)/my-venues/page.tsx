@@ -13,6 +13,7 @@ import {
   Loader2,
   Edit,
 } from "lucide-react";
+import pluralize from "pluralize";
 
 export default function MyVenuesPage() {
   const { data: myVenues, isLoading } = trpc.venue.getMyVenues.useQuery();
@@ -68,7 +69,7 @@ export default function MyVenuesPage() {
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">
                     <UsersIcon className="mr-1 h-3 w-3" />
-                    {(venue as any).members?.length || 0} members
+                    {(venue as any).members?.length || 0} {pluralize("member", (venue as any).members?.length || 0)}
                   </Badge>
                   <Badge variant="outline">
                     <Calendar className="mr-1 h-3 w-3" />

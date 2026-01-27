@@ -11,9 +11,6 @@ import {
   User,
   LogOut,
   Menu,
-  Activity,
-  Search,
-  Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OnboardingCheck } from "@/components/onboarding-check";
@@ -89,12 +86,19 @@ export default function MainLayout({
                 Events
               </Button>
             </Link>
-            <Link href="/venues-and-organizers">
-              <Button variant="ghost" size="sm">
-                Venues & Organizers
+            <Link href="/venues">
+              <Button variant="ghost" size="sm" className="gap-1">
+                {/*<Building2 className="h-4 w-4" />*/}
+                Venues
               </Button>
             </Link>
-            <div className="group relative">
+            <Link href="/organizers">
+              <Button variant="ghost" size="sm" className="gap-1">
+                {/*<Users className="h-4 w-4" />*/}
+                Organizers
+              </Button>
+            </Link>
+            <Link href="/friends">
               <Button variant="ghost" size="sm" className="gap-1">
                 Friends
                 {receivedRequestsCount > 0 && (
@@ -103,56 +107,7 @@ export default function MainLayout({
                   </span>
                 )}
               </Button>
-              <div className="absolute left-0 top-full hidden w-52 pt-2 group-hover:block">
-                <div className="rounded-2xl border bg-popover p-2 shadow-md">
-                  <Link href="/friends/activity">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start gap-4 rounded-xl px-2 py-2.5 font-normal"
-                    >
-                      <Activity className="h-4 w-4" />
-                      Activity
-                    </Button>
-                  </Link>
-                  <Link href="/friends/list">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start gap-4 rounded-xl px-2 py-2.5 font-normal"
-                    >
-                      <Users className="h-4 w-4" />
-                      My Friends
-                    </Button>
-                  </Link>
-                  <Link href="/friends/requests">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start gap-4 rounded-xl px-2 py-2.5 font-normal"
-                    >
-                      <Mail className="h-4 w-4" />
-                      Requests
-                      {receivedRequestsCount > 0 && (
-                        <span className="ml-auto flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
-                          {receivedRequestsCount}
-                        </span>
-                      )}
-                    </Button>
-                  </Link>
-                  <Link href="/friends/search">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start gap-4 rounded-xl px-2 py-2.5 font-normal"
-                    >
-                      <Search className="h-4 w-4" />
-                      Find Friends
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
+            </Link>
           </nav>
 
           {/* Right Side - Spacer for mobile */}
@@ -320,17 +275,27 @@ export default function MainLayout({
                     </Button>
                   </Link>
 
-                  <Link href="/venues-and-organizers" onClick={closeMobileMenu}>
+                  <Link href="/venues" onClick={closeMobileMenu}>
                     <Button
                       variant="ghost"
                       className="w-full justify-start px-4 text-base"
                       size="lg"
                     >
                       <Building2 className="mr-3 h-5 w-5" />
-                      Venues & Organizers
+                      Venues
                     </Button>
                   </Link>
-                  <div className="flex flex-col">
+                  <Link href="/organizers" onClick={closeMobileMenu}>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start px-4 text-base"
+                      size="lg"
+                    >
+                      <Users className="mr-3 h-5 w-5" />
+                      Organizers
+                    </Button>
+                  </Link>
+                  <Link href="/friends" onClick={closeMobileMenu}>
                     <Button
                       variant="ghost"
                       className="w-full justify-start px-4 text-base"
@@ -344,50 +309,7 @@ export default function MainLayout({
                         </span>
                       )}
                     </Button>
-                    <div className="ml-8 flex flex-col gap-3 border-l pl-2 pt-1">
-                      <Link href="/friends/activity" onClick={closeMobileMenu}>
-                        <Button
-                          variant="ghost"
-                          className="h-9 w-full justify-start px-4 text-sm font-normal"
-                        >
-                          <Activity className="mr-2 h-4 w-4" />
-                          Activity
-                        </Button>
-                      </Link>
-                      <Link href="/friends/list" onClick={closeMobileMenu}>
-                        <Button
-                          variant="ghost"
-                          className="h-9 w-full justify-start px-4 text-sm font-normal"
-                        >
-                          <Users className="mr-2 h-4 w-4" />
-                          My Friends
-                        </Button>
-                      </Link>
-                      <Link href="/friends/requests" onClick={closeMobileMenu}>
-                        <Button
-                          variant="ghost"
-                          className="h-9 w-full justify-start px-4 text-sm font-normal"
-                        >
-                          <Mail className="mr-2 h-4 w-4" />
-                          Requests
-                          {receivedRequestsCount > 0 && (
-                            <span className="ml-auto flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
-                              {receivedRequestsCount}
-                            </span>
-                          )}
-                        </Button>
-                      </Link>
-                      <Link href="/friends/search" onClick={closeMobileMenu}>
-                        <Button
-                          variant="ghost"
-                          className="h-9 w-full justify-start px-4 text-sm font-normal"
-                        >
-                          <Search className="mr-2 h-4 w-4" />
-                          Find Friends
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
+                  </Link>
 
                   <div className="mt-4 flex flex-col gap-2 border-t pt-4">
                     <Link href="/profile" onClick={closeMobileMenu}>
