@@ -6,14 +6,12 @@ import { ActivityFeed } from "@/components/friends/activity-feed";
 
 function ActivityPageContent() {
   return (
-    <div className="container mx-auto space-y-4 py-8">
+    <div className="container mx-auto space-y-4 py-4">
       <div>
         <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
           Activity
         </h1>
-        <p className="text-muted-foreground">
-          See what your friends are up to
-        </p>
+        <p className="text-muted-foreground">See what your friends are up to</p>
       </div>
 
       <ActivityFeed />

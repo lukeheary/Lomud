@@ -20,6 +20,7 @@ export const organizerRouter = router({
         city: z.string().optional(),
         state: z.string().optional(),
         search: z.string().optional(),
+        followedOnly: z.boolean().optional(),
         limit: z.number().min(1).max(100).default(20),
         offset: z.number().min(0).default(0),
       })
@@ -32,6 +33,28 @@ export const organizerRouter = router({
 
       if (input.search) {
         conditions.push(ilike(organizers.name, `%${input.search}%`));
+      }
+
+      if (input.followedOnly) {
+        if (!ctx.auth.userId) {
+          return [];
+        }
+
+        const followedOrganizerIds = await ctx.db
+          .select({ organizerId: organizerFollows.organizerId })
+          .from(organizerFollows)
+          .where(eq(organizerFollows.userId, ctx.auth.userId));
+
+        if (followedOrganizerIds.length === 0) {
+          return [];
+        }
+
+        conditions.push(
+          inArray(
+            organizers.id,
+            followedOrganizerIds.map((f) => f.organizerId)
+          )
+        );
       }
 
       return await ctx.db.query.organizers.findMany({

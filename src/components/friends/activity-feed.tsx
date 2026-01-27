@@ -2,7 +2,6 @@
 
 import { trpc } from "@/lib/trpc";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import {
   Loader2,
   Users,
@@ -14,16 +13,14 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
-import { cn, formatRelativeEventDate } from "@/lib/utils";
+import { formatRelativeEventDate } from "@/lib/utils";
 
 interface ActivityItemProps {
   activity: any;
-  compact?: boolean;
 }
 
-function ActivityItem({ activity, compact = false }: ActivityItemProps) {
-  const { actor, type, entityType, entityId, metadata, createdAt, event } =
-    activity;
+function ActivityItem({ activity }: ActivityItemProps) {
+  const { actor, type, entityId, metadata, createdAt, event } = activity;
 
   const eventRelativeDate = event?.startAt
     ? formatRelativeEventDate(new Date(event.startAt))
@@ -66,44 +63,23 @@ function ActivityItem({ activity, compact = false }: ActivityItemProps) {
         return (
           <>
             {actorName} is going to{" "}
-            {compact ? (
+            <Link
+              href={`/event/${entityId}`}
+              className="font-medium text-primary hover:underline"
+            >
+              {entityName}
+            </Link>
+            {activity.event?.venueName && (
               <>
-                {/*<span className="md:hidden">*/}
-                {/*  <Link*/}
-                {/*    href={`/event/${entityId}`}*/}
-                {/*    className="font-medium text-primary hover:underline"*/}
-                {/*  >*/}
-                {/*    {activity.event?.venueName || entityName}*/}
-                {/*  </Link>*/}
-                {/*</span>*/}
-                {/*<span className="hidden md:inline">*/}
+                {" "}
+                at{" "}
                 <Link
                   href={`/event/${entityId}`}
                   className="font-medium text-primary hover:underline"
                 >
-                  {entityName}
+                  {activity.event.venueName}
                 </Link>
-                {activity.event?.venueName && (
-                  <>
-                    {" "}
-                    at{" "}
-                    <Link
-                      href={`/event/${entityId}`}
-                      className="font-medium text-primary hover:underline"
-                    >
-                      {activity.event.venueName}
-                    </Link>
-                  </>
-                )}
-                {/*</span>*/}
               </>
-            ) : (
-              <Link
-                href={`/event/${entityId}`}
-                className="font-medium text-primary hover:underline"
-              >
-                {entityName}
-              </Link>
             )}
           </>
         );
@@ -117,6 +93,18 @@ function ActivityItem({ activity, compact = false }: ActivityItemProps) {
             >
               {entityName}
             </Link>
+            {activity.event?.venueName && (
+              <>
+                {" "}
+                at{" "}
+                <Link
+                  href={`/event/${entityId}`}
+                  className="font-medium text-primary hover:underline"
+                >
+                  {activity.event.venueName}
+                </Link>
+              </>
+            )}
           </>
         );
       case "follow_venue":
@@ -143,6 +131,18 @@ function ActivityItem({ activity, compact = false }: ActivityItemProps) {
             >
               {entityName}
             </Link>
+            {activity.event?.venueName && (
+              <>
+                {" "}
+                at{" "}
+                <Link
+                  href={`/event/${entityId}`}
+                  className="font-medium text-primary hover:underline"
+                >
+                  {activity.event.venueName}
+                </Link>
+              </>
+            )}
           </>
         );
       default:
@@ -157,19 +157,9 @@ function ActivityItem({ activity, compact = false }: ActivityItemProps) {
   const content = renderContent();
 
   return (
-    <div
-      className={
-        compact ? "flex gap-3 pb-4 last:pb-0" : "flex gap-4 pb-2 last:pb-0"
-      }
-    >
+    <div className="flex gap-4 pb-2 last:pb-0">
       <div className="relative flex flex-col items-center pt-1.5">
-        <Avatar
-          className={
-            compact
-              ? "h-8 w-8"
-              : "h-10 w-10 border-2 border-background ring-2 ring-muted/20"
-          }
-        >
+        <Avatar className="h-10 w-10 border-2 border-background ring-2 ring-muted/20">
           <AvatarImage src={actor.imageUrl || undefined} />
           <AvatarFallback>
             {actor.firstName?.[0]}
@@ -199,13 +189,9 @@ function ActivityItem({ activity, compact = false }: ActivityItemProps) {
 
 interface ActivityFeedProps {
   limit?: number;
-  compact?: boolean;
 }
 
-export function ActivityFeed({
-  limit = 50,
-  compact = false,
-}: ActivityFeedProps) {
+export function ActivityFeed({ limit = 50 }: ActivityFeedProps) {
   const { data: activities, isLoading } = trpc.friends.getFriendFeed.useQuery({
     limit,
   });
@@ -220,37 +206,11 @@ export function ActivityFeed({
 
   if (!activities || activities.length === 0) {
     return (
-      <div
-        className={cn(
-          "flex flex-col items-center justify-center text-center",
-          compact ? "rounded-2xl border border-dashed py-6" : "py-16"
-        )}
-      >
-        <div
-          className={cn(
-            "rounded-full bg-muted/30",
-            compact ? "mb-2 p-2" : "mb-4 p-4"
-          )}
-        >
-          <Users
-            className={cn(
-              "text-muted-foreground/60",
-              compact ? "h-5 w-5" : "h-8 w-8"
-            )}
-          />
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="mb-4 rounded-full bg-muted/30 p-4">
+          <Users className="h-8 w-8 text-muted-foreground/60" />
         </div>
-        <p className={cn("font-medium", compact ? "text-sm" : "text-lg")}>
-          No recent activity
-        </p>
-        {/*<p*/}
-        {/*  className={cn(*/}
-        {/*    "text-muted-foreground",*/}
-        {/*    compact ? "text-xs" : "text-sm",*/}
-        {/*    !compact && "max-w-[250px]"*/}
-        {/*  )}*/}
-        {/*>*/}
-        {/*  When your friends RSVP to events or follow venues, you'll see it here.*/}
-        {/*</p>*/}
+        <p className="text-lg font-medium">No recent activity</p>
       </div>
     );
   }
@@ -260,23 +220,10 @@ export function ActivityFeed({
       <div className="flex flex-col">
         {activities.map((activity: any, index: number) => (
           <div key={activity.id} className="relative pb-3 last:pb-0 md:pb-4">
-            <ActivityItem activity={activity} compact={compact} />
+            <ActivityItem activity={activity} />
           </div>
         ))}
       </div>
-
-      {/*{compact && activities.length >= limit && (*/}
-      {/*  <div className="flex justify-center pt-2">*/}
-      {/*    <Button*/}
-      {/*      variant="ghost"*/}
-      {/*      size="sm"*/}
-      {/*      asChild*/}
-      {/*      className="text-muted-foreground hover:text-primary"*/}
-      {/*    >*/}
-      {/*      <Link href="/friends">Show more activity</Link>*/}
-      {/*    </Button>*/}
-      {/*  </div>*/}
-      {/*)}*/}
     </div>
   );
 }

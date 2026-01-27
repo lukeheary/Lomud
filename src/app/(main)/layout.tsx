@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Calendar,
   Building2,
@@ -11,6 +11,7 @@ import {
   User,
   LogOut,
   Menu,
+  Home,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OnboardingCheck } from "@/components/onboarding-check";
@@ -39,6 +40,7 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { signOut } = useClerk();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data: adminCheck } = trpc.user.isAdmin.useQuery();
@@ -53,6 +55,11 @@ export default function MainLayout({
 
   const receivedRequestsCount =
     pendingRequests?.filter((f) => !f.isSender).length ?? 0;
+
+  const isHome = pathname === "/home";
+  const isVenues = pathname === "/venues";
+  const isOrganizers = pathname === "/organizers";
+  const isFriends = pathname === "/friends";
 
   const handleSignOut = async () => {
     await signOut();
@@ -82,24 +89,36 @@ export default function MainLayout({
           {/* Center - Desktop Navigation */}
           <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-2 md:flex">
             <Link href="/home">
-              <Button variant="ghost" size="sm">
-                Events
+              <Button variant={isHome ? "secondary" : "ghost"} size="sm">
+                Home
               </Button>
             </Link>
             <Link href="/venues">
-              <Button variant="ghost" size="sm" className="gap-1">
+              <Button
+                variant={isVenues ? "secondary" : "ghost"}
+                size="sm"
+                className={"gap-1"}
+              >
                 {/*<Building2 className="h-4 w-4" />*/}
                 Venues
               </Button>
             </Link>
             <Link href="/organizers">
-              <Button variant="ghost" size="sm" className="gap-1">
+              <Button
+                variant={isOrganizers ? "secondary" : "ghost"}
+                size="sm"
+                className={"gap-1"}
+              >
                 {/*<Users className="h-4 w-4" />*/}
                 Organizers
               </Button>
             </Link>
             <Link href="/friends">
-              <Button variant="ghost" size="sm" className="gap-1">
+              <Button
+                variant={isFriends ? "secondary" : "ghost"}
+                size="sm"
+                className={"gap-1"}
+              >
                 Friends
                 {receivedRequestsCount > 0 && (
                   <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
@@ -266,18 +285,18 @@ export default function MainLayout({
                 <nav className="mt-8 flex flex-col gap-2">
                   <Link href="/home" onClick={closeMobileMenu}>
                     <Button
-                      variant="ghost"
+                      variant={isHome ? "secondary" : "ghost"}
                       className="w-full justify-start px-4 text-base"
                       size="lg"
                     >
-                      <Calendar className="mr-3 h-5 w-5" />
-                      Events
+                      <Home className="mr-3 h-5 w-5" />
+                      Home
                     </Button>
                   </Link>
 
                   <Link href="/venues" onClick={closeMobileMenu}>
                     <Button
-                      variant="ghost"
+                      variant={isVenues ? "secondary" : "ghost"}
                       className="w-full justify-start px-4 text-base"
                       size="lg"
                     >
@@ -287,7 +306,7 @@ export default function MainLayout({
                   </Link>
                   <Link href="/organizers" onClick={closeMobileMenu}>
                     <Button
-                      variant="ghost"
+                      variant={isOrganizers ? "secondary" : "ghost"}
                       className="w-full justify-start px-4 text-base"
                       size="lg"
                     >
@@ -297,7 +316,7 @@ export default function MainLayout({
                   </Link>
                   <Link href="/friends" onClick={closeMobileMenu}>
                     <Button
-                      variant="ghost"
+                      variant={isFriends ? "secondary" : "ghost"}
                       className="w-full justify-start px-4 text-base"
                       size="lg"
                     >

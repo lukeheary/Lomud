@@ -21,7 +21,7 @@ export default function MyOrganizersPage() {
   }
 
   return (
-    <div className="container mx-auto space-y-4 py-8">
+    <div className="container mx-auto space-y-4 py-4">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
@@ -58,7 +58,11 @@ export default function MyOrganizersPage() {
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">
                     <Users className="mr-1 h-3 w-3" />
-                    {(organizer as any).members?.length || 0} {pluralize("member", (organizer as any).members?.length || 0)}
+                    {(organizer as any).members?.length || 0}{" "}
+                    {pluralize(
+                      "member",
+                      (organizer as any).members?.length || 0
+                    )}
                   </Badge>
                   <Badge variant="outline">
                     <Calendar className="mr-1 h-3 w-3" />

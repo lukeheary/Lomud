@@ -185,18 +185,15 @@ function FriendsPageContent() {
   };
 
   return (
-    <div className="container mx-auto space-y-4 py-8">
-      {/* Header - hidden in search mode */}
-      {/*{!isSearchMode && (*/}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-          Friends
-        </h1>
-        <p className="text-muted-foreground">
-          Connect with friends and see what they&apos;re up to
-        </p>
-      </div>
-      {/*)}*/}
+    <div className="container mx-auto space-y-4 py-4">
+      {/*<div>*/}
+      {/*  <h1 className="text-2xl font-bold tracking-tight md:text-3xl">*/}
+      {/*    Friends*/}
+      {/*  </h1>*/}
+      {/*  <p className="text-muted-foreground">*/}
+      {/*    Connect with friends and see what they&apos;re up to*/}
+      {/*  </p>*/}
+      {/*</div>*/}
 
       {/* Search */}
       <Suspense fallback={null}>
@@ -384,7 +381,7 @@ function FriendsPageContent() {
 
           {/* Activity Feed */}
           <div>
-            {/*<h2 className="mb-3 text-lg font-semibold">Activity</h2>*/}
+            <h2 className="mb-3 text-xl font-semibold">Activity</h2>
             <ActivityFeed />
           </div>
         </>

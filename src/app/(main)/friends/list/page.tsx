@@ -11,7 +11,7 @@ function FriendsListContent() {
   const acceptedFriends = friends?.filter((f) => f.status === "accepted") || [];
 
   return (
-    <div className="container mx-auto space-y-4 py-8">
+    <div className="container mx-auto space-y-4 py-4">
       <div>
         <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
           My Friends

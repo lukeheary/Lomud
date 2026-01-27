@@ -304,7 +304,7 @@ function HomePageContent() {
           </div>
         </Link>
 
-        <ActivityFeed limit={3} compact={true} />
+        <ActivityFeed limit={3} />
       </div>
 
       {/* add a divider line*/}

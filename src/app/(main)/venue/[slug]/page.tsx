@@ -104,7 +104,7 @@ export default function VenuePage() {
   }
 
   return (
-    <div className="container mx-auto space-y-4 py-8">
+    <div className="container mx-auto space-y-4 py-4">
       {/* Venue Header */}
       <Card>
         <CardContent className="pt-6">
@@ -113,7 +113,9 @@ export default function VenuePage() {
               <div>
                 <h1 className="text-3xl font-bold">{venue.name}</h1>
                 {venue.description && (
-                  <p className="mt-2 text-muted-foreground">{venue.description}</p>
+                  <p className="mt-2 text-muted-foreground">
+                    {venue.description}
+                  </p>
                 )}
               </div>
               <Button
@@ -167,17 +169,17 @@ export default function VenuePage() {
             <div className="flex items-center gap-4">
               <Badge variant="outline">
                 <Heart className="mr-1 h-3 w-3" />
-                {(venue as any).follows?.length || 0} {pluralize("follower", (venue as any).follows?.length || 0)}
+                {(venue as any).follows?.length || 0}{" "}
+                {pluralize("follower", (venue as any).follows?.length || 0)}
               </Badge>
               <Badge variant="outline">
-                {(venue as any).events?.length || 0} {pluralize("event", (venue as any).events?.length || 0)}
+                {(venue as any).events?.length || 0}{" "}
+                {pluralize("event", (venue as any).events?.length || 0)}
               </Badge>
             </div>
 
             {(venue as any).hours && (
-              <VenueHoursDisplay
-                hours={(venue as any).hours as VenueHours}
-              />
+              <VenueHoursDisplay hours={(venue as any).hours as VenueHours} />
             )}
           </div>
         </CardContent>

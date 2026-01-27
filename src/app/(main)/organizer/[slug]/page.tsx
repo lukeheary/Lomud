@@ -98,7 +98,7 @@ export default function OrganizerPage() {
   }
 
   return (
-    <div className="container mx-auto space-y-4 py-8">
+    <div className="container mx-auto space-y-4 py-4">
       {/* Organizer Header */}
       <Card>
         <CardContent className="pt-6">
@@ -157,10 +157,12 @@ export default function OrganizerPage() {
             <div className="flex items-center gap-4">
               <Badge variant="outline">
                 <Heart className="mr-1 h-3 w-3" />
-                {(organizer as any).follows?.length || 0} {pluralize("follower", (organizer as any).follows?.length || 0)}
+                {(organizer as any).follows?.length || 0}{" "}
+                {pluralize("follower", (organizer as any).follows?.length || 0)}
               </Badge>
               <Badge variant="outline">
-                {(organizer as any).events?.length || 0} {pluralize("event", (organizer as any).events?.length || 0)}
+                {(organizer as any).events?.length || 0}{" "}
+                {pluralize("event", (organizer as any).events?.length || 0)}
               </Badge>
             </div>
           </div>

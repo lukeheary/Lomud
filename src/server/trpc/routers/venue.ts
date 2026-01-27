@@ -77,6 +77,7 @@ export const venueRouter = router({
         city: z.string().optional(),
         state: z.string().optional(),
         search: z.string().optional(),
+        followedOnly: z.boolean().optional(),
         limit: z.number().min(1).max(100).default(20),
         offset: z.number().min(0).default(0),
       })
@@ -88,6 +89,28 @@ export const venueRouter = router({
       if (input.state) conditions.push(eq(venues.state, input.state));
       if (input.search) {
         conditions.push(ilike(venues.name, `%${input.search}%`));
+      }
+
+      if (input.followedOnly) {
+        if (!ctx.auth.userId) {
+          return [];
+        }
+
+        const followedVenueIds = await ctx.db
+          .select({ venueId: venueFollows.venueId })
+          .from(venueFollows)
+          .where(eq(venueFollows.userId, ctx.auth.userId));
+
+        if (followedVenueIds.length === 0) {
+          return [];
+        }
+
+        conditions.push(
+          inArray(
+            venues.id,
+            followedVenueIds.map((f) => f.venueId)
+          )
+        );
       }
 
       return await ctx.db.query.venues.findMany({

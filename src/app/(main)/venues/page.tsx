@@ -15,11 +15,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import { FollowFilterSelect } from "@/components/shared/follow-filter-select";
+
 function VenuesPageContent() {
   const [searchQuery, setSearchQuery] = useQueryState("search", {
     defaultValue: "",
   });
   const [selectedCity, setSelectedCity] = useQueryState("city", {
+    defaultValue: "all",
+  });
+  const [followingFilter, setFollowingFilter] = useQueryState("filter", {
     defaultValue: "all",
   });
   const [hasSetInitialCity, setHasSetInitialCity] = useState(false);
@@ -41,23 +46,24 @@ function VenuesPageContent() {
   const { data: venues, isLoading } = trpc.venue.listVenues.useQuery({
     search: searchQuery || undefined,
     city: selectedCity !== "all" ? selectedCity : undefined,
+    followedOnly: followingFilter === "followed",
     limit: 50,
   });
 
   return (
-    <div className="container mx-auto space-y-4 py-8">
+    <div className="container mx-auto space-y-4 py-4">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-          Venues
-          {selectedCity !== "all" && (
-            <span className="text-muted-foreground"> in {selectedCity}</span>
-          )}
-        </h1>
-        <p className="text-muted-foreground">
-          Discover local venues and event spaces
-        </p>
-      </div>
+      {/*<div>*/}
+      {/*  <h1 className="text-2xl font-bold tracking-tight md:text-3xl">*/}
+      {/*    Venues*/}
+      {/*    {selectedCity !== "all" && (*/}
+      {/*      <span className="text-muted-foreground"> in {selectedCity}</span>*/}
+      {/*    )}*/}
+      {/*  </h1>*/}
+      {/*  <p className="text-muted-foreground">*/}
+      {/*    Discover local venues and event spaces*/}
+      {/*  </p>*/}
+      {/*</div>*/}
 
       {/* Search and Filters */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -70,20 +76,30 @@ function VenuesPageContent() {
           />
         </Suspense>
 
-        {/* City Filter */}
-        <Select value={selectedCity} onValueChange={setSelectedCity}>
-          <SelectTrigger className="w-full shrink-0 md:w-fit">
-            <SelectValue placeholder="Select city" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Cities</SelectItem>
-            {cities?.map((city) => (
-              <SelectItem key={`${city.city}-${city.state}`} value={city.city}>
-                {city.city}, {city.state}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* Filters */}
+        <div className="flex shrink-0 gap-2">
+          <FollowFilterSelect
+            value={(followingFilter as "all" | "followed") || "all"}
+            onValueChange={setFollowingFilter}
+            allLabel="All Venues"
+            className="w-full sm:w-[150px]"
+          />
+
+          {/* City Filter */}
+          <Select value={selectedCity} onValueChange={setSelectedCity}>
+            <SelectTrigger className="w-full md:w-fit">
+              <SelectValue placeholder="Select city" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Cities</SelectItem>
+              {cities?.map((city) => (
+                <SelectItem key={`${city.city}-${city.state}`} value={city.city}>
+                  {city.city}, {city.state}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Loading State */}
@@ -132,7 +148,9 @@ function VenuesPageContent() {
             <Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
             <h3 className="mb-2 text-lg font-semibold">No venues found</h3>
             <p className="mb-4 text-muted-foreground">
-              {searchQuery
+              {followingFilter === "followed"
+                ? "You aren't following any venues yet"
+                : searchQuery
                 ? "Try adjusting your search or filters"
                 : "No venues available yet"}
             </p>
