@@ -357,7 +357,11 @@ export const friendsRouter = router({
         offset: input.offset,
         with: {
           actor: true,
-          event: true,
+          event: {
+            with: {
+              venue: true,
+            },
+          },
           venue: true,
           organizer: true,
         },

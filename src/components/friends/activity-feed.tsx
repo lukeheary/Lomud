@@ -73,12 +73,18 @@ function ActivityItem({ activity }: ActivityItemProps) {
               <>
                 {" "}
                 at{" "}
-                <Link
-                  href={`/event/${entityId}`}
-                  className="font-medium text-primary hover:underline"
-                >
-                  {activity.event.venueName}
-                </Link>
+                {activity.event.venue?.slug ? (
+                  <Link
+                    href={`/venue/${activity.event.venue.slug}`}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    {activity.event.venueName}
+                  </Link>
+                ) : (
+                  <span className="font-medium text-foreground">
+                    {activity.event.venueName}
+                  </span>
+                )}
               </>
             )}
           </>
@@ -97,12 +103,18 @@ function ActivityItem({ activity }: ActivityItemProps) {
               <>
                 {" "}
                 at{" "}
-                <Link
-                  href={`/event/${entityId}`}
-                  className="font-medium text-primary hover:underline"
-                >
-                  {activity.event.venueName}
-                </Link>
+                {activity.event.venue?.slug ? (
+                  <Link
+                    href={`/venue/${activity.event.venue.slug}`}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    {activity.event.venueName}
+                  </Link>
+                ) : (
+                  <span className="font-medium text-foreground">
+                    {activity.event.venueName}
+                  </span>
+                )}
               </>
             )}
           </>
@@ -111,14 +123,32 @@ function ActivityItem({ activity }: ActivityItemProps) {
         return (
           <>
             {actorName} started following{" "}
-            <span className="font-medium text-foreground">{entityName}</span>
+            {activity.venue?.slug ? (
+              <Link
+                href={`/venue/${activity.venue.slug}`}
+                className="font-medium text-primary hover:underline"
+              >
+                {entityName}
+              </Link>
+            ) : (
+              <span className="font-medium text-foreground">{entityName}</span>
+            )}
           </>
         );
       case "follow_organizer":
         return (
           <>
             {actorName} started following{" "}
-            <span className="font-medium text-foreground">{entityName}</span>
+            {activity.organizer?.slug ? (
+              <Link
+                href={`/organizer/${activity.organizer.slug}`}
+                className="font-medium text-primary hover:underline"
+              >
+                {entityName}
+              </Link>
+            ) : (
+              <span className="font-medium text-foreground">{entityName}</span>
+            )}
           </>
         );
       case "created_event":
@@ -135,12 +165,18 @@ function ActivityItem({ activity }: ActivityItemProps) {
               <>
                 {" "}
                 at{" "}
-                <Link
-                  href={`/event/${entityId}`}
-                  className="font-medium text-primary hover:underline"
-                >
-                  {activity.event.venueName}
-                </Link>
+                {activity.event.venue?.slug ? (
+                  <Link
+                    href={`/venue/${activity.event.venue.slug}`}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    {activity.event.venueName}
+                  </Link>
+                ) : (
+                  <span className="font-medium text-foreground">
+                    {activity.event.venueName}
+                  </span>
+                )}
               </>
             )}
           </>

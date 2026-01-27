@@ -224,7 +224,9 @@ function FriendsPageContent() {
                       <span className="hidden lg:inline">
                         {pluralize("Friend", acceptedFriends.length)}
                       </span>
-                      <span className="lg:hidden">Friends</span>
+                      <span className="lg:hidden">
+                        {pluralize("Friend", acceptedFriends.length)}
+                      </span>
                     </p>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground lg:h-5 lg:w-5" />
@@ -244,7 +246,9 @@ function FriendsPageContent() {
                         <span className="hidden lg:inline">
                           {pluralize("Request", receivedRequests.length)}
                         </span>
-                        <span className="lg:hidden">Requests</span>
+                        <span className="lg:hidden">
+                          {pluralize("Request", receivedRequests.length)}
+                        </span>
                       </p>
                       {receivedRequests.length > 0 && (
                         <Badge

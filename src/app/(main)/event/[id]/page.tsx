@@ -231,7 +231,16 @@ export default function EventPage() {
           {event.venueName && (
             <div className="flex items-center gap-2 text-lg">
               <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">{event.venueName}</span>
+              {event.venue?.slug ? (
+                <Link
+                  href={`/venue/${event.venue.slug}`}
+                  className="font-medium hover:underline"
+                >
+                  {event.venueName}
+                </Link>
+              ) : (
+                <span className="font-medium">{event.venueName}</span>
+              )}
             </div>
           )}
 
