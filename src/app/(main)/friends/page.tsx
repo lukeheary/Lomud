@@ -165,7 +165,7 @@ function FriendsPageContent() {
                   <div className="flex items-center gap-2">
                     <p className="flex flex-row items-baseline gap-1.5 text-base font-medium lg:text-lg">
                       <span>{acceptedFriends.length}</span>
-                      <span className={"text-muted-foreground"}>
+                      <span className={"text-sm text-muted-foreground"}>
                         {pluralize("Friend", acceptedFriends.length)}
                       </span>
                     </p>
@@ -182,7 +182,7 @@ function FriendsPageContent() {
                     <div className="flex items-center gap-1.5">
                       <p className="flex flex-row items-baseline gap-1.5 text-base font-medium lg:text-lg">
                         <span>{receivedRequests.length}</span>
-                        <span className={"text-muted-foreground"}>
+                        <span className={"text-sm text-muted-foreground"}>
                           {pluralize("Request", receivedRequests.length)}
                         </span>
                       </p>

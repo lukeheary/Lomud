@@ -83,7 +83,7 @@ function OrganizersPageContent() {
             value={(followingFilter as "all" | "followed") || "all"}
             onValueChange={setFollowingFilter}
             allLabel="All Organizers"
-            className="w-full sm:w-[150px]"
+            className="w-full sm:w-[160px]"
           />
 
           {/* City Filter */}
@@ -94,7 +94,10 @@ function OrganizersPageContent() {
             <SelectContent>
               <SelectItem value="all">All Cities</SelectItem>
               {cities?.map((city) => (
-                <SelectItem key={`${city.city}-${city.state}`} value={city.city}>
+                <SelectItem
+                  key={`${city.city}-${city.state}`}
+                  value={city.city}
+                >
                   {city.city}, {city.state}
                 </SelectItem>
               ))}
@@ -157,8 +160,8 @@ function OrganizersPageContent() {
               {followingFilter === "followed"
                 ? "You aren't following any organizers yet"
                 : searchQuery
-                ? "Try adjusting your search or filters"
-                : "No organizers available yet"}
+                  ? "Try adjusting your search or filters"
+                  : "No organizers available yet"}
             </p>
           </CardContent>
         </Card>

@@ -96,7 +96,7 @@ export default function VenuePage() {
         <p className="mb-4 text-muted-foreground">
           The venue you&apos;re looking for doesn&apos;t exist
         </p>
-        <Link href="/venues-and-organizers">
+        <Link href="/venues">
           <Button>Browse Venues</Button>
         </Link>
       </div>

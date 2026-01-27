@@ -17,9 +17,12 @@ function FriendsListContent() {
     <div className="container mx-auto space-y-4 py-4">
       <div className="flex items-center gap-2">
         <Link href="/friends">
-          <Button variant="ghost" size="icon">
+          <button
+            type="button"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
             <ArrowLeft className="h-5 w-5" />
-          </Button>
+          </button>
         </Link>
         <div>
           <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
