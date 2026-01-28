@@ -5,7 +5,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, Loader2 } from "lucide-react";
+import { Building2, Users, Calendar, Loader2 } from "lucide-react";
 import pluralize from "pluralize";
 
 export default function MyOrganizersPage() {
@@ -93,7 +93,7 @@ export default function MyOrganizersPage() {
       ) : (
         <Card>
           <CardContent className="py-12 text-center">
-            <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
             <h3 className="mb-2 text-lg font-semibold">No organizers yet</h3>
             <p className="mb-4 text-muted-foreground">
               You are not a member of any organizers. Contact an admin to be

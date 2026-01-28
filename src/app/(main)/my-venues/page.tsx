@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  Building2,
+  Building,
   MapPin,
   Calendar,
   Users as UsersIcon,
@@ -47,7 +47,7 @@ export default function MyVenuesPage() {
               <CardHeader className={"pb-2"}>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
-                    {/*<Building2 className="h-5 w-5" />*/}
+                    {/*<Building className="h-5 w-5" />*/}
                     <CardTitle className="text-lg">{venue.name}</CardTitle>
                   </div>
                 </div>
@@ -98,7 +98,7 @@ export default function MyVenuesPage() {
       ) : (
         <Card>
           <CardContent className="py-12 text-center">
-            <Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <Building className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
             <h3 className="mb-2 text-lg font-semibold">No venues yet</h3>
             <p className="mb-4 text-muted-foreground">
               You are not a member of any venues. Contact an admin to be added

@@ -111,7 +111,7 @@ export default function VenuePage() {
           <div className="space-y-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h1 className="text-3xl font-bold">{venue.name}</h1>
+                <h1 className="text-xl font-bold md:text-3xl">{venue.name}</h1>
                 {venue.description && (
                   <p className="mt-2 text-muted-foreground">
                     {venue.description}
@@ -185,7 +185,6 @@ export default function VenuePage() {
         </CardContent>
       </Card>
 
-      {/* Upcoming Events */}
       <Card className={"border-none bg-background"}>
         <CardHeader className={"px-0 md:px-6 md:pb-0 md:pt-6"}>
           <CardTitle>Upcoming Events</CardTitle>

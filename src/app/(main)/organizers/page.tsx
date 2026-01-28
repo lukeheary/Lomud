@@ -5,7 +5,7 @@ import { useState, useEffect, Suspense } from "react";
 import { trpc } from "@/lib/trpc";
 import { SearchInput } from "@/components/ui/search-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, MapPin, Loader2 } from "lucide-react";
+import { Building2, MapPin, Loader2 } from "lucide-react";
 import { useQueryState } from "nuqs";
 import {
   Select,
@@ -154,7 +154,7 @@ function OrganizersPageContent() {
       {!isLoading && organizers && organizers.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
-            <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
             <h3 className="mb-2 text-lg font-semibold">No organizers found</h3>
             <p className="mb-4 text-muted-foreground">
               {followingFilter === "followed"

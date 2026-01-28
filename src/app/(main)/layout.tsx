@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import {
   Calendar,
+  Building,
   Building2,
   Users,
   Plus,
@@ -201,73 +202,9 @@ export default function MainLayout({
             </DropdownMenu>
           </div>
 
-          {/* Mobile Right Menu - Bell, Avatar, and Menu */}
+          {/* Mobile Right Menu - Bell and Menu */}
           <div className="flex items-center gap-1 md:hidden">
             <NotificationsBell />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.imageUrl || undefined} />
-                    <AvatarFallback>
-                      <User className="h-4 w-4" />
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem asChild>
-                  <Link
-                    href="/profile"
-                    className="flex cursor-pointer items-center"
-                  >
-                    <User className="mr-2 h-4 w-4" />
-                    My Profile
-                  </Link>
-                </DropdownMenuItem>
-                {hasVenues && (
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href="/my-venues"
-                      className="flex cursor-pointer items-center"
-                    >
-                      <Building2 className="mr-2 h-4 w-4" />
-                      My Venues
-                    </Link>
-                  </DropdownMenuItem>
-                )}
-                {hasOrganizers && (
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href="/my-organizers"
-                      className="flex cursor-pointer items-center"
-                    >
-                      <Users className="mr-2 h-4 w-4" />
-                      My Organizers
-                    </Link>
-                  </DropdownMenuItem>
-                )}
-                {isAdmin && (
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href="/admin"
-                      className="flex cursor-pointer items-center"
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Admin Settings
-                    </Link>
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={handleSignOut}
-                  className="cursor-pointer text-destructive focus:text-destructive"
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
 
             {/* Mobile Menu */}
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -300,7 +237,7 @@ export default function MainLayout({
                       className="w-full justify-start px-4 text-base"
                       size="lg"
                     >
-                      <Building2 className="mr-3 h-5 w-5" />
+                      <Building className="mr-3 h-5 w-5" />
                       Venues
                     </Button>
                   </Link>
@@ -310,7 +247,7 @@ export default function MainLayout({
                       className="w-full justify-start px-4 text-base"
                       size="lg"
                     >
-                      <Users className="mr-3 h-5 w-5" />
+                      <Building2 className="mr-3 h-5 w-5" />
                       Organizers
                     </Button>
                   </Link>
@@ -337,7 +274,12 @@ export default function MainLayout({
                         className="w-full justify-start px-4 text-base"
                         size="lg"
                       >
-                        <User className="mr-3 h-5 w-5" />
+                        <Avatar className="mr-3 h-5 w-5">
+                          <AvatarImage src={user?.imageUrl || undefined} />
+                          <AvatarFallback>
+                            <User className="h-3 w-3" />
+                          </AvatarFallback>
+                        </Avatar>
                         My Profile
                       </Button>
                     </Link>

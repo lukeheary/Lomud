@@ -325,16 +325,6 @@ export default function EventPage() {
                 {event.city}, {event.state}
               </p>
             </div>
-
-            {/* Organizer Info (if creator is different from organizer) */}
-            {event.createdBy && (
-              <div className="mt-6 border-t pt-4">
-                <p className="text-sm text-muted-foreground">
-                  Organized by {event.createdBy.firstName}{" "}
-                  {event.createdBy.lastName}
-                </p>
-              </div>
-            )}
           </div>
 
           {/* Lineup / Attendees Section */}
