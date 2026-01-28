@@ -105,7 +105,7 @@ export default function OrganizerPage() {
           <div className="space-y-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h1 className="text-xl font-bold md:text-3xl">
+                <h1 className="text-2xl font-bold md:text-3xl">
                   {organizer.name}
                 </h1>
                 {organizer.description && (

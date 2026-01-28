@@ -147,7 +147,7 @@ export default function EventPage() {
       {/* Image Modal */}
       {isImageModalOpen && event.imageUrl && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xl"
           onClick={() => setIsImageModalOpen(false)}
         >
           <Button
@@ -215,7 +215,7 @@ export default function EventPage() {
           {/* Expand Icon - Overlay on bottom left */}
           {event.imageUrl && (
             <div
-              className="absolute bottom-4 left-4 cursor-pointer rounded-full bg-black/50 p-2 transition-colors hover:bg-black/70"
+              className="absolute bottom-2 left-2 cursor-pointer rounded-full bg-black/50 p-2 transition-colors hover:bg-black/70"
               onClick={() => setIsImageModalOpen(true)}
             >
               <Expand className="h-4 w-4 text-white" />
@@ -295,11 +295,12 @@ export default function EventPage() {
               Interested
             </Button>
             <Button
-              variant={"outline"}
-              className={cn("flex-1 text-base font-medium", {
-                "border-transparent bg-green-500 text-black":
-                  event.userRsvp?.status === "going",
-              })}
+              variant={event.userRsvp?.status === "going" ? "default" : "outline"}
+              className={cn(
+                "flex-1 text-base font-medium transition-colors",
+                event.userRsvp?.status === "going" &&
+                  "border-transparent bg-green-500 text-black hover:bg-green-600"
+              )}
               size="lg"
               onClick={() => handleRsvp("going")}
               disabled={rsvpMutation.isPending || deleteRsvpMutation.isPending}
