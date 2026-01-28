@@ -56,7 +56,7 @@ import { EventFilterSelect } from "@/components/events/event-filter-select";
 import { EventFilterTab } from "@/types/events";
 import { useQueryState, parseAsString, parseAsIsoDate } from "nuqs";
 import { parseISO, subDays } from "date-fns";
-import { ActivityFeed } from "@/components/friends/activity-feed";
+import { ActivityFeed, useHasRecentActivity } from "@/components/friends/activity-feed";
 import { CATEGORY_LABELS, type Category } from "@/lib/categories";
 
 type ViewMode = "week" | "month";
@@ -109,6 +109,9 @@ function HomePageContent() {
 
   // Get current user to show their city
   const { data: currentUser } = trpc.user.getCurrentUser.useQuery();
+
+  // Check if there's recent activity to show
+  const { hasActivity: hasRecentActivity } = useHasRecentActivity(3);
 
   // Get available cities
   const { data: cities } = trpc.event.getAvailableCities.useQuery();
@@ -291,22 +294,21 @@ function HomePageContent() {
 
   return (
     <div className="container relative mx-auto min-h-screen py-4 md:py-4">
-      {/* Friend Activity Feed */}
-      <div className="mb-4">
-        <Link href="/friends" className="transition-colors hover:text-primary">
-          <div className="flex items-center gap-1 pb-2 md:pb-3">
-            <h1 className="text-xl font-bold tracking-tight">
-              Recent Activity
-            </h1>
-            <ChevronRight className="h-4 w-4" />
-          </div>
-        </Link>
+      {/* Friend Activity Feed - only show if there's activity */}
+      {hasRecentActivity && (
+        <div className="mb-4">
+          <Link href="/friends" className="transition-colors hover:text-primary">
+            <div className="flex items-center gap-1 pb-2 md:pb-3">
+              <h1 className="text-xl font-bold tracking-tight">
+                Recent Activity
+              </h1>
+              <ChevronRight className="h-4 w-4" />
+            </div>
+          </Link>
 
-        <ActivityFeed limit={3} />
-      </div>
-
-      {/* add a divider line*/}
-      {/*<hr className="my-4 border-t" />*/}
+          <ActivityFeed limit={3} hideWhenEmpty />
+        </div>
+      )}
 
       {/* Sentinel for sticky detection */}
       <div ref={stickySentinelRef} className="h-px w-full" />

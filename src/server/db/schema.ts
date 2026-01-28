@@ -158,7 +158,7 @@ export const organizersRelations = relations(organizers, ({ many }) => ({
 // VENUE MEMBERS TABLE
 // ============================================================================
 export const venueMembers = pgTable(
-  "venueMembers",
+  "venue_members",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     userId: text("user_id")
@@ -170,12 +170,12 @@ export const venueMembers = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
-    userVenueIdx: uniqueIndex("venueMembers_user_venue_idx").on(
+    userVenueIdx: uniqueIndex("venue_members_user_venue_idx").on(
       table.userId,
       table.venueId
     ),
-    userIdx: index("venueMembers_user_idx").on(table.userId),
-    venueIdx: index("venueMembers_venue_idx").on(table.venueId),
+    userIdx: index("venue_members_user_idx").on(table.userId),
+    venueIdx: index("venue_members_venue_idx").on(table.venueId),
   })
 );
 
@@ -194,7 +194,7 @@ export const venueMembersRelations = relations(venueMembers, ({ one }) => ({
 // ORGANIZER MEMBERS TABLE
 // ============================================================================
 export const organizerMembers = pgTable(
-  "organizerMembers",
+  "organizer_members",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     userId: text("user_id")
@@ -206,12 +206,12 @@ export const organizerMembers = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
-    userOrganizerIdx: uniqueIndex("organizerMembers_user_organizer_idx").on(
+    userOrganizerIdx: uniqueIndex("organizer_members_user_organizer_idx").on(
       table.userId,
       table.organizerId
     ),
-    userIdx: index("organizerMembers_user_idx").on(table.userId),
-    organizerIdx: index("organizerMembers_organizer_idx").on(table.organizerId),
+    userIdx: index("organizer_members_user_idx").on(table.userId),
+    organizerIdx: index("organizer_members_organizer_idx").on(table.organizerId),
   })
 );
 
@@ -233,7 +233,7 @@ export const organizerMembersRelations = relations(
 // VENUE FOLLOWS TABLE
 // ============================================================================
 export const venueFollows = pgTable(
-  "venueFollows",
+  "venue_follows",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     userId: text("user_id")
@@ -245,12 +245,12 @@ export const venueFollows = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
-    userVenueIdx: uniqueIndex("venueFollows_user_venue_idx").on(
+    userVenueIdx: uniqueIndex("venue_follows_user_venue_idx").on(
       table.userId,
       table.venueId
     ),
-    userIdx: index("venueFollows_user_idx").on(table.userId),
-    venueIdx: index("venueFollows_venue_idx").on(table.venueId),
+    userIdx: index("venue_follows_user_idx").on(table.userId),
+    venueIdx: index("venue_follows_venue_idx").on(table.venueId),
   })
 );
 
@@ -269,7 +269,7 @@ export const venueFollowsRelations = relations(venueFollows, ({ one }) => ({
 // ORGANIZER FOLLOWS TABLE
 // ============================================================================
 export const organizerFollows = pgTable(
-  "organizerFollows",
+  "organizer_follows",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     userId: text("user_id")
@@ -281,12 +281,12 @@ export const organizerFollows = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
-    userOrganizerIdx: uniqueIndex("organizerFollows_user_organizer_idx").on(
+    userOrganizerIdx: uniqueIndex("organizer_follows_user_organizer_idx").on(
       table.userId,
       table.organizerId
     ),
-    userIdx: index("organizerFollows_user_idx").on(table.userId),
-    organizerIdx: index("organizerFollows_organizer_idx").on(table.organizerId),
+    userIdx: index("organizer_follows_user_idx").on(table.userId),
+    organizerIdx: index("organizer_follows_organizer_idx").on(table.organizerId),
   })
 );
 
@@ -482,10 +482,10 @@ export const friendsRelations = relations(friends, ({ one }) => ({
 }));
 
 // ============================================================================
-// ACTIVITY EVENTS TABLE (Append-only)
+// ACTIVITY TABLE (Append-only)
 // ============================================================================
 export const activityEvents = pgTable(
-  "activity_events",
+  "activity",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     actorUserId: text("actor_user_id")
@@ -498,7 +498,7 @@ export const activityEvents = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
-    actorCreatedAtIdx: index("activity_events_actor_created_at_idx").on(
+    actorCreatedAtIdx: index("activity_actor_created_at_idx").on(
       table.actorUserId,
       table.createdAt
     ),

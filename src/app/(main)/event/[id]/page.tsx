@@ -5,22 +5,19 @@ import Link from "next/link";
 import Image from "next/image";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import {
   Calendar,
   MapPin,
-  Building2,
   Loader2,
   Heart,
-  Share2,
-  Clock,
-  User,
+  Share,
   Edit,
   Users,
   X,
+  Expand,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -133,9 +130,13 @@ export default function EventPage() {
     attendees?.filter((a) => a.status === "going").map((a) => a.user) || [];
 
   const eventDate = new Date(event.startAt);
-  const dayOfWeek = format(eventDate, "EEEE");
-  const monthDay = format(eventDate, "MMMM d, yyyy");
-  const time = format(eventDate, "h:mm a zzz");
+  const formattedDate = format(eventDate, "EEE, MMM d");
+  const timeWithoutTz = format(eventDate, "h:mm a");
+  const timezone =
+    new Intl.DateTimeFormat("en-US", { timeZoneName: "short" })
+      .formatToParts(eventDate)
+      .find((part) => part.type === "timeZoneName")?.value || "";
+  const formattedTime = `${timeWithoutTz} ${timezone}`;
 
   // Check if user can edit this event
   const canEdit =
@@ -203,13 +204,23 @@ export default function EventPage() {
                 </Button>
               </Link>
             )}
+            {/*<Button size="icon" variant="secondary" className="h-10 w-10">*/}
+            {/*  <Heart className="h-4 w-4" />*/}
+            {/*</Button>*/}
             <Button size="icon" variant="secondary" className="h-10 w-10">
-              <Heart className="h-4 w-4" />
-            </Button>
-            <Button size="icon" variant="secondary" className="h-10 w-10">
-              <Share2 className="h-4 w-4" />
+              <Share className="h-4 w-4" />
             </Button>
           </div>
+
+          {/* Expand Icon - Overlay on bottom left */}
+          {event.imageUrl && (
+            <div
+              className="absolute bottom-4 left-4 cursor-pointer rounded-full bg-black/50 p-2 transition-colors hover:bg-black/70"
+              onClick={() => setIsImageModalOpen(true)}
+            >
+              <Expand className="h-4 w-4 text-white" />
+            </div>
+          )}
 
           {/* Avatars - Overlay on bottom right */}
           {goingUsers.length > 0 && (
@@ -226,31 +237,29 @@ export default function EventPage() {
         <div>
           {/* Title & Basic Info */}
           <div className="mb-2">
-            <h1 className="text-4xl font-bold">{event.title}</h1>
+            <h1 className="text-3xl font-bold md:text-4xl">{event.title}</h1>
+          </div>
+
+          <div className="flex items-center gap-2 text-lg">
+            <Calendar className="h-4 w-4" />
+            <span>
+              {formattedDate} at {formattedTime}
+            </span>
           </div>
 
           {event.venueName && (
-            <div className="flex items-center gap-2 text-lg">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
+            <Link
+              className="mt-1 flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary"
+              href={`/venue/${event.venue?.slug}`}
+            >
+              <MapPin className="h-4 w-4" />
               {event.venue?.slug ? (
-                <Link
-                  href={`/venue/${event.venue.slug}`}
-                  className="font-medium hover:underline"
-                >
-                  {event.venueName}
-                </Link>
+                <span className="">{event.venueName}</span>
               ) : (
-                <span className="font-medium">{event.venueName}</span>
+                <span className="">{event.venueName}</span>
               )}
-            </div>
+            </Link>
           )}
-
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Calendar className="h-4 w-4" />
-            <span>
-              {dayOfWeek}, {monthDay}, {time}
-            </span>
-          </div>
 
           {event.organizer && (
             <Link
@@ -258,7 +267,7 @@ export default function EventPage() {
               className="mt-1 flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary"
             >
               <Users className="h-4 w-4" />
-              <span>Hosted by {event.organizer.name}</span>
+              <span>Presented by {event.organizer.name}</span>
             </Link>
           )}
 

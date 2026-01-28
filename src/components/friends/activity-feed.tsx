@@ -225,9 +225,10 @@ function ActivityItem({ activity }: ActivityItemProps) {
 
 interface ActivityFeedProps {
   limit?: number;
+  hideWhenEmpty?: boolean;
 }
 
-export function ActivityFeed({ limit = 50 }: ActivityFeedProps) {
+export function ActivityFeed({ limit = 50, hideWhenEmpty = false }: ActivityFeedProps) {
   const { data: activities, isLoading } = trpc.friends.getFriendFeed.useQuery({
     limit,
   });
@@ -241,6 +242,9 @@ export function ActivityFeed({ limit = 50 }: ActivityFeedProps) {
   }
 
   if (!activities || activities.length === 0) {
+    if (hideWhenEmpty) {
+      return null;
+    }
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <div className="mb-4 rounded-full bg-muted/30 p-4">
@@ -262,4 +266,12 @@ export function ActivityFeed({ limit = 50 }: ActivityFeedProps) {
       </div>
     </div>
   );
+}
+
+// Hook to check if there are activities (for conditionally showing sections)
+export function useHasRecentActivity(limit: number = 50) {
+  const { data: activities, isLoading } = trpc.friends.getFriendFeed.useQuery({
+    limit,
+  });
+  return { hasActivity: !isLoading && activities && activities.length > 0, isLoading };
 }
