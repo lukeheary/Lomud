@@ -125,6 +125,7 @@ async function main() {
       state: "MA",
       website: "https://royaleboston.com",
       instagram: "royaleboston",
+      categories: ["clubs", "concerts"],
       hours: {
         monday: { open: "22:00", close: "02:00", closed: true },
         tuesday: { open: "22:00", close: "02:00", closed: true },
@@ -146,6 +147,7 @@ async function main() {
       state: "MA",
       website: null,
       instagram: null,
+      categories: ["clubs", "bars"],
       hours: {
         monday: { open: "21:00", close: "02:00", closed: true },
         tuesday: { open: "21:00", close: "02:00", closed: true },
@@ -167,6 +169,7 @@ async function main() {
       state: "MA",
       website: null,
       instagram: null,
+      categories: ["bars", "lgbt"],
       hours: {
         monday: { open: "17:00", close: "01:00", closed: true },
         tuesday: { open: "17:00", close: "01:00", closed: false },
@@ -190,6 +193,7 @@ async function main() {
       state: "NY",
       website: "https://www.elsewhere.club",
       instagram: "elsewherenyc",
+      categories: ["clubs", "concerts", "social"],
       hours: {
         monday: { open: "19:00", close: "02:00", closed: true },
         tuesday: { open: "19:00", close: "02:00", closed: true },
@@ -211,6 +215,7 @@ async function main() {
       state: "NY",
       website: null,
       instagram: null,
+      categories: ["clubs", "lgbt"],
       hours: {
         monday: { open: "20:00", close: "04:00", closed: true },
         tuesday: { open: "20:00", close: "04:00", closed: true },
@@ -406,7 +411,7 @@ async function main() {
       address: "279 Tremont St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
-      category: "clubs" as const,
+      categories: ["clubs", "concerts"],
       visibility: "public" as const,
     },
     {
@@ -423,7 +428,7 @@ async function main() {
       address: "51 Stuart St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
-      category: "clubs" as const,
+      categories: ["clubs"],
       visibility: "public" as const,
     },
     // REMOVED: The Grand Boston event(s) because venue was removed
@@ -441,7 +446,7 @@ async function main() {
       address: "14 Massachusetts Ave, Cambridge, MA 02139",
       city: "Cambridge",
       state: "MA",
-      category: "bars" as const,
+      categories: ["bars", "lgbt"],
       visibility: "public" as const,
     },
 
@@ -460,7 +465,7 @@ async function main() {
       address: "279 Tremont St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
-      category: "clubs" as const,
+      categories: ["clubs"],
       visibility: "public" as const,
     },
     {
@@ -477,7 +482,7 @@ async function main() {
       address: "51 Stuart St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
-      category: "bars" as const,
+      categories: ["bars", "social"],
       visibility: "public" as const,
     },
 
@@ -498,7 +503,7 @@ async function main() {
       address: "599 Johnson Ave, Brooklyn, NY 11237",
       city: "Brooklyn",
       state: "NY",
-      category: "social" as const,
+      categories: ["social", "clubs"],
       visibility: "public" as const,
     },
     {
@@ -515,7 +520,7 @@ async function main() {
       address: "98 Meserole Ave, Brooklyn, NY 11222",
       city: "Brooklyn",
       state: "NY",
-      category: "clubs" as const,
+      categories: ["clubs", "lgbt"],
       visibility: "public" as const,
     },
 
@@ -534,7 +539,7 @@ async function main() {
       address: "599 Johnson Ave, Brooklyn, NY 11237",
       city: "Brooklyn",
       state: "NY",
-      category: "concerts" as const,
+      categories: ["concerts"],
       visibility: "public" as const,
     },
     {
@@ -551,7 +556,7 @@ async function main() {
       address: "98 Meserole Ave, Brooklyn, NY 11222",
       city: "Brooklyn",
       state: "NY",
-      category: "bars" as const,
+      categories: ["bars"],
       visibility: "public" as const,
     },
   ];

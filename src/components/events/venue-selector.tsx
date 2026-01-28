@@ -26,6 +26,7 @@ export interface VenueData {
     address?: string;
     city: string;
     state: string;
+    categories?: string[];
 }
 
 interface VenueSelectorProps {
@@ -142,6 +143,7 @@ export function VenueSelector({
                                                         address: v.address || "",
                                                         city: v.city,
                                                         state: v.state,
+                                                        categories: (v.categories as string[]) || [],
                                                     });
                                                     setIsVenuePopoverOpen(false);
                                                 }}

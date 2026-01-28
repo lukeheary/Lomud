@@ -12,6 +12,7 @@ import {
 import { and, asc, desc, eq, gte, ilike, inArray, lt, or, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { logActivity } from "../../utils/activity-logger";
+import { filterValidCategories } from "@/lib/categories";
 
 export const venueRouter = router({
   searchVenues: publicProcedure
@@ -387,6 +388,7 @@ export const venueRouter = router({
         website: z.string().url().optional().or(z.literal("")),
         instagram: z.string().max(100).optional(),
         hours: z.any().optional(),
+        categories: z.array(z.string()).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -427,12 +429,13 @@ export const venueRouter = router({
         }
       }
 
-      const { venueId, ...updates } = input;
+      const { venueId, categories, ...updates } = input;
 
       const [updated] = await ctx.db
         .update(venues)
         .set({
           ...updates,
+          categories: categories !== undefined ? filterValidCategories(categories) : undefined,
           updatedAt: new Date(),
         })
         .where(eq(venues.id, venueId))

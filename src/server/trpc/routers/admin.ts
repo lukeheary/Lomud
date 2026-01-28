@@ -9,6 +9,7 @@ import {
 } from "../../db/schema";
 import { eq, and, or, ilike, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
+import { filterValidCategories } from "@/lib/categories";
 
 export const adminRouter = router({
   // ============================================================================
@@ -35,6 +36,7 @@ export const adminRouter = router({
         website: z.string().url().optional().or(z.literal("")),
         instagram: z.string().max(100).optional(),
         hours: z.any().optional(),
+        categories: z.array(z.string()).optional().default([]),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -50,7 +52,14 @@ export const adminRouter = router({
         });
       }
 
-      const [venue] = await ctx.db.insert(venues).values(input).returning();
+      const { categories, ...rest } = input;
+      const [venue] = await ctx.db
+        .insert(venues)
+        .values({
+          ...rest,
+          categories: filterValidCategories(categories || []),
+        })
+        .returning();
 
       return venue;
     }),

@@ -27,6 +27,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { AvatarStack } from "@/components/ui/avatar-stack";
 import { useState } from "react";
+import { CATEGORY_LABELS, type Category } from "@/lib/categories";
 
 type RsvpStatus = "going" | "interested" | "not_going";
 
@@ -262,9 +263,11 @@ export default function EventPage() {
           )}
 
           <div className="mt-2 flex flex-wrap gap-2">
-            <Badge variant="secondary" className="capitalize">
-              {event.category}
-            </Badge>
+            {event.categories?.map((category) => (
+              <Badge key={category} variant="secondary" className="capitalize">
+                {CATEGORY_LABELS[category as Category] || category}
+              </Badge>
+            ))}
           </div>
 
           {/* RSVP Buttons - Shared across mobile and desktop */}

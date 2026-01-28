@@ -15,14 +15,7 @@ import {
 // ENUMS
 // ============================================================================
 
-export const eventCategoryEnum = pgEnum("event_category", [
-  "clubs",
-  "bars",
-  "concerts",
-  "comedy",
-  "theater",
-  "social",
-]);
+// Categories are now stored as jsonb arrays - see src/lib/categories.ts for the list
 
 export const eventVisibilityEnum = pgEnum("event_visibility", [
   "public",
@@ -115,6 +108,7 @@ export const venues = pgTable(
     website: text("website"),
     instagram: varchar("instagram", { length: 100 }),
     hours: jsonb("hours"), // Store hours as: { monday: { open: "09:00", close: "17:00", closed: false }, ... }
+    categories: jsonb("categories").$type<string[]>().default([]),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -359,7 +353,7 @@ export const events = pgTable(
     address: text("address"),
     city: varchar("city", { length: 100 }).notNull(),
     state: varchar("state", { length: 2 }).notNull(),
-    category: eventCategoryEnum("category").notNull().default("social"),
+    categories: jsonb("categories").$type<string[]>().default([]),
     visibility: eventVisibilityEnum("visibility").notNull().default("public"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -369,7 +363,7 @@ export const events = pgTable(
     organizerIdx: index("events_organizer_idx").on(table.organizerId),
     startAtIdx: index("events_start_at_idx").on(table.startAt),
     locationIdx: index("events_location_idx").on(table.city, table.state),
-    categoryIdx: index("events_category_idx").on(table.category),
+    // Categories now use GIN index for jsonb array
     visibilityIdx: index("events_visibility_idx").on(table.visibility),
     // Composite index for common query pattern
     startVisibilityIdx: index("events_start_visibility_idx").on(

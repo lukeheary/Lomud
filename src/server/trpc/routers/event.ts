@@ -11,9 +11,10 @@ import {
   venueFollows,
   venueMembers,
 } from "../../db/schema";
-import { and, desc, eq, gte, ilike, inArray, lte, or } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, inArray, lte, or, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { logActivity } from "../../utils/activity-logger";
+import { CATEGORIES, filterValidCategories } from "@/lib/categories";
 
 export const eventRouter = router({
   createEvent: protectedProcedure
@@ -30,14 +31,7 @@ export const eventRouter = router({
         address: z.string().optional(),
         city: z.string().min(1).max(100),
         state: z.string().length(2),
-        category: z.enum([
-          "clubs",
-          "bars",
-          "concerts",
-          "comedy",
-          "theater",
-          "social",
-        ]),
+        categories: z.array(z.string()).optional().default([]),
         visibility: z.enum(["public", "private"]).default("public"),
       })
     )
@@ -90,6 +84,9 @@ export const eventRouter = router({
         });
       }
 
+      // Filter to only valid categories
+      const validCategories = filterValidCategories(input.categories || []);
+
       const [event] = await ctx.db
         .insert(events)
         .values({
@@ -97,7 +94,7 @@ export const eventRouter = router({
           venueName: input.venueName ?? null,
           city: input.city,
           state: input.state,
-          category: input.category,
+          categories: validCategories,
           startAt: input.startAt,
           visibility: input.visibility,
           createdByUserId: ctx.auth.userId,
@@ -130,16 +127,7 @@ export const eventRouter = router({
         endDate: z.date(),
         followedOnly: z.boolean().default(false),
         friendsGoingOnly: z.boolean().default(false),
-        category: z
-          .enum([
-            "clubs",
-            "bars",
-            "concerts",
-            "comedy",
-            "theater",
-            "social",
-          ])
-          .optional(),
+        category: z.string().optional(),
         city: z.string().optional(),
         state: z.string().optional(),
         search: z.string().optional(),
@@ -155,9 +143,11 @@ export const eventRouter = router({
         eq(events.visibility, "public"),
       ];
 
-      // Add category filter
+      // Add category filter - check if the category is in the jsonb array
       if (input.category) {
-        conditions.push(eq(events.category, input.category));
+        conditions.push(
+          sql`${events.categories} @> ${JSON.stringify([input.category])}::jsonb`
+        );
       }
 
       // Add location filters
@@ -493,16 +483,7 @@ export const eventRouter = router({
         address: z.string().optional(),
         city: z.string().min(1).max(100).optional(),
         state: z.string().length(2).optional(),
-        category: z
-          .enum([
-            "clubs",
-            "bars",
-            "concerts",
-            "comedy",
-            "theater",
-            "social",
-          ])
-          .optional(),
+        categories: z.array(z.string()).optional(),
         visibility: z.enum(["public", "private"]).optional(),
         venueId: z.string().uuid().optional(),
         organizerId: z.string().uuid().optional(),
@@ -567,8 +548,8 @@ export const eventRouter = router({
       if (updates.address !== undefined) updateData.address = updates.address;
       if (updates.city !== undefined) updateData.city = updates.city;
       if (updates.state !== undefined) updateData.state = updates.state;
-      if (updates.category !== undefined)
-        updateData.category = updates.category;
+      if (updates.categories !== undefined)
+        updateData.categories = filterValidCategories(updates.categories);
       if (updates.visibility !== undefined)
         updateData.visibility = updates.visibility;
       if (updates.venueId !== undefined)

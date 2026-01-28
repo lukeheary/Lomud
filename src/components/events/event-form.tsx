@@ -6,27 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { S3Uploader } from "@/components/ui/s3-uploader";
 import { VenueSelector, VenueData } from "@/components/events/venue-selector";
-
-const EVENT_CATEGORIES = [
-    "clubs",
-    "bars",
-    "concerts",
-    "comedy",
-    "theater",
-    "social",
-] as const;
+import { CategoryMultiSelect } from "@/components/category-multi-select";
 
 interface EventFormProps {
     venueId?: string;
@@ -42,7 +27,7 @@ export function EventForm({ venueId, organizerId, onSuccess, onCancel }: EventFo
         title: "",
         description: "",
         imageUrl: "",
-        category: "" as (typeof EVENT_CATEGORIES)[number],
+        categories: [] as string[],
         startAt: "",
         endAt: "",
         venueName: "",
@@ -67,7 +52,15 @@ export function EventForm({ venueId, organizerId, onSuccess, onCancel }: EventFo
                 address: venue.address || "",
                 city: venue.city,
                 state: venue.state,
+                categories: (venue.categories as string[]) || [],
             });
+            // Inherit venue categories
+            if ((venue.categories as string[])?.length > 0) {
+                setFormData((prev) => ({
+                    ...prev,
+                    categories: venue.categories as string[],
+                }));
+            }
         }
     }, [venue]);
 
@@ -93,11 +86,7 @@ export function EventForm({ venueId, organizerId, onSuccess, onCancel }: EventFo
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (
-            !formData.title ||
-            !formData.category ||
-            !formData.startAt
-        ) {
+        if (!formData.title || !formData.startAt) {
             toast({
                 title: "Validation Error",
                 description: "Please fill in all required fields",
@@ -156,7 +145,7 @@ export function EventForm({ venueId, organizerId, onSuccess, onCancel }: EventFo
             title: formData.title,
             description: formData.description || undefined,
             imageUrl: formData.imageUrl || undefined,
-            category: formData.category,
+            categories: formData.categories,
             startAt: startDate,
             endAt: endDate || undefined,
             venueName: selectedVenue?.name || formData.venueName,
@@ -164,6 +153,17 @@ export function EventForm({ venueId, organizerId, onSuccess, onCancel }: EventFo
             city: selectedVenue?.city || formData.city,
             state: selectedVenue?.state || formData.state,
         });
+    };
+
+    // When a venue is selected, inherit its categories
+    const handleVenueSelect = (venue: VenueData | null) => {
+        setSelectedVenue(venue);
+        if (venue?.categories && venue.categories.length > 0) {
+            setFormData((prev) => ({
+                ...prev,
+                categories: venue.categories || [],
+            }));
+        }
     };
 
     if (venueId && isLoadingVenue) {
@@ -233,31 +233,16 @@ export function EventForm({ venueId, organizerId, onSuccess, onCancel }: EventFo
                         />
                     </div>
 
-                    {/* Category */}
+                    {/* Categories */}
                     <div className="space-y-2">
-                        <Label htmlFor="category">
-                            Category <span className="text-destructive">*</span>
-                        </Label>
-                        <Select
-                            value={formData.category}
-                            onValueChange={(value) =>
-                                setFormData({
-                                    ...formData,
-                                    category: value as (typeof EVENT_CATEGORIES)[number],
-                                })
+                        <Label htmlFor="categories">Categories</Label>
+                        <CategoryMultiSelect
+                            value={formData.categories}
+                            onChange={(categories) =>
+                                setFormData({ ...formData, categories })
                             }
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select a category" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {EVENT_CATEGORIES.map((category) => (
-                                    <SelectItem key={category} value={category}>
-                                        {category.charAt(0).toUpperCase() + category.slice(1)}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                            placeholder="Select categories..."
+                        />
                     </div>
 
                     {/* Date & Time */}
@@ -293,7 +278,7 @@ export function EventForm({ venueId, organizerId, onSuccess, onCancel }: EventFo
                     {!venueId && (
                         <VenueSelector
                             selectedVenue={selectedVenue}
-                            onVenueSelect={setSelectedVenue}
+                            onVenueSelect={handleVenueSelect}
                             isCreatingNew={isCreatingNewVenue}
                             setIsCreatingNew={setIsCreatingNewVenue}
                         />

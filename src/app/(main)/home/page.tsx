@@ -57,6 +57,7 @@ import { EventFilterTab } from "@/types/events";
 import { useQueryState, parseAsString, parseAsIsoDate } from "nuqs";
 import { parseISO, subDays } from "date-fns";
 import { ActivityFeed } from "@/components/friends/activity-feed";
+import { CATEGORY_LABELS, type Category } from "@/lib/categories";
 
 type ViewMode = "week" | "month";
 
@@ -583,9 +584,16 @@ function HomePageContent() {
                                 <h4 className="mb-1 text-base font-semibold leading-tight">
                                   {event.title}
                                 </h4>
-                                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs capitalize text-primary">
-                                  {event.category}
-                                </span>
+                                <div className="flex flex-wrap gap-1">
+                                  {event.categories?.slice(0, 2).map((cat) => (
+                                    <span
+                                      key={cat}
+                                      className="rounded-full bg-primary/10 px-2 py-0.5 text-xs capitalize text-primary"
+                                    >
+                                      {CATEGORY_LABELS[cat as Category] || cat}
+                                    </span>
+                                  ))}
+                                </div>
                               </div>
 
                               {/* Date & Time */}

@@ -7,30 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Loader2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { US_STATES } from "@/lib/utils";
 import { S3Uploader } from "@/components/ui/s3-uploader";
 import Link from "next/link";
 import { format } from "date-fns";
 import { VenueSelector, VenueData } from "@/components/events/venue-selector";
-
-const EVENT_CATEGORIES = [
-  "clubs",
-  "bars",
-  "concerts",
-  "comedy",
-  "theater",
-  "social",
-] as const;
+import { CategoryMultiSelect } from "@/components/category-multi-select";
 
 export default function EditEventPage() {
   const params = useParams();
@@ -52,7 +36,7 @@ export default function EditEventPage() {
     title: "",
     description: "",
     imageUrl: "",
-    category: "" as (typeof EVENT_CATEGORIES)[number],
+    categories: [] as string[],
     startAt: "",
     endAt: "",
     venueName: "",
@@ -90,7 +74,7 @@ export default function EditEventPage() {
         title: event.title || "",
         description: event.description || "",
         imageUrl: event.imageUrl || "",
-        category: event.category as (typeof EVENT_CATEGORIES)[number],
+        categories: (event.categories as string[]) || [],
         startAt: format(new Date(event.startAt), "yyyy-MM-dd'T'HH:mm"),
         endAt: event.endAt
           ? format(new Date(event.endAt), "yyyy-MM-dd'T'HH:mm")
@@ -119,7 +103,6 @@ export default function EditEventPage() {
 
     if (
       !formData.title ||
-      !formData.category ||
       !formData.startAt ||
       !formData.city ||
       !formData.state
@@ -180,7 +163,7 @@ export default function EditEventPage() {
         title: formData.title,
         description: formData.description || undefined,
         imageUrl: formData.imageUrl || undefined,
-        category: formData.category,
+        categories: formData.categories,
         startAt: startDate,
         endAt: endDate || undefined,
         venueName: selectedVenue?.name || formData.venueName,
@@ -268,31 +251,16 @@ export default function EditEventPage() {
               />
             </div>
 
-            {/* Category */}
+            {/* Categories */}
             <div className="space-y-2">
-              <Label htmlFor="category">
-                Category <span className="text-destructive">*</span>
-              </Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    category: value as (typeof EVENT_CATEGORIES)[number],
-                  })
+              <Label htmlFor="categories">Categories</Label>
+              <CategoryMultiSelect
+                value={formData.categories}
+                onChange={(categories) =>
+                  setFormData({ ...formData, categories })
                 }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {EVENT_CATEGORIES.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="Select categories..."
+              />
             </div>
 
             {/* Description */}

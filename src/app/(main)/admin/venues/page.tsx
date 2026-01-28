@@ -40,6 +40,7 @@ import {
 import { GooglePlacesAutocomplete } from "@/components/google-places-autocomplete";
 import Link from "next/link";
 import { EventForm } from "@/components/events/event-form";
+import { CategoryMultiSelect } from "@/components/category-multi-select";
 
 type ViewMode = "list" | "create" | "edit" | "members" | "create-event";
 
@@ -63,6 +64,7 @@ export default function AdminVenuesPage() {
     website: "",
     instagram: "",
     hours: null as VenueHours | null,
+    categories: [] as string[],
   });
 
   // Google Places search state
@@ -102,6 +104,7 @@ export default function AdminVenuesPage() {
       website: "",
       instagram: "",
       hours: null,
+      categories: [],
     });
     setEditingVenueId(null);
     setPlaceSearch("");
@@ -183,6 +186,7 @@ export default function AdminVenuesPage() {
       website: venue.website || "",
       instagram: venue.instagram || "",
       hours: venue.hours || null,
+      categories: (venue.categories as string[]) || [],
     });
     setIsSlugSynced((venue.slug || "") === (venue.instagram || ""));
     setPlaceSearch(venue.name);
@@ -556,6 +560,16 @@ export default function AdminVenuesPage() {
               hours={venueForm.hours}
               onChange={(hours) => setVenueForm({ ...venueForm, hours })}
             />
+            <div>
+              <Label>Categories</Label>
+              <CategoryMultiSelect
+                value={venueForm.categories}
+                onChange={(categories) =>
+                  setVenueForm({ ...venueForm, categories })
+                }
+                placeholder="Select categories..."
+              />
+            </div>
             <div className="flex gap-2">
               {viewMode === "edit" ? (
                 <Button
