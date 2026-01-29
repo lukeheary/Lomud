@@ -576,10 +576,7 @@ export default function AdminOrganizersPage() {
           <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Create Event</h1>
-            <p className="text-muted-foreground">{currentOrganizer?.name}</p>
-          </div>
+          <h1 className="text-3xl font-bold tracking-tight">Create Event</h1>
         </div>
 
         <EventForm

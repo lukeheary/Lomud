@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { S3Uploader } from "@/components/ui/s3-uploader";
 import { VenueSelector, VenueData } from "@/components/events/venue-selector";
 import { CategoryMultiSelect } from "@/components/category-multi-select";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 
 interface EventFormProps {
   venueId?: string;
@@ -263,28 +264,26 @@ export function EventForm({
             {/* Date & Time */}
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="startAt">
+                <Label>
                   Start Date & Time <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  id="startAt"
-                  type="datetime-local"
+                <DateTimePicker
                   value={formData.startAt}
-                  onChange={(e) =>
-                    setFormData({ ...formData, startAt: e.target.value })
+                  onChange={(value) =>
+                    setFormData({ ...formData, startAt: value })
                   }
+                  placeholder="Select start date & time"
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="endAt">End Date & Time</Label>
-                <Input
-                  id="endAt"
-                  type="datetime-local"
+                <Label>End Date & Time</Label>
+                <DateTimePicker
                   value={formData.endAt}
-                  onChange={(e) =>
-                    setFormData({ ...formData, endAt: e.target.value })
+                  onChange={(value) =>
+                    setFormData({ ...formData, endAt: value })
                   }
+                  placeholder="Select end date & time"
                 />
               </div>
             </div>

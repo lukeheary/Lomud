@@ -8,7 +8,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Building2, Users, Calendar } from "lucide-react";
+import { Building, Building2, Calendar } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminPage() {
@@ -20,14 +20,14 @@ export default function AdminPage() {
     {
       label: "Total Venues",
       value: venues?.length ?? 0,
-      icon: Building2,
+      icon: Building,
       href: "/admin/venues",
       description: "Manage physical locations",
     },
     {
       label: "Total Organizers",
       value: organizers?.length ?? 0,
-      icon: Users,
+      icon: Building2,
       href: "/admin/organizers",
       description: "Manage event creators",
     },
@@ -82,7 +82,7 @@ export default function AdminPage() {
             <Link href="/admin/venues">
               <Card className="p-4 hover:bg-accent">
                 <div className="flex items-center gap-3">
-                  <Building2 className="h-4 w-4" />
+                  <Building className="h-4 w-4" />
                   <div className="text-sm font-medium">Add a new Venue</div>
                 </div>
               </Card>
@@ -90,7 +90,7 @@ export default function AdminPage() {
             <Link href="/admin/organizers">
               <Card className="p-4 hover:bg-accent">
                 <div className="flex items-center gap-3">
-                  <Users className="h-4 w-4" />
+                  <Building2 className="h-4 w-4" />
                   <div className="text-sm font-medium">Add a new Organizer</div>
                 </div>
               </Card>

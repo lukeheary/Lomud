@@ -61,6 +61,10 @@ export default function MainLayout({
   const isVenues = pathname === "/venues";
   const isOrganizers = pathname === "/organizers";
   const isFriends = pathname === "/friends";
+  const isProfile = pathname === "/profile";
+  const isMyVenues = pathname === "/my-venues";
+  const isMyOrganizers = pathname === "/my-organizers";
+  const isAdminPage = pathname?.startsWith("/admin");
 
   const handleSignOut = async () => {
     await signOut();
@@ -90,35 +94,37 @@ export default function MainLayout({
           {/* Center - Desktop Navigation */}
           <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-2 md:flex">
             <Link href="/home">
-              <Button variant={isHome ? "secondary" : "ghost"} size="sm">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={isHome ? "text-foreground" : "text-muted-foreground"}
+              >
                 Home
               </Button>
             </Link>
             <Link href="/venues">
               <Button
-                variant={isVenues ? "secondary" : "ghost"}
+                variant="ghost"
                 size="sm"
-                className={"gap-1"}
+                className={isVenues ? "text-foreground" : "text-muted-foreground"}
               >
-                {/*<Building2 className="h-4 w-4" />*/}
                 Venues
               </Button>
             </Link>
             <Link href="/organizers">
               <Button
-                variant={isOrganizers ? "secondary" : "ghost"}
+                variant="ghost"
                 size="sm"
-                className={"gap-1"}
+                className={isOrganizers ? "text-foreground" : "text-muted-foreground"}
               >
-                {/*<Users className="h-4 w-4" />*/}
                 Organizers
               </Button>
             </Link>
             <Link href="/friends">
               <Button
-                variant={isFriends ? "secondary" : "ghost"}
+                variant="ghost"
                 size="sm"
-                className={"gap-1"}
+                className={isFriends ? "gap-1 text-foreground" : "gap-1 text-muted-foreground"}
               >
                 Friends
                 {receivedRequestsCount > 0 && (
@@ -222,8 +228,8 @@ export default function MainLayout({
                 <nav className="mt-8 flex flex-col gap-2">
                   <Link href="/home" onClick={closeMobileMenu}>
                     <Button
-                      variant={isHome ? "secondary" : "ghost"}
-                      className="w-full justify-start px-4 text-base"
+                      variant="ghost"
+                      className={`w-full justify-start px-4 text-base ${isHome ? "text-foreground" : "text-muted-foreground"}`}
                       size="lg"
                     >
                       <Home className="mr-3 h-5 w-5" />
@@ -233,8 +239,8 @@ export default function MainLayout({
 
                   <Link href="/venues" onClick={closeMobileMenu}>
                     <Button
-                      variant={isVenues ? "secondary" : "ghost"}
-                      className="w-full justify-start px-4 text-base"
+                      variant="ghost"
+                      className={`w-full justify-start px-4 text-base ${isVenues ? "text-foreground" : "text-muted-foreground"}`}
                       size="lg"
                     >
                       <Building className="mr-3 h-5 w-5" />
@@ -243,8 +249,8 @@ export default function MainLayout({
                   </Link>
                   <Link href="/organizers" onClick={closeMobileMenu}>
                     <Button
-                      variant={isOrganizers ? "secondary" : "ghost"}
-                      className="w-full justify-start px-4 text-base"
+                      variant="ghost"
+                      className={`w-full justify-start px-4 text-base ${isOrganizers ? "text-foreground" : "text-muted-foreground"}`}
                       size="lg"
                     >
                       <Building2 className="mr-3 h-5 w-5" />
@@ -253,8 +259,8 @@ export default function MainLayout({
                   </Link>
                   <Link href="/friends" onClick={closeMobileMenu}>
                     <Button
-                      variant={isFriends ? "secondary" : "ghost"}
-                      className="w-full justify-start px-4 text-base"
+                      variant="ghost"
+                      className={`w-full justify-start px-4 text-base ${isFriends ? "text-foreground" : "text-muted-foreground"}`}
                       size="lg"
                     >
                       <Users className="mr-3 h-5 w-5" />
@@ -271,7 +277,7 @@ export default function MainLayout({
                     <Link href="/profile" onClick={closeMobileMenu}>
                       <Button
                         variant="ghost"
-                        className="w-full justify-start px-4 text-base"
+                        className={`w-full justify-start px-4 text-base ${isProfile ? "text-foreground" : "text-muted-foreground"}`}
                         size="lg"
                       >
                         <Avatar className="mr-3 h-5 w-5">
@@ -287,7 +293,7 @@ export default function MainLayout({
                       <Link href="/my-venues" onClick={closeMobileMenu}>
                         <Button
                           variant="ghost"
-                          className="w-full justify-start px-4 text-base"
+                          className={`w-full justify-start px-4 text-base ${isMyVenues ? "text-foreground" : "text-muted-foreground"}`}
                           size="lg"
                         >
                           <Building2 className="mr-3 h-5 w-5" />
@@ -299,7 +305,7 @@ export default function MainLayout({
                       <Link href="/my-organizers" onClick={closeMobileMenu}>
                         <Button
                           variant="ghost"
-                          className="w-full justify-start px-4 text-base"
+                          className={`w-full justify-start px-4 text-base ${isMyOrganizers ? "text-foreground" : "text-muted-foreground"}`}
                           size="lg"
                         >
                           <Users className="mr-3 h-5 w-5" />
@@ -311,7 +317,7 @@ export default function MainLayout({
                       <Link href="/admin" onClick={closeMobileMenu}>
                         <Button
                           variant="ghost"
-                          className="w-full justify-start px-4 text-base"
+                          className={`w-full justify-start px-4 text-base ${isAdminPage ? "text-foreground" : "text-muted-foreground"}`}
                           size="lg"
                         >
                           <Plus className="mr-3 h-5 w-5" />
