@@ -41,6 +41,7 @@ import { GooglePlacesAutocomplete } from "@/components/google-places-autocomplet
 import Link from "next/link";
 import { EventForm } from "@/components/events/event-form";
 import { CategoryMultiSelect } from "@/components/category-multi-select";
+import { SlugInstagramInput } from "@/components/slug-instagram-input";
 
 type ViewMode = "list" | "create" | "edit" | "members" | "create-event";
 
@@ -373,91 +374,28 @@ export default function AdminVenuesPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              {isSlugSynced ? (
-                <div className="col-span-2">
-                  <div className="mb-2 flex items-center justify-between">
-                    <Label htmlFor="venue-slug-insta">
-                      Slug / Instagram Handle *
-                    </Label>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-auto px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
-                      onClick={() => setIsSlugSynced(false)}
-                    >
-                      Separate Fields
-                    </Button>
-                  </div>
-                  <Input
-                    id="venue-slug-insta"
-                    placeholder="big-night-live"
-                    value={venueForm.slug}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setVenueForm({
-                        ...venueForm,
-                        slug: val,
-                        instagram: val.replace(/-/g, ""),
-                      });
-                    }}
-                  />
-                </div>
-              ) : (
-                <>
-                  <div>
-                    <div className="mb-2 flex items-center justify-between">
-                      <Label htmlFor="venue-slug">Slug *</Label>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-auto px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
-                        onClick={() => {
-                          setIsSlugSynced(true);
-                          setVenueForm({
-                            ...venueForm,
-                            instagram: venueForm.slug.replace(/-/g, ""),
-                          });
-                        }}
-                      >
-                        Sync with Instagram
-                      </Button>
-                    </div>
-                    <Input
-                      id="venue-slug"
-                      placeholder="big-night-live"
-                      value={venueForm.slug}
-                      onChange={(e) =>
-                        setVenueForm({ ...venueForm, slug: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="venue-name">Name *</Label>
-                    <Input
-                      id="venue-name"
-                      placeholder="Big Night Live"
-                      value={venueForm.name}
-                      onChange={(e) =>
-                        setVenueForm({ ...venueForm, name: e.target.value })
-                      }
-                    />
-                  </div>
-                </>
-              )}
-              {isSlugSynced && (
-                <div className="col-span-2">
-                  <Label htmlFor="venue-name">Name *</Label>
-                  <Input
-                    id="venue-name"
-                    placeholder="Big Night Live"
-                    value={venueForm.name}
-                    onChange={(e) =>
-                      setVenueForm({ ...venueForm, name: e.target.value })
-                    }
-                  />
-                </div>
-              )}
+            <SlugInstagramInput
+              slug={venueForm.slug}
+              instagram={venueForm.instagram}
+              onSlugChange={(slug) => setVenueForm({ ...venueForm, slug })}
+              onInstagramChange={(instagram) =>
+                setVenueForm({ ...venueForm, instagram })
+              }
+              isSynced={isSlugSynced}
+              onSyncedChange={setIsSlugSynced}
+              slugPlaceholder="big-night-live"
+              idPrefix="venue"
+            />
+            <div>
+              <Label htmlFor="venue-name">Name *</Label>
+              <Input
+                id="venue-name"
+                placeholder="Big Night Live"
+                value={venueForm.name}
+                onChange={(e) =>
+                  setVenueForm({ ...venueForm, name: e.target.value })
+                }
+              />
             </div>
             <div>
               <Label>Venue Image</Label>
@@ -525,36 +463,16 @@ export default function AdminVenuesPage() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="venue-website">Website</Label>
-                <Input
-                  id="venue-website"
-                  placeholder="https://bignightlive.com"
-                  value={venueForm.website}
-                  onChange={(e) =>
-                    setVenueForm({ ...venueForm, website: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                {!isSlugSynced && (
-                  <>
-                    <Label htmlFor="venue-instagram">Instagram</Label>
-                    <Input
-                      id="venue-instagram"
-                      placeholder="bignightlive"
-                      value={venueForm.instagram}
-                      onChange={(e) =>
-                        setVenueForm({
-                          ...venueForm,
-                          instagram: e.target.value,
-                        })
-                      }
-                    />
-                  </>
-                )}
-              </div>
+            <div>
+              <Label htmlFor="venue-website">Website</Label>
+              <Input
+                id="venue-website"
+                placeholder="https://bignightlive.com"
+                value={venueForm.website}
+                onChange={(e) =>
+                  setVenueForm({ ...venueForm, website: e.target.value })
+                }
+              />
             </div>
             <VenueHoursEditor
               hours={venueForm.hours}

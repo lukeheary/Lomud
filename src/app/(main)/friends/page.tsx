@@ -141,7 +141,7 @@ function FriendsPageContent() {
       {/*  </p>*/}
       {/*</div>*/}
 
-      <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-4">
+      <div className="flex flex-col gap-2 md:flex-row md:items-center">
         <div className="flex-1">
           <Suspense fallback={null}>
             <SearchInput
@@ -163,7 +163,7 @@ function FriendsPageContent() {
               <Card className="cursor-pointer rounded-full bg-muted transition-colors hover:bg-muted/80">
                 <CardContent className="flex h-12 items-center justify-between px-4 py-0">
                   <div className="flex items-center gap-2">
-                    <p className="flex flex-row items-baseline gap-1.5 text-base font-medium lg:text-lg">
+                    <p className="flex flex-row items-center gap-1.5 text-base font-medium lg:text-lg">
                       <span>{acceptedFriends.length}</span>
                       <span className={"text-sm text-muted-foreground"}>
                         {pluralize("Friend", acceptedFriends.length)}
@@ -180,7 +180,7 @@ function FriendsPageContent() {
                 <CardContent className="flex h-12 items-center justify-between px-4 py-0">
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1.5">
-                      <p className="flex flex-row items-baseline gap-1.5 text-base font-medium lg:text-lg">
+                      <p className="flex flex-row items-center gap-1.5 text-base font-medium lg:text-lg">
                         <span>{receivedRequests.length}</span>
                         <span className={"text-sm text-muted-foreground"}>
                           {pluralize("Request", receivedRequests.length)}

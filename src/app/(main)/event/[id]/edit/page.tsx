@@ -198,24 +198,28 @@ export default function EditEventPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-2xl py-8">
+    <div className="container mx-auto max-w-2xl space-y-4 py-8">
       <Link
         href={`/event/${eventId}`}
-        className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Event
       </Link>
 
+      {/* Venue Details */}
+      <VenueSelector
+        selectedVenue={selectedVenue}
+        onVenueSelect={setSelectedVenue}
+        isCreatingNew={isCreatingNewVenue}
+        setIsCreatingNew={setIsCreatingNewVenue}
+      />
+
       <Card>
         <CardHeader>
           <div className="flex items-center gap-3">
-            <Calendar className="h-6 w-6" />
             <div>
               <CardTitle className="text-2xl">Edit Event</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Update event details
-              </p>
             </div>
           </div>
         </CardHeader>
@@ -305,14 +309,6 @@ export default function EditEventPage() {
                 />
               </div>
             </div>
-
-            {/* Venue Details */}
-            <VenueSelector
-              selectedVenue={selectedVenue}
-              onVenueSelect={setSelectedVenue}
-              isCreatingNew={isCreatingNewVenue}
-              setIsCreatingNew={setIsCreatingNewVenue}
-            />
 
             {/* Submit Button */}
             <div className="flex gap-3">

@@ -203,7 +203,7 @@ export function S3Uploader({
   return (
     <div
       className={cn(
-        "relative w-full rounded-lg border-2 border-dashed p-6 text-center transition-colors",
+        "relative w-full rounded-lg border-2 border-dashed p-6 text-center transition-colors hover:cursor-pointer hover:border-solid",
         dragActive && "border-primary bg-primary/5",
         isUploading && "opacity-50",
         className
