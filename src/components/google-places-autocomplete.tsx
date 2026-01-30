@@ -114,7 +114,7 @@ function AutocompleteInput({
         let longitude: number | undefined;
 
         if (place.geometry?.location) {
-          const location = place.geometry.location;
+          const location = place.geometry.location as any;
           // Google Maps LatLng objects have lat() and lng() as methods
           latitude = typeof location.lat === 'function' ? location.lat() : location.lat;
           longitude = typeof location.lng === 'function' ? location.lng() : location.lng;
