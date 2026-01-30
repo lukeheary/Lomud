@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Calendar, Users, MapPin, Sparkles } from "lucide-react";
 import { truculenta } from "@/lib/fonts";
+import { LandingPageRedirect } from "@/components/landing-page-redirect";
 
 export default async function LandingPage() {
   const { userId } = await auth();
@@ -14,6 +15,9 @@ export default async function LandingPage() {
   }
 
   return (
+    <>
+      {/* Client-side redirect check for newly signed up users */}
+      <LandingPageRedirect />
     <div className="flex min-h-screen flex-col">
       {/* Navigation */}
       <header className="sticky top-0 z-50 border-b bg-background">
@@ -134,5 +138,6 @@ export default async function LandingPage() {
         </div>
       </footer>
     </div>
+    </>
   );
 }

@@ -1,6 +1,6 @@
 import { Webhook } from "svix";
 import { headers } from "next/headers";
-import { WebhookEvent } from "@clerk/nextjs/server";
+import { WebhookEvent, clerkClient } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { users } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
@@ -81,6 +81,17 @@ export async function POST(req: Request) {
           updatedAt: new Date(),
         },
       });
+
+    // For new users, set isOnboarding: true in Clerk's public metadata
+    // This allows middleware to redirect them to onboarding
+    if (!existingUser) {
+      const clerk = await clerkClient();
+      await clerk.users.updateUserMetadata(id, {
+        publicMetadata: {
+          isOnboarding: true,
+        },
+      });
+    }
 
     console.log(`✅ User ${id} synced to database`);
   }

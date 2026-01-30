@@ -10,6 +10,7 @@ import {
   pgEnum,
   jsonb,
   doublePrecision,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 // ============================================================================
@@ -71,6 +72,7 @@ export const users = pgTable(
     city: varchar("city", { length: 100 }),
     state: varchar("state", { length: 2 }),
     role: userRoleEnum("role").notNull().default("user"),
+    isOnboarding: boolean("is_onboarding").notNull().default(true),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },

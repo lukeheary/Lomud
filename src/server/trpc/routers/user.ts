@@ -68,6 +68,7 @@ export const userRouter = router({
       const updateData: Record<string, any> = {
         username: input.username.toLowerCase(),
         updatedAt: new Date(),
+        isOnboarding: false, // Mark onboarding as complete
       };
 
       if (input.city) {
@@ -90,6 +91,15 @@ export const userRouter = router({
           message: "Failed to update username",
         });
       }
+
+      // Update Clerk's public metadata to mark onboarding as complete
+      // This allows middleware to check onboarding status
+      const clerk = await clerkClient();
+      await clerk.users.updateUserMetadata(userId, {
+        publicMetadata: {
+          isOnboarding: false,
+        },
+      });
 
       return updatedUser;
     }),
