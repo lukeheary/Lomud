@@ -20,6 +20,8 @@ export interface VenueData {
   address?: string;
   city: string;
   state: string;
+  latitude?: number;
+  longitude?: number;
   slug?: string;
   instagram?: string;
   categories?: string[];
@@ -77,6 +79,8 @@ export function VenueSelector({
     city: string;
     state: string;
     formattedAddress: string;
+    latitude?: number;
+    longitude?: number;
   }) => {
     // Generate slug from venue name
     const slug = place.name
@@ -89,6 +93,8 @@ export function VenueSelector({
       address: place.address,
       city: place.city,
       state: place.state,
+      latitude: place.latitude,
+      longitude: place.longitude,
       slug: slug.length >= 3 ? slug : `venue-${slug}`,
       instagram: (slug.length >= 3 ? slug : `venue-${slug}`).replace(/-/g, ""),
     });
@@ -288,6 +294,9 @@ export function VenueSelector({
                   }
                   onInstagramChange={(instagram) =>
                     onVenueSelect({ ...selectedVenue, instagram })
+                  }
+                  onBothChange={(slug, instagram) =>
+                    onVenueSelect({ ...selectedVenue, slug, instagram })
                   }
                   isSynced={isSlugSynced}
                   onSyncedChange={setIsSlugSynced}

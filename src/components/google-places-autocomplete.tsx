@@ -12,6 +12,8 @@ interface PlaceResult {
   city: string;
   state: string;
   formattedAddress: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface GooglePlacesAutocompleteProps {
@@ -63,7 +65,7 @@ function AutocompleteInput({
     ).google.maps.places.Autocomplete(inputRef.current, {
       types,
       componentRestrictions: { country: "us" },
-      fields: ["address_components", "formatted_address", "name"],
+      fields: ["address_components", "formatted_address", "name", "geometry"],
     });
 
     // Add place changed listener
@@ -106,12 +108,27 @@ function AutocompleteInput({
         const formattedAddress = place.formatted_address || "";
         const name = place.name || "";
 
+        // Extract latitude and longitude from geometry
+        // Note: location.lat() and location.lng() are functions that return numbers
+        let latitude: number | undefined;
+        let longitude: number | undefined;
+
+        if (place.geometry?.location) {
+          const location = place.geometry.location;
+          // Google Maps LatLng objects have lat() and lng() as methods
+          latitude = typeof location.lat === 'function' ? location.lat() : location.lat;
+          longitude = typeof location.lng === 'function' ? location.lng() : location.lng;
+        }
+
         console.log("Extracted data:", {
           name,
           address,
           city,
           state,
           formattedAddress,
+          latitude,
+          longitude,
+          geometry: place.geometry,
         });
 
         onPlaceSelectRef.current({
@@ -120,6 +137,8 @@ function AutocompleteInput({
           city,
           state,
           formattedAddress,
+          latitude,
+          longitude,
         });
       }
     );

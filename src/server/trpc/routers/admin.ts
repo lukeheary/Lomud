@@ -33,6 +33,8 @@ export const adminRouter = router({
         address: z.string().optional(),
         city: z.string().min(1).max(100),
         state: z.string().length(2, "State must be 2-letter code"),
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
         website: z.string().url().optional().or(z.literal("")),
         instagram: z.string().max(100).optional(),
         hours: z.any().optional(),

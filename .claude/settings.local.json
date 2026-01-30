@@ -23,7 +23,8 @@
       "Bash(pnpm tsc:*)",
       "Bash(source ~/.nvm/nvm.sh)",
       "Bash(nvm use:*)",
-      "Bash(yes:*)"
+      "Bash(yes:*)",
+      "Bash(npx drizzle-kit:*)"
     ]
   }
 }

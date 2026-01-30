@@ -39,6 +39,8 @@ export const venueRouter = router({
         address: z.string().optional(),
         city: z.string().min(1).max(100),
         state: z.string().length(2),
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
         website: z.string().url().optional().or(z.literal("")),
         instagram: z.string().max(100).optional(),
       })
@@ -387,6 +389,8 @@ export const venueRouter = router({
         state: z.string().length(2).optional(),
         website: z.string().url().optional().or(z.literal("")),
         instagram: z.string().max(100).optional(),
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
         hours: z.any().optional(),
         categories: z.array(z.string()).optional(),
       })

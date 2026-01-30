@@ -438,7 +438,7 @@ function HomePageContent() {
       </div>
 
       {/* Friend Activity Feed - only show if there's activity and not in search mode */}
-      {!isSearchMode && hasRecentActivity && (
+      {!isSearchMode && hasRecentActivity && isCurrentWeek && (
         <div className="mb-4">
           <div className="flex items-center gap-1 pb-2 md:pb-3">
             <Link

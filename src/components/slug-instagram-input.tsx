@@ -9,6 +9,7 @@ interface SlugInstagramInputProps {
   instagram: string;
   onSlugChange: (slug: string) => void;
   onInstagramChange: (instagram: string) => void;
+  onBothChange?: (slug: string, instagram: string) => void;
   isSynced: boolean;
   onSyncedChange: (synced: boolean) => void;
   slugPlaceholder?: string;
@@ -22,6 +23,7 @@ export function SlugInstagramInput({
   instagram,
   onSlugChange,
   onInstagramChange,
+  onBothChange,
   isSynced,
   onSyncedChange,
   slugPlaceholder = "venue-name",
@@ -30,8 +32,13 @@ export function SlugInstagramInput({
   error,
 }: SlugInstagramInputProps) {
   const handleSyncedInputChange = (value: string) => {
-    onSlugChange(value);
-    onInstagramChange(value.replace(/-/g, ""));
+    const newInstagram = value.replace(/-/g, "");
+    if (onBothChange) {
+      onBothChange(value, newInstagram);
+    } else {
+      onSlugChange(value);
+      onInstagramChange(newInstagram);
+    }
   };
 
   const handleSyncFields = () => {

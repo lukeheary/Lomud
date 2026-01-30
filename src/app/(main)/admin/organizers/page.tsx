@@ -348,6 +348,9 @@ export default function AdminOrganizersPage() {
               onInstagramChange={(instagram) =>
                 setOrganizerForm({ ...organizerForm, instagram })
               }
+              onBothChange={(slug, instagram) =>
+                setOrganizerForm({ ...organizerForm, slug, instagram })
+              }
               isSynced={isSlugSynced}
               onSyncedChange={setIsSlugSynced}
               slugPlaceholder="after-brunch"

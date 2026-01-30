@@ -125,6 +125,8 @@ export function EventForm({
           address: selectedVenue.address || undefined,
           city: selectedVenue.city,
           state: selectedVenue.state,
+          latitude: selectedVenue.latitude,
+          longitude: selectedVenue.longitude,
         });
         finalVenueId = newVenue.id;
       } catch (error: any) {

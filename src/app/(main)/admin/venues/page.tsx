@@ -64,6 +64,8 @@ export default function AdminVenuesPage() {
     state: "",
     website: "",
     instagram: "",
+    latitude: null as number | null,
+    longitude: null as number | null,
     hours: null as VenueHours | null,
     categories: [] as string[],
   });
@@ -104,6 +106,8 @@ export default function AdminVenuesPage() {
       state: "",
       website: "",
       instagram: "",
+      latitude: null,
+      longitude: null,
       hours: null,
       categories: [],
     });
@@ -119,6 +123,8 @@ export default function AdminVenuesPage() {
       city: string;
       state: string;
       formattedAddress: string;
+      latitude?: number;
+      longitude?: number;
     }) => {
       // Generate slug from venue name
       const slug = place.name
@@ -133,6 +139,8 @@ export default function AdminVenuesPage() {
         address: place.address,
         city: place.city,
         state: place.state,
+        latitude: place.latitude || null,
+        longitude: place.longitude || null,
         instagram: isSlugSynced
           ? (slug.length >= 3 ? slug : `venue-${slug}`).replace(/-/g, "")
           : prev.instagram,
@@ -186,6 +194,8 @@ export default function AdminVenuesPage() {
       state: venue.state,
       website: venue.website || "",
       instagram: venue.instagram || "",
+      latitude: venue.latitude || null,
+      longitude: venue.longitude || null,
       hours: venue.hours || null,
       categories: (venue.categories as string[]) || [],
     });
@@ -381,6 +391,9 @@ export default function AdminVenuesPage() {
               onInstagramChange={(instagram) =>
                 setVenueForm({ ...venueForm, instagram })
               }
+              onBothChange={(slug, instagram) =>
+                setVenueForm({ ...venueForm, slug, instagram })
+              }
               isSynced={isSlugSynced}
               onSyncedChange={setIsSlugSynced}
               slugPlaceholder="big-night-live"
@@ -495,6 +508,8 @@ export default function AdminVenuesPage() {
                     updateVenueMutation.mutate({
                       venueId: editingVenueId!,
                       ...venueForm,
+                      latitude: venueForm.latitude ?? undefined,
+                      longitude: venueForm.longitude ?? undefined,
                     })
                   }
                   disabled={
@@ -512,7 +527,11 @@ export default function AdminVenuesPage() {
                 </Button>
               ) : (
                 <Button
-                  onClick={() => createVenueMutation.mutate(venueForm)}
+                  onClick={() => createVenueMutation.mutate({
+                    ...venueForm,
+                    latitude: venueForm.latitude ?? undefined,
+                    longitude: venueForm.longitude ?? undefined,
+                  })}
                   disabled={
                     createVenueMutation.isPending ||
                     !venueForm.slug ||

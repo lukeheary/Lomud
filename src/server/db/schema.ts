@@ -9,6 +9,7 @@ import {
   uniqueIndex,
   pgEnum,
   jsonb,
+  doublePrecision,
 } from "drizzle-orm/pg-core";
 
 // ============================================================================
@@ -105,6 +106,8 @@ export const venues = pgTable(
     address: text("address"),
     city: varchar("city", { length: 100 }).notNull(),
     state: varchar("state", { length: 2 }).notNull(),
+    latitude: doublePrecision("latitude"),
+    longitude: doublePrecision("longitude"),
     website: text("website"),
     instagram: varchar("instagram", { length: 100 }),
     hours: jsonb("hours"), // Store hours as: { monday: { open: "09:00", close: "17:00", closed: false }, ... }
