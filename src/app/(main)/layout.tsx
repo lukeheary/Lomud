@@ -4,8 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import {
-  Calendar,
-  Building,
+  MapPin,
   Building2,
   Users,
   Plus,
@@ -59,8 +58,7 @@ export default function MainLayout({
     pendingRequests?.filter((f) => !f.isSender).length ?? 0;
 
   const isHome = pathname === "/home";
-  const isVenues = pathname === "/venues";
-  const isOrganizers = pathname === "/organizers";
+  const isPlaces = pathname === "/places";
   const isFriends = pathname === "/friends";
   const isProfile = pathname === "/profile";
   const isMyVenues = pathname === "/my-venues";
@@ -103,26 +101,15 @@ export default function MainLayout({
                 Home
               </Button>
             </Link>
-            <Link href="/venues">
+            <Link href="/places">
               <Button
                 variant="ghost"
                 size="sm"
                 className={
-                  isVenues ? "text-foreground" : "text-muted-foreground"
+                  isPlaces ? "text-foreground" : "text-muted-foreground"
                 }
               >
-                Venues
-              </Button>
-            </Link>
-            <Link href="/organizers">
-              <Button
-                variant="ghost"
-                size="sm"
-                className={
-                  isOrganizers ? "text-foreground" : "text-muted-foreground"
-                }
-              >
-                Organizers
+                Places
               </Button>
             </Link>
             <Link href="/friends">
@@ -246,24 +233,14 @@ export default function MainLayout({
                     </Button>
                   </Link>
 
-                  <Link href="/venues" onClick={closeMobileMenu}>
+                  <Link href="/places" onClick={closeMobileMenu}>
                     <Button
                       variant="ghost"
-                      className={`w-full justify-start px-4 text-base ${isVenues ? "text-foreground" : "text-muted-foreground"}`}
+                      className={`w-full justify-start px-4 text-base ${isPlaces ? "text-foreground" : "text-muted-foreground"}`}
                       size="lg"
                     >
-                      <Building className="mr-3 h-5 w-5" />
-                      Venues
-                    </Button>
-                  </Link>
-                  <Link href="/organizers" onClick={closeMobileMenu}>
-                    <Button
-                      variant="ghost"
-                      className={`w-full justify-start px-4 text-base ${isOrganizers ? "text-foreground" : "text-muted-foreground"}`}
-                      size="lg"
-                    >
-                      <Building2 className="mr-3 h-5 w-5" />
-                      Organizers
+                      <MapPin className="mr-3 h-5 w-5" />
+                      Places
                     </Button>
                   </Link>
                   <Link href="/friends" onClick={closeMobileMenu}>
