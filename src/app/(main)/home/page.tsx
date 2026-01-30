@@ -76,8 +76,10 @@ function HomePageContent() {
     scroll: false,
     shallow: true,
   });
-  const [selectedCity, setSelectedCity] = useQueryState("city", {
-    defaultValue: "all",
+  const [selectedCity, setSelectedCity] = useQueryState<string | null>("city", {
+    defaultValue: null,
+    parse: (value) => value || null,
+    serialize: (value) => value || "",
     scroll: false,
     shallow: true,
   });
@@ -93,7 +95,6 @@ function HomePageContent() {
     scroll: false,
     shallow: true,
   });
-  const [hasSetInitialCity, setHasSetInitialCity] = useState(false);
 
   const currentDate = useMemo(() => {
     try {
@@ -113,7 +114,7 @@ function HomePageContent() {
   }, [viewMode, currentDate]);
 
   // Get current user to show their city
-  const { data: currentUser } = trpc.user.getCurrentUser.useQuery();
+  const { data: currentUser, isLoading: isLoadingUser } = trpc.user.getCurrentUser.useQuery();
 
   // Check if there's recent activity to show
   const { hasActivity: hasRecentActivity } = useHasRecentActivity(3);
@@ -121,13 +122,11 @@ function HomePageContent() {
   // Get available cities
   const { data: cities } = trpc.event.getAvailableCities.useQuery();
 
-  // Set default city to user's city on initial load only
-  useEffect(() => {
-    if (currentUser?.city && selectedCity === "all" && !hasSetInitialCity) {
-      void setSelectedCity(currentUser.city, { scroll: false, shallow: true });
-      setHasSetInitialCity(true);
-    }
-  }, [currentUser, selectedCity, hasSetInitialCity, setSelectedCity]);
+  // Determine the effective city: use URL param if set, otherwise user's city
+  const effectiveCity = selectedCity ?? currentUser?.city ?? null;
+
+  // Don't run queries until we know the user's city (to avoid flash of "all cities")
+  const isReady = !isLoadingUser;
 
   // Determine if we're actively searching (has query text)
   const isSearching = Boolean(searchQuery && searchQuery.trim().length > 0);
@@ -177,11 +176,12 @@ function HomePageContent() {
       endDate: dateRange.endDate,
       followedOnly: activeFilter === "followed",
       friendsGoingOnly: activeFilter === "friends",
-      city: selectedCity !== "all" ? selectedCity : undefined,
+      city: effectiveCity && effectiveCity !== "all" ? effectiveCity : undefined,
       search: searchQuery || undefined,
     },
     {
       placeholderData: (previousData) => previousData,
+      enabled: isReady,
     }
   );
 
@@ -190,10 +190,10 @@ function HomePageContent() {
     trpc.event.getRecentlyAddedEvents.useQuery(
       {
         limit: 12,
-        city: selectedCity !== "all" ? selectedCity : undefined,
+        city: effectiveCity && effectiveCity !== "all" ? effectiveCity : undefined,
       },
       {
-        enabled: isSearchMode && !isSearching,
+        enabled: isReady && isSearchMode && !isSearching,
       }
     );
 
@@ -383,7 +383,7 @@ function HomePageContent() {
 
           <div className="flex w-full gap-2 sm:w-fit">
             {/* City Filter */}
-            <Select value={selectedCity} onValueChange={setSelectedCity}>
+            <Select value={effectiveCity ?? "all"} onValueChange={setSelectedCity}>
               <SelectTrigger className="flex-1 shrink-0 sm:w-[200px]">
                 <SelectValue placeholder="Select city" />
               </SelectTrigger>
@@ -476,7 +476,7 @@ function HomePageContent() {
       {/*)}*/}
 
       {/* Initial Loading State */}
-      {isLoading && !events && (
+      {(isLoading || !isReady) && !events && (
         <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>

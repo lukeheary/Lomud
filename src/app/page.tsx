@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Calendar, Users, MapPin, Sparkles } from "lucide-react";
+import { truculenta } from "@/lib/fonts";
 
 export default async function LandingPage() {
   const { userId } = await auth();
@@ -18,7 +19,7 @@ export default async function LandingPage() {
       <header className="sticky top-0 z-50 border-b bg-background">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2 text-xl font-bold">
-            <span>Lomud</span>
+            <span className={truculenta.className}>WIG</span>
           </div>
           <div className="flex items-center gap-2">
             <Link href="/sign-in">
@@ -131,7 +132,7 @@ export default async function LandingPage() {
       {/* Footer */}
       <footer className="border-t py-6">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          Lomud - Discover local events and connect with your community
+          <span className={truculenta.className}>WIG</span> - Discover local events and connect with your community
         </div>
       </footer>
     </div>

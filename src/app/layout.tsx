@@ -15,7 +15,7 @@ const urbanist = Urbanist({ subsets: ["latin"], weight: ["400", "700"] });
 const lexend = Lexend({ subsets: ["latin"], weight: ["400", "700"] });
 
 export const metadata: Metadata = {
-  title: "Lomud",
+  title: "WIG",
   description: "Discover local events and connect with your community",
 };
 

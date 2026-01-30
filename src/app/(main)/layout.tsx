@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/sheet";
 import { useClerk } from "@clerk/nextjs";
 import { NotificationsBell } from "@/components/notifications-bell";
+import { truculenta } from "@/lib/fonts";
 
 export default function MainLayout({
   children,
@@ -85,9 +86,9 @@ export default function MainLayout({
           <div className="flex items-center">
             <Link
               href="/home"
-              className="flex items-center gap-2 text-xl font-bold"
+              className="flex items-center gap-2 text-3xl font-bold"
             >
-              <span>Lomud</span>
+              <span className={truculenta.className}>WIG</span>
             </Link>
           </div>
 
@@ -106,7 +107,9 @@ export default function MainLayout({
               <Button
                 variant="ghost"
                 size="sm"
-                className={isVenues ? "text-foreground" : "text-muted-foreground"}
+                className={
+                  isVenues ? "text-foreground" : "text-muted-foreground"
+                }
               >
                 Venues
               </Button>
@@ -115,7 +118,9 @@ export default function MainLayout({
               <Button
                 variant="ghost"
                 size="sm"
-                className={isOrganizers ? "text-foreground" : "text-muted-foreground"}
+                className={
+                  isOrganizers ? "text-foreground" : "text-muted-foreground"
+                }
               >
                 Organizers
               </Button>
@@ -124,7 +129,11 @@ export default function MainLayout({
               <Button
                 variant="ghost"
                 size="sm"
-                className={isFriends ? "gap-1 text-foreground" : "gap-1 text-muted-foreground"}
+                className={
+                  isFriends
+                    ? "gap-1 text-foreground"
+                    : "gap-1 text-muted-foreground"
+                }
               >
                 Friends
                 {receivedRequestsCount > 0 && (

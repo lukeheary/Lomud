@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, Suspense } from "react";
+import { Suspense } from "react";
 import { trpc } from "@/lib/trpc";
 import { SearchInput } from "@/components/ui/search-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,33 +21,34 @@ function VenuesPageContent() {
   const [searchQuery, setSearchQuery] = useQueryState("search", {
     defaultValue: "",
   });
-  const [selectedCity, setSelectedCity] = useQueryState("city", {
-    defaultValue: "all",
+  const [selectedCity, setSelectedCity] = useQueryState<string | null>("city", {
+    defaultValue: null,
+    parse: (value) => value || null,
+    serialize: (value) => value || "",
   });
   const [followingFilter, setFollowingFilter] = useQueryState("filter", {
     defaultValue: "all",
   });
-  const [hasSetInitialCity, setHasSetInitialCity] = useState(false);
 
   // Get current user to show their city
-  const { data: currentUser } = trpc.user.getCurrentUser.useQuery();
-
-  // Set default city to user's city on initial load only
-  useEffect(() => {
-    if (currentUser?.city && selectedCity === "all" && !hasSetInitialCity) {
-      void setSelectedCity(currentUser.city, { scroll: false, shallow: true });
-      setHasSetInitialCity(true);
-    }
-  }, [currentUser, selectedCity, hasSetInitialCity, setSelectedCity]);
+  const { data: currentUser, isLoading: isLoadingUser } = trpc.user.getCurrentUser.useQuery();
 
   // Get available cities
   const { data: cities } = trpc.event.getAvailableCities.useQuery();
 
+  // Determine the effective city: use URL param if set, otherwise user's city
+  const effectiveCity = selectedCity ?? currentUser?.city ?? null;
+
+  // Don't run query until we know the user's city (to avoid flash of "all cities")
+  const isReady = !isLoadingUser;
+
   const { data: venues, isLoading } = trpc.venue.listVenues.useQuery({
     search: searchQuery || undefined,
-    city: selectedCity !== "all" ? selectedCity : undefined,
+    city: effectiveCity && effectiveCity !== "all" ? effectiveCity : undefined,
     followedOnly: followingFilter === "followed",
     limit: 50,
+  }, {
+    enabled: isReady,
   });
 
   return (
@@ -86,7 +87,7 @@ function VenuesPageContent() {
           />
 
           {/* City Filter */}
-          <Select value={selectedCity} onValueChange={setSelectedCity}>
+          <Select value={effectiveCity ?? "all"} onValueChange={setSelectedCity}>
             <SelectTrigger className="w-full md:w-fit">
               <SelectValue placeholder="Select city" />
             </SelectTrigger>
@@ -103,7 +104,7 @@ function VenuesPageContent() {
       </div>
 
       {/* Loading State */}
-      {isLoading && (
+      {(isLoading || !isReady) && (
         <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
