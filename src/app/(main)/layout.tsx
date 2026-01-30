@@ -12,6 +12,7 @@ import {
   LogOut,
   Menu,
   Home,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OnboardingCheck } from "@/components/onboarding-check";
@@ -34,12 +35,13 @@ import {
 import { useClerk } from "@clerk/nextjs";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { truculenta } from "@/lib/fonts";
+import {
+  HomeSearchProvider,
+  useHomeSearch,
+} from "@/contexts/home-search-context";
+import { cn } from "@/lib/utils";
 
-export default function MainLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function MainLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { signOut } = useClerk();
@@ -53,6 +55,8 @@ export default function MainLayout({
   const { data: pendingRequests } = trpc.friends.listFriends.useQuery({
     statusFilter: "pending",
   });
+
+  const { showNavbarSearch, scrollToSearchAndFocus } = useHomeSearch();
 
   const receivedRequestsCount =
     pendingRequests?.filter((f) => !f.isSender).length ?? 0;
@@ -84,7 +88,7 @@ export default function MainLayout({
           <div className="flex items-center">
             <Link
               href="/home"
-              className="tracki flex items-center gap-2 text-3xl font-black tracking-wide"
+              className="tracki flex items-center gap-2 text-4xl font-black tracking-wide"
             >
               <span className={truculenta.className}>WIG</span>
             </Link>
@@ -137,6 +141,24 @@ export default function MainLayout({
 
           {/* Desktop Right Menu */}
           <div className="hidden items-center gap-2 md:flex">
+            {/* Search button - only visible when scrolled on home page */}
+            <div
+              className={cn(
+                "overflow-hidden transition-all duration-200",
+                isHome && showNavbarSearch
+                  ? "w-10 opacity-100"
+                  : "w-0 opacity-0"
+              )}
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={scrollToSearchAndFocus}
+                className="h-10 w-10"
+              >
+                <Search className="h-5 w-5" />
+              </Button>
+            </div>
             <NotificationsBell />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -206,6 +228,24 @@ export default function MainLayout({
 
           {/* Mobile Right Menu - Bell and Menu */}
           <div className="flex items-center md:hidden">
+            {/* Search button - only visible when scrolled on home page */}
+            <div
+              className={cn(
+                "overflow-hidden transition-all duration-200",
+                isHome && showNavbarSearch
+                  ? "w-10 opacity-100"
+                  : "w-0 opacity-0"
+              )}
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={scrollToSearchAndFocus}
+                className="h-10 w-10"
+              >
+                <Search className="h-5 w-5" />
+              </Button>
+            </div>
             <NotificationsBell />
 
             {/* Mobile Menu */}
@@ -333,13 +373,18 @@ export default function MainLayout({
 
       {/* Main Content */}
       <main className="flex-1">{children}</main>
-
-      {/* Footer */}
-      {/*<footer className="border-t py-6 mt-12">*/}
-      {/*  <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">*/}
-      {/*    LocalSocialCalendar - Discover local events and connect with your community*/}
-      {/*  </div>*/}
-      {/*</footer>*/}
     </div>
+  );
+}
+
+export default function MainLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <HomeSearchProvider>
+      <MainLayoutContent>{children}</MainLayoutContent>
+    </HomeSearchProvider>
   );
 }

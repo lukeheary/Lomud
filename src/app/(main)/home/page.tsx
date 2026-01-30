@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, Suspense, useRef } from "react";
+import { useState, useMemo, useEffect, Suspense, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -61,6 +61,7 @@ import {
   useHasRecentActivity,
 } from "@/components/friends/activity-feed";
 import { CATEGORY_LABELS, type Category } from "@/lib/categories";
+import { useHomeSearch } from "@/contexts/home-search-context";
 
 type ViewMode = "week" | "month";
 
@@ -123,6 +124,9 @@ function HomePageContent() {
   // Get available cities
   const { data: cities } = trpc.event.getAvailableCities.useQuery();
 
+  // Home search context for navbar search button
+  const { setShowNavbarSearch, registerScrollToSearch } = useHomeSearch();
+
   // Determine the effective city: use URL param if set, otherwise user's city
   const effectiveCity = selectedCity ?? currentUser?.city ?? null;
 
@@ -137,6 +141,24 @@ function HomePageContent() {
     setSearchQuery("");
     searchInputRef.current?.blur();
   };
+
+  // Scroll to search and focus callback for navbar search button
+  const scrollToSearchAndFocus = useCallback(() => {
+    // Jump to top instantly
+    window.scrollTo(0, 0);
+    // Focus the search input immediately
+    searchInputRef.current?.focus();
+  }, []);
+
+  // Register the scroll callback with the context
+  useEffect(() => {
+    registerScrollToSearch(scrollToSearchAndFocus);
+  }, [registerScrollToSearch, scrollToSearchAndFocus]);
+
+  // Update navbar search visibility based on sticky state
+  useEffect(() => {
+    setShowNavbarSearch(isSticky);
+  }, [isSticky, setShowNavbarSearch]);
 
   // Calculate date range based on view mode (or search mode)
   const dateRange = useMemo(() => {
@@ -335,7 +357,7 @@ function HomePageContent() {
       {/* Search and Filters */}
       <div
         className={cn(
-          "sticky top-0 z-[45] -mx-4 -mt-4 bg-background px-4 pb-4 pt-4 transition-shadow md:top-16 md:z-30 md:-mx-8 md:bg-background/95 md:px-8 md:pt-4 md:backdrop-blur md:supports-[backdrop-filter]:bg-background",
+          "z-[45] -mx-4 -mt-4 bg-background px-4 pb-4 pt-4 transition-shadow md:top-16 md:z-30 md:-mx-8 md:bg-background/95 md:px-8 md:pt-4 md:backdrop-blur md:supports-[backdrop-filter]:bg-background",
           isSticky
             ? "border-b shadow-sm md:border-none md:shadow-none"
             : "border-none shadow-none"
