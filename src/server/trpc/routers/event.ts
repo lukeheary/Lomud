@@ -610,9 +610,89 @@ export const eventRouter = router({
         with: {
           venue: true,
           organizer: true,
+          createdBy: true,
         },
       });
 
-      return recentEvents;
+      // Fetch user's RSVPs for these events
+      const eventIds = recentEvents.map((e) => e.id);
+      const userRsvps =
+        eventIds.length > 0
+          ? await ctx.db.query.rsvps.findMany({
+              where: and(
+                eq(rsvps.userId, ctx.auth.userId),
+                inArray(rsvps.eventId, eventIds)
+              ),
+            })
+          : [];
+
+      // Create a map of event IDs to RSVPs
+      const rsvpMap = new Map(userRsvps.map((r) => [r.eventId, r]));
+
+      // Fetch current user data
+      const currentUser = await ctx.db.query.users.findFirst({
+        where: eq(users.id, ctx.auth.userId),
+      });
+
+      // Fetch user's friends
+      const userFriends = await ctx.db.query.friends.findMany({
+        where: and(
+          or(
+            eq(friends.userId, ctx.auth.userId),
+            eq(friends.friendUserId, ctx.auth.userId)
+          ),
+          eq(friends.status, "accepted")
+        ),
+      });
+
+      const friendIds = userFriends.map((f) =>
+        f.userId === ctx.auth.userId ? f.friendUserId : f.userId
+      );
+
+      // Fetch friends' RSVPs (going status only)
+      const friendsRsvps =
+        eventIds.length > 0 && friendIds.length > 0
+          ? await ctx.db.query.rsvps.findMany({
+              where: and(
+                inArray(rsvps.eventId, eventIds),
+                inArray(rsvps.userId, friendIds),
+                eq(rsvps.status, "going")
+              ),
+              with: {
+                user: true,
+              },
+            })
+          : [];
+
+      // Create a map of event IDs to attendees
+      const attendeesMap = new Map<string, typeof friendsRsvps>();
+
+      // Add current user if they're going to any events
+      for (const userRsvp of userRsvps) {
+        if (userRsvp.status === "going" && currentUser) {
+          if (!attendeesMap.has(userRsvp.eventId)) {
+            attendeesMap.set(userRsvp.eventId, []);
+          }
+          attendeesMap.get(userRsvp.eventId)!.push({
+            ...userRsvp,
+            user: currentUser,
+          } as any);
+        }
+      }
+
+      // Add friends to the map
+      for (const rsvp of friendsRsvps) {
+        if (!attendeesMap.has(rsvp.eventId)) {
+          attendeesMap.set(rsvp.eventId, []);
+        }
+        attendeesMap.get(rsvp.eventId)!.push(rsvp);
+      }
+
+      // Return events with userRsvp and friendsGoing attached
+      return recentEvents.map((event) => ({
+        ...event,
+        userRsvp: rsvpMap.get(event.id) || null,
+        friendsGoing: attendeesMap.get(event.id) || [],
+      }));
     }),
 });
