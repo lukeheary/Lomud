@@ -583,4 +583,36 @@ export const eventRouter = router({
       .where(eq(events.visibility, "public"))
       .orderBy(events.city);
   }),
+
+  getRecentlyAddedEvents: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(20).default(8),
+        city: z.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const now = new Date();
+
+      const conditions = [
+        eq(events.visibility, "public"),
+        gte(events.startAt, now), // Only future events
+      ];
+
+      if (input.city) {
+        conditions.push(eq(events.city, input.city));
+      }
+
+      const recentEvents = await ctx.db.query.events.findMany({
+        where: and(...conditions),
+        orderBy: [desc(events.createdAt)],
+        limit: input.limit,
+        with: {
+          venue: true,
+          organizer: true,
+        },
+      });
+
+      return recentEvents;
+    }),
 });

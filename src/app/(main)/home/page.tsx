@@ -56,7 +56,10 @@ import { EventFilterSelect } from "@/components/events/event-filter-select";
 import { EventFilterTab } from "@/types/events";
 import { useQueryState, parseAsString, parseAsIsoDate } from "nuqs";
 import { parseISO, subDays } from "date-fns";
-import { ActivityFeed, useHasRecentActivity } from "@/components/friends/activity-feed";
+import {
+  ActivityFeed,
+  useHasRecentActivity,
+} from "@/components/friends/activity-feed";
 import { CATEGORY_LABELS, type Category } from "@/lib/categories";
 
 type ViewMode = "week" | "month";
@@ -66,6 +69,8 @@ function HomePageContent() {
   const [activeFilter, setActiveFilter] = useState<EventFilterTab>("all");
   const [isSticky, setIsSticky] = useState(false);
   const stickySentinelRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [isSearchMode, setIsSearchMode] = useState(false);
   const [searchQuery, setSearchQuery] = useQueryState("search", {
     defaultValue: "",
     scroll: false,
@@ -124,9 +129,24 @@ function HomePageContent() {
     }
   }, [currentUser, selectedCity, hasSetInitialCity, setSelectedCity]);
 
-  // Calculate date range based on view mode
+  // Determine if we're actively searching (has query text)
+  const isSearching = Boolean(searchQuery && searchQuery.trim().length > 0);
+
+  const handleExitSearch = () => {
+    setIsSearchMode(false);
+    setSearchQuery("");
+    searchInputRef.current?.blur();
+  };
+
+  // Calculate date range based on view mode (or search mode)
   const dateRange = useMemo(() => {
     const today = startOfDay(new Date());
+
+    // When searching, search all future events (1 year ahead)
+    if (isSearching) {
+      return { startDate: today, endDate: addDays(today, 365) };
+    }
+
     if (viewMode === "week") {
       if (isCurrentWeek) {
         // Current week: start from today and go to Sunday
@@ -143,7 +163,7 @@ function HomePageContent() {
       const end = endOfMonth(currentDate);
       return { startDate: start, endDate: end };
     }
-  }, [viewMode, currentDate, isCurrentWeek]);
+  }, [viewMode, currentDate, isCurrentWeek, isSearching]);
 
   // Fetch events with current filters
   const {
@@ -164,6 +184,18 @@ function HomePageContent() {
       placeholderData: (previousData) => previousData,
     }
   );
+
+  // Fetch recently added events (for when search is focused but no query)
+  const { data: recentEvents, isLoading: recentLoading } =
+    trpc.event.getRecentlyAddedEvents.useQuery(
+      {
+        limit: 12,
+        city: selectedCity !== "all" ? selectedCity : undefined,
+      },
+      {
+        enabled: isSearchMode && !isSearching,
+      }
+    );
 
   // Group events by day
   const eventsByDay = useMemo(() => {
@@ -294,22 +326,6 @@ function HomePageContent() {
 
   return (
     <div className="container relative mx-auto min-h-screen py-4 md:py-4">
-      {/* Friend Activity Feed - only show if there's activity */}
-      {hasRecentActivity && (
-        <div className="mb-4">
-          <Link href="/friends" className="transition-colors hover:text-primary">
-            <div className="flex items-center gap-1 pb-2 md:pb-3">
-              <h1 className="text-xl font-bold tracking-tight">
-                Recent Activity
-              </h1>
-              <ChevronRight className="h-4 w-4" />
-            </div>
-          </Link>
-
-          <ActivityFeed limit={3} hideWhenEmpty />
-        </div>
-      )}
-
       {/* Sentinel for sticky detection */}
       <div ref={stickySentinelRef} className="h-px w-full" />
 
@@ -324,33 +340,44 @@ function HomePageContent() {
       >
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           {/* Search Input */}
-          <div className={"flex w-full flex-row gap-2"}>
+          <div className="flex w-full flex-row">
             <Suspense fallback={null}>
               <SearchInput
+                ref={searchInputRef}
                 placeholder="Search events..."
                 value={searchQuery}
                 onChange={setSearchQuery}
+                onFocus={() => setIsSearchMode(true)}
+                showBack={isSearchMode}
+                onBack={handleExitSearch}
                 className="w-full"
               />
             </Suspense>
-            <div className="flex h-12 items-center overflow-hidden rounded-full border border-input bg-background shadow-sm md:hidden">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-full w-14 rounded-none border-r bg-muted px-0"
-                onClick={handlePrevious}
-                disabled={isCurrentWeek}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-full w-14 rounded-none bg-muted px-0 focus:bg-muted/80"
-                onClick={handleNext}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+            <div
+              className={cn(
+                "shrink-0 overflow-hidden transition-all duration-200 ease-out md:hidden",
+                isSearchMode ? "ml-0 w-0 opacity-0" : "ml-2 opacity-100"
+              )}
+            >
+              <div className="flex h-12 items-center overflow-hidden rounded-full border border-input bg-background shadow-sm">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-full w-10 rounded-none border-r bg-muted px-0"
+                  onClick={handlePrevious}
+                  disabled={isCurrentWeek}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-full w-10 rounded-none bg-muted px-0 focus:bg-muted/80"
+                  onClick={handleNext}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -379,29 +406,55 @@ function HomePageContent() {
               className="w-[160px] shrink-0"
             />
 
-            {/* Navigation Controls */}
-            <div className="hidden h-12 items-center overflow-hidden rounded-full border border-input bg-background shadow-sm md:flex">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-full w-9 rounded-none border-r bg-muted px-0"
-                onClick={handlePrevious}
-                disabled={isCurrentWeek}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-full w-9 rounded-none bg-muted px-0"
-                onClick={handleNext}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+            {/* Navigation Controls - fixed width wrapper for smooth transition */}
+            <div
+              className={cn(
+                "hidden shrink-0 overflow-hidden transition-all duration-200 ease-out md:block",
+                isSearchMode ? "w-0 opacity-0" : "w-[82px] opacity-100"
+              )}
+            >
+              <div className="flex h-12 items-center overflow-hidden rounded-full border border-input bg-background shadow-sm">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-full w-10 shrink-0 rounded-none border-r bg-muted px-0"
+                  onClick={handlePrevious}
+                  disabled={isCurrentWeek}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-full w-10 shrink-0 rounded-none bg-muted px-0"
+                  onClick={handleNext}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Friend Activity Feed - only show if there's activity and not in search mode */}
+      {!isSearchMode && hasRecentActivity && (
+        <div className="mb-4">
+          <div className="flex items-center gap-1 pb-2 md:pb-3">
+            <Link
+              href="/friends"
+              className="flex items-center gap-1 transition-colors hover:text-primary"
+            >
+              <h1 className="text-xl font-bold tracking-tight">
+                Recent Activity
+              </h1>
+              <ChevronRight className="h-4 w-4" />
+            </Link>
+          </div>
+
+          <ActivityFeed limit={3} hideWhenEmpty />
+        </div>
+      )}
 
       {/*  <Tabs*/}
       {/*    value={viewMode}*/}
@@ -429,8 +482,51 @@ function HomePageContent() {
         </div>
       )}
 
-      {/* Week View */}
-      {viewMode === "week" && events && (
+      {/* Recently Added Events (when search focused but no query) */}
+      {isSearchMode && !isSearching && (
+        <div className="space-y-4">
+          {/*<h2 className="text-lg font-semibold">Recently Added</h2>*/}
+          {recentLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : !recentEvents || recentEvents.length === 0 ? (
+            <div className="py-12 text-center text-muted-foreground">
+              No recent events to show
+            </div>
+          ) : (
+            <EventCardGrid
+              events={recentEvents}
+              columns={{ mobile: 1, tablet: 3, desktop: 4 }}
+              gap="md"
+            />
+          )}
+        </div>
+      )}
+
+      {/* Search Results - flat list, no date headers */}
+      {isSearching && events && (
+        <div className="space-y-4">
+          {events.length === 0 ? (
+            <div className="py-12 text-center">
+              <CalendarIcon className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+              <h3 className="mb-2 text-lg font-semibold">No events found</h3>
+              <p className="text-muted-foreground">
+                Try adjusting your search or filters
+              </p>
+            </div>
+          ) : (
+            <EventCardGrid
+              events={events}
+              columns={{ mobile: 1, tablet: 3, desktop: 4 }}
+              gap="md"
+            />
+          )}
+        </div>
+      )}
+
+      {/* Week View - only show when not in search mode */}
+      {!isSearchMode && viewMode === "week" && events && (
         <div className="space-y-6">
           {daysToDisplay.map((date, index) => {
             const dateKey = format(date, "yyyy-MM-dd");
@@ -505,8 +601,8 @@ function HomePageContent() {
         </div>
       )}
 
-      {/* Month View */}
-      {viewMode === "month" && events && (
+      {/* Month View - only show when not in search mode */}
+      {!isSearchMode && viewMode === "month" && events && (
         <Card>
           <CardContent className="p-4">
             {/* Day of week headers */}
@@ -661,22 +757,17 @@ function HomePageContent() {
         </Card>
       )}
 
-      {/* Empty State */}
-      {!isLoading && events && events.length === 0 && (
+      {/* Empty State - only show when not searching (search has its own empty state) */}
+      {!isSearching && !isLoading && events && events.length === 0 && (
         <div className="py-12 text-center">
           <CalendarIcon className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
           <h3 className="mb-2 text-lg font-semibold">No events found</h3>
           <p className="mb-4 text-muted-foreground">
-            {searchQuery && "Try adjusting your search or filters"}
-            {!searchQuery &&
-              activeFilter === "followed" &&
+            {activeFilter === "followed" &&
               "Start following businesses to see their events here"}
-            {!searchQuery &&
-              activeFilter === "friends" &&
+            {activeFilter === "friends" &&
               "Add friends and see what events they're attending"}
-            {!searchQuery &&
-              activeFilter === "all" &&
-              "Check back later for upcoming events"}
+            {activeFilter === "all" && "Check back later for upcoming events"}
           </p>
         </div>
       )}
