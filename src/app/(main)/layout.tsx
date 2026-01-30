@@ -15,7 +15,6 @@ import {
   Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { OnboardingCheck } from "@/components/onboarding-check";
 import { trpc } from "@/lib/trpc";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -80,7 +79,6 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <OnboardingCheck />
       {/* Navigation Bar */}
       <header className="sticky top-0 z-40 border-b bg-background">
         <div className="container mx-auto flex h-16 items-center px-4">
