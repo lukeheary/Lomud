@@ -114,7 +114,8 @@ function HomePageContent() {
   }, [viewMode, currentDate]);
 
   // Get current user to show their city
-  const { data: currentUser, isLoading: isLoadingUser } = trpc.user.getCurrentUser.useQuery();
+  const { data: currentUser, isLoading: isLoadingUser } =
+    trpc.user.getCurrentUser.useQuery();
 
   // Check if there's recent activity to show
   const { hasActivity: hasRecentActivity } = useHasRecentActivity(3);
@@ -176,7 +177,8 @@ function HomePageContent() {
       endDate: dateRange.endDate,
       followedOnly: activeFilter === "followed",
       friendsGoingOnly: activeFilter === "friends",
-      city: effectiveCity && effectiveCity !== "all" ? effectiveCity : undefined,
+      city:
+        effectiveCity && effectiveCity !== "all" ? effectiveCity : undefined,
       search: searchQuery || undefined,
     },
     {
@@ -190,7 +192,8 @@ function HomePageContent() {
     trpc.event.getRecentlyAddedEvents.useQuery(
       {
         limit: 12,
-        city: effectiveCity && effectiveCity !== "all" ? effectiveCity : undefined,
+        city:
+          effectiveCity && effectiveCity !== "all" ? effectiveCity : undefined,
       },
       {
         enabled: isReady && isSearchMode && !isSearching,
@@ -383,7 +386,10 @@ function HomePageContent() {
 
           <div className="flex w-full gap-2 sm:w-fit">
             {/* City Filter */}
-            <Select value={effectiveCity ?? "all"} onValueChange={setSelectedCity}>
+            <Select
+              value={effectiveCity ?? "all"}
+              onValueChange={setSelectedCity}
+            >
               <SelectTrigger className="flex-1 shrink-0 sm:w-[200px]">
                 <SelectValue placeholder="Select city" />
               </SelectTrigger>
@@ -417,7 +423,7 @@ function HomePageContent() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-full w-10 shrink-0 rounded-none border-r bg-muted px-0"
+                  className="h-full w-10 shrink-0 rounded-none border-r bg-muted px-0 hover:bg-muted/60"
                   onClick={handlePrevious}
                   disabled={isCurrentWeek}
                 >
@@ -426,7 +432,7 @@ function HomePageContent() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-full w-10 shrink-0 rounded-none bg-muted px-0"
+                  className="h-full w-10 shrink-0 rounded-none bg-muted px-0 hover:bg-muted/80"
                   onClick={handleNext}
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -532,6 +538,15 @@ function HomePageContent() {
             const dateKey = format(date, "yyyy-MM-dd");
             const dayEvents = eventsByDay[dateKey] || [];
             const isToday = isSameDay(date, new Date());
+            const currentHour = new Date().getHours();
+            const isEvening = currentHour >= 18;
+
+            // Format the date header - use Today/Tonight for current day
+            const dateHeader = isToday
+              ? isEvening
+                ? "Tonight"
+                : "Today"
+              : format(date, "EEEE, MMMM d");
 
             return (
               <div key={dateKey}>
@@ -543,40 +558,8 @@ function HomePageContent() {
                         isToday && "text-primary"
                       )}
                     >
-                      {format(date, "EEEE, MMMM d")}
+                      {dateHeader}
                     </div>
-
-                    {index === 0 && (
-                      <div className="flex items-center gap-2">
-                        {/* hide today button if you're viewing a different week*/}
-                        {/*<Button*/}
-                        {/*  variant="outline"*/}
-                        {/*  size="sm"*/}
-                        {/*  onClick={handleToday}*/}
-                        {/*>*/}
-                        {/*  Today*/}
-                        {/*</Button>*/}
-
-                        {/*<div className="flex items-center rounded-md border">*/}
-                        {/*  <Button*/}
-                        {/*    variant="ghost"*/}
-                        {/*    size="icon"*/}
-                        {/*    className="h-8 w-8"*/}
-                        {/*    onClick={handlePrevious}*/}
-                        {/*  >*/}
-                        {/*    <ChevronLeft className="h-4 w-4" />*/}
-                        {/*  </Button>*/}
-                        {/*  <Button*/}
-                        {/*    variant="ghost"*/}
-                        {/*    size="icon"*/}
-                        {/*    className="h-8 w-8"*/}
-                        {/*    onClick={handleNext}*/}
-                        {/*  >*/}
-                        {/*    <ChevronRight className="h-4 w-4" />*/}
-                        {/*  </Button>*/}
-                        {/*</div>*/}
-                      </div>
-                    )}
                   </div>
 
                   <div className="w-full flex-1">

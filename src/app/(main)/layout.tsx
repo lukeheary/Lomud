@@ -86,7 +86,7 @@ export default function MainLayout({
           <div className="flex items-center">
             <Link
               href="/home"
-              className="flex items-center gap-2 text-3xl font-bold"
+              className="tracki flex items-center gap-2 text-3xl font-black tracking-wide"
             >
               <span className={truculenta.className}>WIG</span>
             </Link>
@@ -218,14 +218,14 @@ export default function MainLayout({
           </div>
 
           {/* Mobile Right Menu - Bell and Menu */}
-          <div className="flex items-center gap-1 md:hidden">
+          <div className="flex items-center md:hidden">
             <NotificationsBell />
 
             {/* Mobile Menu */}
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className={"ml-2"}>
+                  <Menu className="mr-2 h-5" />
                 </Button>
               </SheetTrigger>
               <SheetTitle></SheetTitle>

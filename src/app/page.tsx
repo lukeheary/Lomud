@@ -38,13 +38,10 @@ export default async function LandingPage() {
           <div className="mx-auto max-w-4xl space-y-8 text-center">
             <div className="space-y-4">
               <h1 className="text-4xl font-bold tracking-tight md:text-6xl">
-                Discover Local Events
-                <br />
-                <span className="text-primary">Connect with Friends</span>
+                Who is Going?
               </h1>
               <p className="mx-auto max-w-2xl text-xl text-muted-foreground">
-                Find and attend amazing events in your area. See what your
-                friends are going to and never miss out on the fun.
+                Your social calendar for going out.
               </p>
             </div>
 
@@ -100,8 +97,8 @@ export default async function LandingPage() {
                 </div>
                 <h3 className="text-xl font-semibold">Local First</h3>
                 <p className="text-muted-foreground">
-                  Discover what&apos;s happening in your neighborhood and support
-                  local businesses.
+                  Discover what&apos;s happening in your neighborhood and
+                  support local businesses.
                 </p>
               </div>
             </div>
@@ -132,7 +129,8 @@ export default async function LandingPage() {
       {/* Footer */}
       <footer className="border-t py-6">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <span className={truculenta.className}>WIG</span> - Discover local events and connect with your community
+          <span className={truculenta.className}>WIG</span> - Discover local
+          events and connect with your community
         </div>
       </footer>
     </div>

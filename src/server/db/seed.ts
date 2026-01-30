@@ -623,6 +623,76 @@ async function main() {
       visibility: "public" as const,
     },
 
+    // Additional Day 0 events for density
+    {
+      venueId: venueIdBySlug.get("bijou-boston")!,
+      organizerId: null,
+      createdByUserId: u3,
+      title: "Bijou Happy Hour: House Warmup",
+      description:
+        "Pre-game with groovy house and drink specials. Perfect start before the bigger parties.",
+      imageUrl: null,
+      startAt: daysFromTodayAt(0, 18, 0),
+      endAt: hoursAfter(daysFromTodayAt(0, 18, 0), 3),
+      venueName: "Bijou Boston",
+      address: "51 Stuart St, Boston, MA 02116",
+      city: "Boston",
+      state: "MA",
+      categories: ["bars", "social"],
+      visibility: "public" as const,
+    },
+    {
+      venueId: venueIdBySlug.get("middlesex-lounge-cambridge")!,
+      organizerId: organizerIdBySlug.get("midnight-moves") ?? null,
+      createdByUserId: u3,
+      title: "Midnight Moves: Cambridge Kickoff",
+      description:
+        "Disco and funk to start your night right. Early vibes, late energy.",
+      imageUrl: null,
+      startAt: daysFromTodayAt(0, 19, 30),
+      endAt: hoursAfter(daysFromTodayAt(0, 19, 30), 4),
+      venueName: "The Middlesex Lounge",
+      address: "14 Massachusetts Ave, Cambridge, MA 02139",
+      city: "Cambridge",
+      state: "MA",
+      categories: ["bars", "lgbt"],
+      visibility: "public" as const,
+    },
+    {
+      venueId: venueIdBySlug.get("elsewhere-brooklyn")!,
+      organizerId: organizerIdBySlug.get("midnight-moves") ?? null,
+      createdByUserId: u2,
+      title: "Midnight Moves: Brooklyn Opening Party",
+      description:
+        "Multi-room house and disco party. Rooftop, zone one, and dance floor all going off.",
+      imageUrl: null,
+      startAt: daysFromTodayAt(0, 20, 0),
+      endAt: hoursAfter(daysFromTodayAt(0, 20, 0), 6),
+      venueName: "Elsewhere",
+      address: "599 Johnson Ave, Brooklyn, NY 11237",
+      city: "Brooklyn",
+      state: "NY",
+      categories: ["clubs", "concerts"],
+      visibility: "public" as const,
+    },
+    {
+      venueId: venueIdBySlug.get("good-room-brooklyn")!,
+      organizerId: organizerIdBySlug.get("neon-nights-collective") ?? null,
+      createdByUserId: u4,
+      title: "Neon Nights: Brooklyn Deep House Session",
+      description:
+        "Classic Good Room vibes: deep house, warm crowd, and all-night energy.",
+      imageUrl: null,
+      startAt: daysFromTodayAt(0, 23, 0),
+      endAt: hoursAfter(daysFromTodayAt(0, 23, 0), 5),
+      venueName: "Good Room",
+      address: "98 Meserole Ave, Brooklyn, NY 11222",
+      city: "Brooklyn",
+      state: "NY",
+      categories: ["clubs", "lgbt"],
+      visibility: "public" as const,
+    },
+
     // ----------
     // NYC / Brooklyn
     // ----------

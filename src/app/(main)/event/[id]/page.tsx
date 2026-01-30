@@ -267,7 +267,7 @@ export default function EventPage() {
               className="mt-1 flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary"
             >
               <Users className="h-4 w-4" />
-              <span>Presented by {event.organizer.name}</span>
+              <span>Organized by {event.organizer.name}</span>
             </Link>
           )}
 
@@ -295,7 +295,9 @@ export default function EventPage() {
               Interested
             </Button>
             <Button
-              variant={event.userRsvp?.status === "going" ? "default" : "outline"}
+              variant={
+                event.userRsvp?.status === "going" ? "default" : "outline"
+              }
               className={cn(
                 "flex-1 text-base font-medium transition-colors",
                 event.userRsvp?.status === "going" &&
