@@ -2,7 +2,7 @@
 
 import { Bell, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import {
   Popover,
   PopoverContent,
@@ -86,13 +86,11 @@ export function NotificationsBell() {
                   key={request.id}
                   className="flex items-start gap-3 rounded-lg bg-muted/50 p-3 transition-colors hover:bg-muted"
                 >
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={request.user.imageUrl || undefined} />
-                    <AvatarFallback>
-                      {request.user.firstName?.[0]}
-                      {request.user.lastName?.[0]}
-                    </AvatarFallback>
-                  </Avatar>
+                  <UserAvatar 
+                    src={request.user.imageUrl} 
+                    name={request.user.firstName} 
+                    className="h-10 w-10"
+                  />
 
                   <div className="flex-1 space-y-2">
                     <div>

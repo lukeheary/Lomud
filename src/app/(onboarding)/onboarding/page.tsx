@@ -14,9 +14,18 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Loader2, UserCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { GooglePlacesAutocomplete } from "@/components/google-places-autocomplete";
+import { S3Uploader } from "@/components/ui/s3-uploader";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -26,6 +35,8 @@ export default function OnboardingPage() {
     username: "",
     city: "",
     state: "",
+    gender: "" as "male" | "female" | "other" | "",
+    imageUrl: "",
   });
   const [searchCity, setSearchCity] = useState("");
   const [isRedirecting, setIsRedirecting] = useState(false);
@@ -60,7 +71,7 @@ export default function OnboardingPage() {
 
   // Check if form is valid for enabling submit button
   const isValidUsername = /^[a-zA-Z0-9_]{3,20}$/.test(formData.username);
-  const isFormValid = isValidUsername && formData.city && formData.state;
+  const isFormValid = isValidUsername && formData.city && formData.state && formData.gender;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,11 +107,23 @@ export default function OnboardingPage() {
       return;
     }
 
+    // Validate gender
+    if (!formData.gender) {
+      toast({
+        title: "Validation Error",
+        description: "Please select your gender",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Submit username and location
     updateUserMutation.mutate({
       username: formData.username,
       city: formData.city,
       state: formData.state,
+      gender: formData.gender as "male" | "female" | "other",
+      imageUrl: formData.imageUrl || undefined,
     });
   };
 
@@ -136,20 +159,42 @@ export default function OnboardingPage() {
     <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <UserCircle className="h-6 w-6 text-primary" />
-          </div>
+          {/*<div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">*/}
+          {/*  <UserCircle className="h-6 w-6 text-primary" />*/}
+          {/*</div>*/}
           <CardTitle className="text-2xl">Complete Your Profile</CardTitle>
           <CardDescription>
-            Set up your username and location to get started
+            Set up your profile to get started
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="mb-6 flex flex-col items-center">
+            <div className="relative mb-4 h-24 w-24">
+              <UserAvatar 
+                src={formData.imageUrl} 
+                name={clerkUser?.firstName || formData.username} 
+                className="h-24 w-24 border-2 border-primary/10"
+              />
+            </div>
+            <S3Uploader
+              variant="button"
+              buttonText={formData.imageUrl ? "Change Picture" : "Upload Picture"}
+              onUploadComplete={(url) => setFormData({ ...formData, imageUrl: url })}
+              onRemoveImage={() => setFormData({ ...formData, imageUrl: "" })}
+              folder="profile-pictures"
+              className="w-full max-w-[200px]"
+            />
+            {!formData.imageUrl && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                Optional: You can use your generated avatar
+              </p>
+            )}
+          </div>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Username */}
             <div className="space-y-2">
               <Label htmlFor="username">
-                Username <span className="text-destructive">*</span>
+                Instagram Handle <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="username"
@@ -181,6 +226,28 @@ export default function OnboardingPage() {
                 placeholder="Search for your city..."
                 searchType="cities"
               />
+            </div>
+
+            {/* Gender */}
+            <div className="space-y-2">
+              <Label htmlFor="gender">
+                Gender <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={formData.gender}
+                onValueChange={(value: "male" | "female" | "other") =>
+                  setFormData({ ...formData, gender: value })
+                }
+              >
+                <SelectTrigger id="gender">
+                  <SelectValue placeholder="Select gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <Button

@@ -3,7 +3,6 @@
 import { Suspense } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, Mail, Loader2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";

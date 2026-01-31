@@ -47,6 +47,11 @@ export async function POST(req: Request) {
   if (eventType === "user.created" || eventType === "user.updated") {
     const { id, email_addresses, username, first_name, last_name, image_url } =
       evt.data;
+    
+    // Check if the user has a real image (Clerk default images should be ignored)
+    // @ts-ignore - has_image might not be in the typings but is in the payload
+    const hasRealImage = evt.data.has_image === true;
+    const finalImageUrl = hasRealImage ? image_url : null;
 
     // For new users, use a temporary username that will be updated during onboarding
     // For existing users being updated, preserve their current username
@@ -66,7 +71,7 @@ export async function POST(req: Request) {
         username: finalUsername,
         firstName: first_name,
         lastName: last_name,
-        imageUrl: image_url,
+        imageUrl: finalImageUrl,
       })
       .onConflictDoUpdate({
         target: users.id,
@@ -76,8 +81,11 @@ export async function POST(req: Request) {
           ...(username ? { username } : {}),
           firstName: first_name,
           lastName: last_name,
-          // Don't overwrite imageUrl if user already has one (S3 takes precedence)
-          ...(existingUser?.imageUrl ? {} : { imageUrl: image_url }),
+          // Only overwrite imageUrl if the new one is a real image and the current one is either 
+          // missing or a Clerk default (S3/User-uploaded images should be preserved)
+          ...(finalImageUrl && (!existingUser?.imageUrl || existingUser.imageUrl.includes("clerk.com/default-user-image")) 
+            ? { imageUrl: finalImageUrl } 
+            : {}),
           updatedAt: new Date(),
         },
       });

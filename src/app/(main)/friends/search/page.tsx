@@ -4,7 +4,7 @@ import { Suspense, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import {
   UserPlus,
   Search,
@@ -114,13 +114,10 @@ function SearchPageContent() {
                   className="flex items-center justify-between rounded-lg border p-4"
                 >
                   <div className="flex items-center gap-3">
-                    <Avatar>
-                      <AvatarImage src={user.imageUrl || undefined} />
-                      <AvatarFallback>
-                        {user.firstName?.[0]}
-                        {user.lastName?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
+                    <UserAvatar 
+                      src={user.imageUrl} 
+                      name={user.firstName} 
+                    />
                     <div>
                       <p className="font-medium">
                         {user.firstName} {user.lastName}
@@ -169,13 +166,10 @@ function SearchPageContent() {
                     className="flex items-center justify-between rounded-lg border p-4"
                   >
                     <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={user.imageUrl || undefined} />
-                        <AvatarFallback>
-                          {user.firstName?.[0]}
-                          {user.lastName?.[0]}
-                        </AvatarFallback>
-                      </Avatar>
+                      <UserAvatar 
+                        src={user.imageUrl} 
+                        name={user.firstName} 
+                      />
                       <div>
                         <p className="font-medium">
                           {user.firstName} {user.lastName}

@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,7 +70,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
 
   const handleSignOut = async () => {
     await signOut();
-    router.push("/sign-in");
+    router.push("/");
   };
 
   const closeMobileMenu = () => {
@@ -86,7 +86,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
           <div className="flex items-center">
             <Link
               href="/home"
-              className="tracki flex items-center gap-2 text-4xl font-black tracking-wide"
+              className="flex items-center gap-2 text-4xl font-black tracking-wide"
             >
               <span className={truculenta.className}>WIG</span>
             </Link>
@@ -161,12 +161,11 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.imageUrl || undefined} />
-                    <AvatarFallback>
-                      <User className="h-4 w-4" />
-                    </AvatarFallback>
-                  </Avatar>
+                  <UserAvatar 
+                    src={user?.imageUrl} 
+                    name={user?.firstName} 
+                    className="h-8 w-8"
+                  />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -304,12 +303,11 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                         className={`w-full justify-start px-4 text-base ${isProfile ? "text-foreground" : "text-muted-foreground"}`}
                         size="lg"
                       >
-                        <Avatar className="mr-3 h-5 w-5">
-                          <AvatarImage src={user?.imageUrl || undefined} />
-                          <AvatarFallback>
-                            <User className="h-3 w-3" />
-                          </AvatarFallback>
-                        </Avatar>
+                        <UserAvatar 
+                          src={user?.imageUrl} 
+                          name={user?.firstName} 
+                          className="mr-3 h-5 w-5"
+                        />
                         My Profile
                       </Button>
                     </Link>

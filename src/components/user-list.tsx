@@ -1,5 +1,5 @@
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
 
@@ -48,13 +48,10 @@ export function UserList<T>({
             onClick={() => onItemClick?.(item)}
           >
             <div className="flex items-center gap-3">
-              <Avatar>
-                <AvatarImage src={user.imageUrl || undefined} />
-                <AvatarFallback>
-                  {user.firstName?.[0]}
-                  {user.lastName?.[0]}
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar 
+                src={user.imageUrl} 
+                name={user.firstName} 
+              />
               <div>
                 <div className="flex items-center gap-2">
                   <p className="font-medium">

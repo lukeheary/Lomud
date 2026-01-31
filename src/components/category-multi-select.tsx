@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Check, X, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Popover,
@@ -43,12 +43,13 @@ export function CategoryMultiSelect({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
+        <div
           role="combobox"
           aria-expanded={open}
+          tabIndex={0}
           className={cn(
-            "h-auto min-h-12 w-full justify-between rounded-xl bg-muted px-4 py-2",
+            buttonVariants({ variant: "outline" }),
+            "h-auto min-h-12 w-full justify-between rounded-xl bg-muted px-4 py-2 cursor-pointer",
             className
           )}
         >
@@ -79,7 +80,7 @@ export function CategoryMultiSelect({
             )}
           </div>
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
+        </div>
       </PopoverTrigger>
       <PopoverContent className="w-[300px] p-2" align="start">
         <div className="grid gap-1">

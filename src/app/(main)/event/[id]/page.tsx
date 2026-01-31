@@ -6,7 +6,7 @@ import Image from "next/image";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { Separator } from "@/components/ui/separator";
 import {
   Calendar,
@@ -355,15 +355,11 @@ export default function EventPage() {
                       key={attendee.user.id}
                       className="flex items-center gap-3 rounded-lg border bg-card p-3"
                     >
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage
-                          src={attendee.user.imageUrl || undefined}
-                        />
-                        <AvatarFallback>
-                          {attendee.user.firstName?.[0]}
-                          {attendee.user.lastName?.[0]}
-                        </AvatarFallback>
-                      </Avatar>
+                      <UserAvatar 
+                        src={attendee.user.imageUrl} 
+                        name={attendee.user.firstName} 
+                        className="h-10 w-10"
+                      />
                       <div className="text-sm">
                         <p className="font-medium">
                           {attendee.user.firstName} {attendee.user.lastName}

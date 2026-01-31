@@ -1,7 +1,7 @@
 "use client";
 
 import { trpc } from "@/lib/trpc";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import {
   Loader2,
   Users,
@@ -195,13 +195,11 @@ function ActivityItem({ activity }: ActivityItemProps) {
   return (
     <div className="flex gap-4 pb-2 last:pb-0">
       <div className="relative flex flex-col items-center pt-1.5">
-        <Avatar className="h-10 w-10 border-2 border-background ring-2 ring-muted/20">
-          <AvatarImage src={actor.imageUrl || undefined} />
-          <AvatarFallback>
-            {actor.firstName?.[0]}
-            {actor.lastName?.[0]}
-          </AvatarFallback>
-        </Avatar>
+        <UserAvatar 
+          src={actor.imageUrl} 
+          name={actor.firstName} 
+          className="h-10 w-10 border-2 border-background ring-2 ring-muted/20"
+        />
         <div className="absolute -right-[6px] -top-[1px] rounded-full bg-background p-0.5">
           {renderIcon()}
         </div>

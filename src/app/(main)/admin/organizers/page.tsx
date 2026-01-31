@@ -233,9 +233,6 @@ export default function AdminOrganizersPage() {
             <h1 className="text-3xl font-bold tracking-tight">
               Organizer Management
             </h1>
-            <p className="text-muted-foreground">
-              Create and manage event organizers
-            </p>
           </div>
           <Button onClick={() => setViewMode("create")}>
             <Plus className="mr-2 h-4 w-4" />

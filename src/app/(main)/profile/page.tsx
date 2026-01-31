@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { Separator } from "@/components/ui/separator";
 import { UserButton } from "@clerk/nextjs";
 import { Loader2, Upload, X } from "lucide-react";
@@ -134,13 +134,11 @@ export default function ProfilePage() {
         <CardContent className="space-y-6">
           {/* Profile Image */}
           <div className="flex items-center gap-6">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src={imageUrl || user.imageUrl || undefined} />
-              <AvatarFallback className="text-2xl">
-                {user.firstName?.[0]}
-                {user.lastName?.[0]}
-              </AvatarFallback>
-            </Avatar>
+            <UserAvatar 
+              src={imageUrl || user.imageUrl} 
+              name={firstName || user.firstName} 
+              className="h-24 w-24"
+            />
             <div className="space-y-2">
               <S3Uploader
                 folder={`profiles/${user.id}`}

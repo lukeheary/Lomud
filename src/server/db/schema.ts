@@ -40,6 +40,12 @@ export const userRoleEnum = pgEnum("user_role", [
   "admin",
 ]);
 
+export const genderEnum = pgEnum("gender", [
+  "male",
+  "female",
+  "other",
+]);
+
 export const activityTypeEnum = pgEnum("activity_type", [
   "rsvp_going",
   "rsvp_interested",
@@ -71,6 +77,7 @@ export const users = pgTable(
     imageUrl: text("image_url"),
     city: varchar("city", { length: 100 }),
     state: varchar("state", { length: 2 }),
+    gender: genderEnum("gender"),
     role: userRoleEnum("role").notNull().default("user"),
     isOnboarding: boolean("is_onboarding").notNull().default(true),
     createdAt: timestamp("created_at").defaultNow().notNull(),

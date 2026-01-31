@@ -2,7 +2,6 @@
 
 import { Suspense } from "react";
 import { trpc } from "@/lib/trpc";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Users, Loader2, ArrowLeft } from "lucide-react";
 import { UserList } from "@/components/user-list";

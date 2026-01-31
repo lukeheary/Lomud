@@ -44,6 +44,8 @@ export const userRouter = router({
           .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
         city: z.string().optional(),
         state: z.string().optional(),
+        gender: z.enum(["male", "female", "other"]).optional(),
+        imageUrl: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -76,6 +78,12 @@ export const userRouter = router({
       }
       if (input.state) {
         updateData.state = input.state;
+      }
+      if (input.gender) {
+        updateData.gender = input.gender;
+      }
+      if (input.imageUrl) {
+        updateData.imageUrl = input.imageUrl;
       }
 
       // Update the user's username and location
@@ -129,6 +137,7 @@ export const userRouter = router({
         imageUrl: z.string().url().optional(),
         city: z.string().optional(),
         state: z.string().optional(),
+        gender: z.enum(["male", "female", "other"]).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -156,6 +165,9 @@ export const userRouter = router({
       }
       if (input.state !== undefined) {
         updateData.state = input.state;
+      }
+      if (input.gender !== undefined) {
+        updateData.gender = input.gender;
       }
 
       console.log("Updating database with:", updateData);
