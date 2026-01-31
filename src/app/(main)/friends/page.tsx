@@ -172,7 +172,7 @@ function FriendsPageContent() {
   const isSearching = searchQuery.length >= 2;
 
   return (
-    <div className="container mx-auto space-y-4 py-4">
+    <div className="container mx-auto py-4">
       {/* Sticky sentinel for intersection observer */}
       <div ref={stickySentinelRef} className="h-0" />
 
@@ -395,7 +395,7 @@ function FriendsPageContent() {
           )}
 
           {/* Activity Feed */}
-          <div>
+          <div className={"pt-4"}>
             <h2 className="mb-3 text-xl font-semibold">Activity</h2>
             <ActivityFeed />
           </div>

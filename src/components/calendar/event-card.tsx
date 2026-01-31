@@ -28,7 +28,7 @@ export function EventCard({ event }: EventCardProps) {
     <Link href={`/event/${event.id}`} className="group">
       <Card className="h-full cursor-pointer overflow-hidden !border-none bg-card p-2 transition-all duration-300 md:flex-col">
         {/* Container - horizontal on mobile, vertical on desktop */}
-        <div className="flex md:block">
+        <div className="relative flex md:block">
           {/* Square Image - smaller on mobile, full width on desktop */}
           <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-2xl bg-muted md:aspect-square md:h-auto md:w-full lg:max-w-[274px]">
             {event.imageUrl ? (
@@ -44,15 +44,10 @@ export function EventCard({ event }: EventCardProps) {
               </div>
             )}
 
-            {/* Friends Going - Bottom Right (shown on both mobile and desktop) */}
+            {/* Friends Going - Desktop: on image */}
             {goingUsers.length > 0 && (
-              <div className="absolute bottom-1 right-1 md:bottom-4 md:right-4">
-                <div className="md:hidden">
-                  <AvatarStack users={goingUsers} maxDisplay={3} size="sm" />
-                </div>
-                <div className="hidden md:block">
-                  <AvatarStack users={goingUsers} maxDisplay={5} size="md" />
-                </div>
+              <div className="absolute bottom-4 right-4 hidden md:block">
+                <AvatarStack users={goingUsers} maxDisplay={5} size="md" />
               </div>
             )}
           </div>
@@ -78,6 +73,13 @@ export function EventCard({ event }: EventCardProps) {
               {/*    : event.organizer.name)}*/}
             </div>
           </div>
+
+          {/* Friends Going - Mobile: bottom right of the row */}
+          {goingUsers.length > 0 && (
+            <div className="absolute bottom-1 right-1 md:hidden">
+              <AvatarStack users={goingUsers} maxDisplay={3} size="sm" />
+            </div>
+          )}
         </div>
       </Card>
     </Link>

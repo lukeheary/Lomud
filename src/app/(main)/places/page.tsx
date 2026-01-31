@@ -177,7 +177,7 @@ function PlacesPageContent() {
     (filterType !== "venues" && isLoadingOrganizers);
 
   return (
-    <div className="container mx-auto space-y-4 py-4">
+    <div className="container mx-auto py-4">
       {/* Sticky sentinel for intersection observer */}
       <div ref={stickySentinelRef} className="h-0" />
 
@@ -243,7 +243,7 @@ function PlacesPageContent() {
 
       {/* Combined Grid */}
       {!isLoading && isReady && combinedItems.length > 0 && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 py-4 md:grid-cols-2 lg:grid-cols-3">
           {combinedItems.map((item) => (
             <Link
               key={`${item.type}-${item.id}`}
