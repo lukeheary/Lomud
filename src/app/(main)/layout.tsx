@@ -125,11 +125,11 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                 }
               >
                 Friends
-                {receivedRequestsCount > 0 && (
-                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
-                    {receivedRequestsCount}
-                  </span>
-                )}
+                {/*{receivedRequestsCount > 0 && (*/}
+                {/*  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">*/}
+                {/*    {receivedRequestsCount}*/}
+                {/*  </span>*/}
+                {/*)}*/}
               </Button>
             </Link>
           </nav>
@@ -161,9 +161,9 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
-                  <UserAvatar 
-                    src={user?.imageUrl} 
-                    name={user?.firstName} 
+                  <UserAvatar
+                    src={user?.imageUrl}
+                    name={user?.firstName}
                     className="h-8 w-8"
                   />
                 </Button>
@@ -288,11 +288,11 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                     >
                       <Users className="mr-3 h-5 w-5" />
                       Friends
-                      {receivedRequestsCount > 0 && (
-                        <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] text-primary-foreground">
-                          {receivedRequestsCount}
-                        </span>
-                      )}
+                      {/*{receivedRequestsCount > 0 && (*/}
+                      {/*  <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] text-primary-foreground">*/}
+                      {/*    {receivedRequestsCount}*/}
+                      {/*  </span>*/}
+                      {/*)}*/}
                     </Button>
                   </Link>
 
@@ -303,9 +303,9 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                         className={`w-full justify-start px-4 text-base ${isProfile ? "text-foreground" : "text-muted-foreground"}`}
                         size="lg"
                       >
-                        <UserAvatar 
-                          src={user?.imageUrl} 
-                          name={user?.firstName} 
+                        <UserAvatar
+                          src={user?.imageUrl}
+                          name={user?.firstName}
                           className="mr-3 h-5 w-5"
                         />
                         My Profile

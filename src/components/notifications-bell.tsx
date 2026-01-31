@@ -65,11 +65,11 @@ export function NotificationsBell() {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80" align="end">
-        <div className="space-y-4">
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-semibold">Notifications</h4>
+            <h4 className="text-xl font-semibold">Notifications</h4>
             {hasNotifications && (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-sm text-muted-foreground">
                 {pendingRequests!.length} new
               </span>
             )}
@@ -86,9 +86,9 @@ export function NotificationsBell() {
                   key={request.id}
                   className="flex items-start gap-3 rounded-lg bg-muted/50 p-3 transition-colors hover:bg-muted"
                 >
-                  <UserAvatar 
-                    src={request.user.imageUrl} 
-                    name={request.user.firstName} 
+                  <UserAvatar
+                    src={request.user.imageUrl}
+                    name={request.user.firstName}
                     className="h-10 w-10"
                   />
 
@@ -97,7 +97,7 @@ export function NotificationsBell() {
                       <p className="text-sm font-medium">
                         {request.user.firstName} {request.user.lastName}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-sm text-muted-foreground">
                         @{request.user.username}
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground">

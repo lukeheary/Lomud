@@ -220,14 +220,14 @@ function FriendsPageContent() {
                           {pluralize("Request", receivedRequests.length)}
                         </span>
                       </p>
-                      {receivedRequests.length > 0 && (
-                        <Badge
-                          variant="default"
-                          className="px-1 py-0 text-[10px] md:text-xs"
-                        >
-                          New
-                        </Badge>
-                      )}
+                      {/*{receivedRequests.length > 0 && (*/}
+                      {/*  <Badge*/}
+                      {/*    variant="default"*/}
+                      {/*    className="px-1 py-0 text-[10px] md:text-xs"*/}
+                      {/*  >*/}
+                      {/*    New*/}
+                      {/*  </Badge>*/}
+                      {/*)}*/}
                     </div>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground lg:h-5 lg:w-5" />
@@ -291,8 +291,8 @@ function FriendsPageContent() {
           ) : (
             // Recent Users (when focused but no query)
             <>
-              <div>
-                <h2 className="text-lg font-semibold">Recently Joined</h2>
+              <div className={"pt-4"}>
+                <h2 className="text-xl font-semibold">Recently Joined</h2>
               </div>
               {recentLoading ? (
                 <div className="flex justify-center py-12">
@@ -337,19 +337,11 @@ function FriendsPageContent() {
         <>
           {/* Pending Requests Preview */}
           {receivedRequests.length > 0 && (
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">Friend Requests</CardTitle>
-                  <Link href="/friends/requests">
-                    <Button variant="ghost" size="sm">
-                      View all
-                      <ChevronRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  </Link>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
+            <div className={"mt-4"}>
+              <div className="flex items-center justify-between">
+                <h2 className={"text-xl font-semibold"}>Friend Requests</h2>
+              </div>
+              <div className="space-y-3">
                 <UserList
                   items={receivedRequests.slice(0, 3)}
                   getUser={(req) => ({
@@ -360,7 +352,7 @@ function FriendsPageContent() {
                     imageUrl: req.friend?.imageUrl || null,
                   })}
                   renderAction={(request) => (
-                    <div className="flex gap-1">
+                    <div className="flex gap-4">
                       <Button
                         size="icon"
                         variant="ghost"
@@ -389,8 +381,8 @@ function FriendsPageContent() {
                     </div>
                   )}
                 />
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
 
           {/* Activity Feed */}

@@ -37,6 +37,11 @@ export function UserAvatar({
             "#e9c46a", // warm sand
             "#f4a261", // soft orange
             "#e76f51", // muted coral
+            "#8b5a8d", // muted purple
+            "#457b9d", // steel blue
+            "#d4a373", // tan
+            "#bc6c25", // burnt sienna
+            "#6a994e", // olive green
           ]}
         />
       </AvatarFallback>
