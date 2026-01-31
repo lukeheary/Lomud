@@ -4,7 +4,7 @@ import { Suspense, useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 import { SearchInput } from "@/components/ui/search-input";
-import { useNavbarSearch } from "@/contexts/home-search-context";
+import { useNavbarSearch } from "@/contexts/nav-search-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";

@@ -1,10 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useMemo, useEffect, useRef, useState, useCallback } from "react";
+import {
+  Suspense,
+  useMemo,
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+} from "react";
 import { trpc } from "@/lib/trpc";
 import { SearchInput } from "@/components/ui/search-input";
-import { useNavbarSearch } from "@/contexts/home-search-context";
+import { useNavbarSearch } from "@/contexts/nav-search-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building, Building2, MapPin, Loader2 } from "lucide-react";
 import { useQueryState } from "nuqs";

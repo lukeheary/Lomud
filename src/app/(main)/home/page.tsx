@@ -68,7 +68,7 @@ import {
   useHasRecentActivity,
 } from "@/components/friends/activity-feed";
 import { CATEGORY_LABELS, type Category } from "@/lib/categories";
-import { useNavbarSearch } from "@/contexts/home-search-context";
+import { useNavbarSearch } from "@/contexts/nav-search-context";
 
 type ViewMode = "week" | "month";
 

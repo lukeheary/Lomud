@@ -37,7 +37,7 @@ import { truculenta } from "@/lib/fonts";
 import {
   NavbarSearchProvider,
   useNavbarSearch,
-} from "@/contexts/home-search-context";
+} from "@/contexts/nav-search-context";
 import { cn } from "@/lib/utils";
 
 function MainLayoutContent({ children }: { children: React.ReactNode }) {
