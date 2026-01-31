@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useMemo } from "react";
+import { Suspense, useMemo, useEffect, useRef, useState, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
 import { SearchInput } from "@/components/ui/search-input";
+import { useNavbarSearch } from "@/contexts/home-search-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building, Building2, MapPin, Loader2 } from "lucide-react";
 import { useQueryState } from "nuqs";
@@ -18,6 +19,48 @@ import {
 type FilterType = "all" | "venues" | "organizers" | "following";
 
 function PlacesPageContent() {
+  const { setShowNavbarSearch, registerScrollToSearch } = useNavbarSearch();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const stickySentinelRef = useRef<HTMLDivElement>(null);
+  const [isSticky, setIsSticky] = useState(false);
+
+  // Scroll to top and focus search input when navbar search button is clicked
+  const scrollToSearchAndFocus = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    searchInputRef.current?.focus();
+  }, []);
+
+  // Register the scroll callback with the navbar context
+  useEffect(() => {
+    registerScrollToSearch(scrollToSearchAndFocus);
+  }, [registerScrollToSearch, scrollToSearchAndFocus]);
+
+  // Update navbar search button visibility based on scroll position
+  useEffect(() => {
+    setShowNavbarSearch(isSticky);
+  }, [isSticky, setShowNavbarSearch]);
+
+  // Observe when the search section scrolls out of view
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsSticky(!entry.isIntersecting);
+      },
+      { threshold: [1], rootMargin: "-1px 0px 0px 0px" }
+    );
+
+    const sentinel = stickySentinelRef.current;
+    if (sentinel) {
+      observer.observe(sentinel);
+    }
+
+    return () => {
+      if (sentinel) {
+        observer.unobserve(sentinel);
+      }
+    };
+  }, []);
+
   const [searchQuery, setSearchQuery] = useQueryState("search", {
     defaultValue: "",
   });
@@ -128,10 +171,14 @@ function PlacesPageContent() {
 
   return (
     <div className="container mx-auto space-y-4 py-4">
+      {/* Sticky sentinel for intersection observer */}
+      <div ref={stickySentinelRef} className="h-0" />
+
       {/* Search and Filters */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <Suspense fallback={null}>
           <SearchInput
+            ref={searchInputRef}
             placeholder="Search venues & organizers..."
             value={searchQuery}
             onChange={setSearchQuery}

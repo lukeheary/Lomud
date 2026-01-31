@@ -1,17 +1,17 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, ReactNode, RefObject } from "react";
+import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 
-interface HomeSearchContextType {
+interface NavbarSearchContextType {
   showNavbarSearch: boolean;
   setShowNavbarSearch: (show: boolean) => void;
   scrollToSearchAndFocus: () => void;
   registerScrollToSearch: (callback: () => void) => void;
 }
 
-const HomeSearchContext = createContext<HomeSearchContextType | null>(null);
+const NavbarSearchContext = createContext<NavbarSearchContextType | null>(null);
 
-export function HomeSearchProvider({ children }: { children: ReactNode }) {
+export function NavbarSearchProvider({ children }: { children: ReactNode }) {
   const [showNavbarSearch, setShowNavbarSearch] = useState(false);
   const [scrollToSearchCallback, setScrollToSearchCallback] = useState<(() => void) | null>(null);
 
@@ -26,7 +26,7 @@ export function HomeSearchProvider({ children }: { children: ReactNode }) {
   }, [scrollToSearchCallback]);
 
   return (
-    <HomeSearchContext.Provider
+    <NavbarSearchContext.Provider
       value={{
         showNavbarSearch,
         setShowNavbarSearch,
@@ -35,12 +35,12 @@ export function HomeSearchProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
-    </HomeSearchContext.Provider>
+    </NavbarSearchContext.Provider>
   );
 }
 
-export function useHomeSearch() {
-  const context = useContext(HomeSearchContext);
+export function useNavbarSearch() {
+  const context = useContext(NavbarSearchContext);
   if (!context) {
     // Return a no-op context when not inside provider (for other pages)
     return {
@@ -51,4 +51,9 @@ export function useHomeSearch() {
     };
   }
   return context;
+
 }
+
+// Keep backward-compatible aliases
+export const HomeSearchProvider = NavbarSearchProvider;
+export const useHomeSearch = useNavbarSearch;

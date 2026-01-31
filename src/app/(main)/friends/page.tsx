@@ -1,9 +1,10 @@
 "use client";
 
-import { Suspense, useState, useRef } from "react";
+import { Suspense, useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 import { SearchInput } from "@/components/ui/search-input";
+import { useNavbarSearch } from "@/contexts/home-search-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -27,10 +28,50 @@ function FriendsPageContent() {
   const { toast } = useToast();
   const utils = trpc.useUtils();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const stickySentinelRef = useRef<HTMLDivElement>(null);
   const [isSearchMode, setIsSearchMode] = useState(false);
+  const [isSticky, setIsSticky] = useState(false);
+  const { setShowNavbarSearch, registerScrollToSearch } = useNavbarSearch();
   const [searchQuery, setSearchQuery] = useQueryState("q", {
     defaultValue: "",
   });
+
+  // Scroll to top and focus search input when navbar search button is clicked
+  const scrollToSearchAndFocus = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    searchInputRef.current?.focus();
+  }, []);
+
+  // Register the scroll callback with the navbar context
+  useEffect(() => {
+    registerScrollToSearch(scrollToSearchAndFocus);
+  }, [registerScrollToSearch, scrollToSearchAndFocus]);
+
+  // Update navbar search button visibility based on scroll position
+  useEffect(() => {
+    setShowNavbarSearch(isSticky);
+  }, [isSticky, setShowNavbarSearch]);
+
+  // Observe when the search section scrolls out of view
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsSticky(!entry.isIntersecting);
+      },
+      { threshold: [1], rootMargin: "-1px 0px 0px 0px" }
+    );
+
+    const sentinel = stickySentinelRef.current;
+    if (sentinel) {
+      observer.observe(sentinel);
+    }
+
+    return () => {
+      if (sentinel) {
+        observer.unobserve(sentinel);
+      }
+    };
+  }, []);
 
   // Fetch friends
   const { data: friends } = trpc.friends.listFriends.useQuery({});
@@ -132,14 +173,8 @@ function FriendsPageContent() {
 
   return (
     <div className="container mx-auto space-y-4 py-4">
-      {/*<div>*/}
-      {/*  <h1 className="text-2xl font-bold tracking-tight md:text-3xl">*/}
-      {/*    Friends*/}
-      {/*  </h1>*/}
-      {/*  <p className="text-muted-foreground">*/}
-      {/*    Connect with friends and see what they&apos;re up to*/}
-      {/*  </p>*/}
-      {/*</div>*/}
+      {/* Sticky sentinel for intersection observer */}
+      <div ref={stickySentinelRef} className="h-0" />
 
       <div className="flex flex-col gap-2 md:flex-row md:items-center">
         <div className="flex-1">

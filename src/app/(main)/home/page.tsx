@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useMemo, useEffect, Suspense, useRef, useCallback } from "react";
+import {
+  useState,
+  useMemo,
+  useEffect,
+  Suspense,
+  useRef,
+  useCallback,
+} from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -61,7 +68,7 @@ import {
   useHasRecentActivity,
 } from "@/components/friends/activity-feed";
 import { CATEGORY_LABELS, type Category } from "@/lib/categories";
-import { useHomeSearch } from "@/contexts/home-search-context";
+import { useNavbarSearch } from "@/contexts/home-search-context";
 
 type ViewMode = "week" | "month";
 
@@ -124,8 +131,8 @@ function HomePageContent() {
   // Get available cities
   const { data: cities } = trpc.event.getAvailableCities.useQuery();
 
-  // Home search context for navbar search button
-  const { setShowNavbarSearch, registerScrollToSearch } = useHomeSearch();
+  // Navbar search context for navbar search button
+  const { setShowNavbarSearch, registerScrollToSearch } = useNavbarSearch();
 
   // Determine the effective city: use URL param if set, otherwise user's city
   const effectiveCity = selectedCity ?? currentUser?.city ?? null;
@@ -356,12 +363,9 @@ function HomePageContent() {
 
       {/* Search and Filters */}
       <div
-        className={cn(
-          "z-[45] -mx-4 -mt-4 bg-background px-4 pb-4 pt-4 transition-shadow md:top-16 md:z-30 md:-mx-8 md:bg-background/95 md:px-8 md:pt-4 md:backdrop-blur md:supports-[backdrop-filter]:bg-background",
-          isSticky
-            ? "border-b shadow-sm md:border-none md:shadow-none"
-            : "border-none shadow-none"
-        )}
+        className={
+          "z-[45] -mx-4 -mt-4 bg-background px-4 pb-4 pt-4 transition-shadow md:top-16 md:z-30 md:-mx-8 md:bg-background/95 md:px-8 md:pt-4 md:backdrop-blur md:supports-[backdrop-filter]:bg-background"
+        }
       >
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           {/* Search Input */}

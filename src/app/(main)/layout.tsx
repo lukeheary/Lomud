@@ -35,8 +35,8 @@ import { useClerk } from "@clerk/nextjs";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { truculenta } from "@/lib/fonts";
 import {
-  HomeSearchProvider,
-  useHomeSearch,
+  NavbarSearchProvider,
+  useNavbarSearch,
 } from "@/contexts/home-search-context";
 import { cn } from "@/lib/utils";
 
@@ -55,7 +55,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
     statusFilter: "pending",
   });
 
-  const { showNavbarSearch, scrollToSearchAndFocus } = useHomeSearch();
+  const { showNavbarSearch, scrollToSearchAndFocus } = useNavbarSearch();
 
   const receivedRequestsCount =
     pendingRequests?.filter((f) => !f.isSender).length ?? 0;
@@ -139,11 +139,11 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
 
           {/* Desktop Right Menu */}
           <div className="hidden items-center gap-2 md:flex">
-            {/* Search button - only visible when scrolled on home page */}
+            {/* Search button - only visible when scrolled on home/places/friends page */}
             <div
               className={cn(
                 "overflow-hidden transition-all duration-200",
-                isHome && showNavbarSearch
+                (isHome || isPlaces || isFriends) && showNavbarSearch
                   ? "w-10 opacity-100"
                   : "w-0 opacity-0"
               )}
@@ -154,7 +154,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                 onClick={scrollToSearchAndFocus}
                 className="h-10 w-10"
               >
-                <Search className="h-5 w-5" />
+                <Search className="h-6 w-6" />
               </Button>
             </div>
             <NotificationsBell />
@@ -226,11 +226,11 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
 
           {/* Mobile Right Menu - Bell and Menu */}
           <div className="flex items-center md:hidden">
-            {/* Search button - only visible when scrolled on home page */}
+            {/* Search button - only visible when scrolled on home/places/friends page */}
             <div
               className={cn(
                 "overflow-hidden transition-all duration-200",
-                isHome && showNavbarSearch
+                (isHome || isPlaces || isFriends) && showNavbarSearch
                   ? "w-10 opacity-100"
                   : "w-0 opacity-0"
               )}
@@ -381,8 +381,8 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <HomeSearchProvider>
+    <NavbarSearchProvider>
       <MainLayoutContent>{children}</MainLayoutContent>
-    </HomeSearchProvider>
+    </NavbarSearchProvider>
   );
 }
