@@ -9,11 +9,11 @@ async function run() {
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
     try {
-        console.log("Adding columns to organizers table...");
+        console.log("Ensuring columns exist on places table...");
         await pool.query(`
-      ALTER TABLE "organizers" ADD COLUMN IF NOT EXISTS "city" varchar(100);
-      ALTER TABLE "organizers" ADD COLUMN IF NOT EXISTS "state" varchar(2);
-      CREATE INDEX IF NOT EXISTS "organizers_location_idx" ON "organizers" ("city", "state");
+      ALTER TABLE "places" ADD COLUMN IF NOT EXISTS "city" varchar(100);
+      ALTER TABLE "places" ADD COLUMN IF NOT EXISTS "state" varchar(2);
+      CREATE INDEX IF NOT EXISTS "places_location_idx" ON "places" ("city", "state");
     `);
         console.log("Success!");
     } catch (err) {

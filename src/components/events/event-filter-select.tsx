@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { ResponsiveSelect } from "@/components/ui/responsive-select";
 import { EventFilterTab } from "@/types/events";
 
 interface EventFilterSelectProps {
@@ -15,24 +9,25 @@ interface EventFilterSelectProps {
   className?: string;
 }
 
+const OPTIONS = [
+  { value: "all", label: "All Events" },
+  { value: "followed", label: "Following" },
+  { value: "friends", label: "Friends Going" },
+];
+
 export function EventFilterSelect({
   value,
   onValueChange,
   className,
 }: EventFilterSelectProps) {
   return (
-    <Select
+    <ResponsiveSelect
       value={value}
       onValueChange={(val) => onValueChange(val as EventFilterTab)}
-    >
-      <SelectTrigger className={className}>
-        <SelectValue placeholder="Filter events" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="all">All Events</SelectItem>
-        <SelectItem value="followed">Following</SelectItem>
-        <SelectItem value="friends">Friends Going</SelectItem>
-      </SelectContent>
-    </Select>
+      options={OPTIONS}
+      placeholder="Filter events"
+      title="Filter Events"
+      className={className}
+    />
   );
 }

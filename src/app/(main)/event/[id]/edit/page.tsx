@@ -91,6 +91,8 @@ export default function EditEventPage() {
         address: event.address || "",
         city: event.city || "",
         state: event.state || "",
+        slug: event.venue?.slug || "",
+        instagram: event.venue?.instagram || "",
       });
       // If no venue ID, it was a manual entry, so we show it as "creating new" mode
       if (!event.venueId) {
@@ -135,11 +137,11 @@ export default function EditEventPage() {
         try {
           const newVenue = await createVenueMutation.mutateAsync({
             type: "venue",
-            slug: selectedVenue.slug || selectedVenue.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""),
             name: selectedVenue.name,
             address: selectedVenue.address || undefined,
             city: selectedVenue.city,
             state: selectedVenue.state,
+            instagram: selectedVenue.instagram || undefined,
           });
           finalVenueId = newVenue.id;
         } catch (error: any) {

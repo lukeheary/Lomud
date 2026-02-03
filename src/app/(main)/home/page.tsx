@@ -60,6 +60,7 @@ import {
 } from "@/components/ui/hover-card";
 import { cn, formatTime } from "@/lib/utils";
 import { EventFilterSelect } from "@/components/events/event-filter-select";
+import { ResponsiveSelect } from "@/components/ui/responsive-select";
 import { EventFilterTab } from "@/types/events";
 import { useQueryState, parseAsString, parseAsIsoDate } from "nuqs";
 import { parseISO, subDays } from "date-fns";
@@ -412,25 +413,20 @@ function HomePageContent() {
 
           <div className="flex w-full gap-2 sm:w-fit">
             {/* City Filter */}
-            <Select
+            <ResponsiveSelect
               value={effectiveCity ?? "all"}
               onValueChange={setSelectedCity}
-            >
-              <SelectTrigger className="flex-1 shrink-0 sm:w-[200px]">
-                <SelectValue placeholder="Select city" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Cities</SelectItem>
-                {cities?.map((city) => (
-                  <SelectItem
-                    key={`${city.city}-${city.state}`}
-                    value={city.city}
-                  >
-                    {city.city}, {city.state}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              options={[
+                { value: "all", label: "All Cities" },
+                ...(cities?.map((city) => ({
+                  value: city.city,
+                  label: `${city.city}, ${city.state}`,
+                })) || []),
+              ]}
+              placeholder="Select city"
+              title="Select City"
+              className="flex-1 shrink-0 sm:w-[200px]"
+            />
 
             <EventFilterSelect
               value={activeFilter}

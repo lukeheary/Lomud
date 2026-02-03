@@ -57,8 +57,8 @@ export function EventForm({
         id: venue.id,
         name: venue.name,
         address: venue.address || "",
-        city: venue.city,
-        state: venue.state,
+        city: venue.city || "",
+        state: venue.state || "",
         categories: (venue.categories as string[]) || [],
       });
       // Inherit venue categories
@@ -122,13 +122,13 @@ export function EventForm({
       try {
         const newVenue = await createVenueMutation.mutateAsync({
           type: "venue",
-          slug: selectedVenue.slug || selectedVenue.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""),
           name: selectedVenue.name,
           address: selectedVenue.address || undefined,
           city: selectedVenue.city,
           state: selectedVenue.state,
           latitude: selectedVenue.latitude,
           longitude: selectedVenue.longitude,
+          instagram: selectedVenue.instagram || undefined,
         });
         finalVenueId = newVenue.id;
       } catch (error: any) {

@@ -175,10 +175,10 @@ export function VenueSelector({
                             id: v.id,
                             name: v.name,
                             address: v.address || "",
-                            city: v.city,
-                            state: v.state,
+                            city: v.city || "",
+                            state: v.state || "",
                             slug: v.slug,
-                            instagram: v.instagram,
+                            instagram: v.instagram || "",
                             categories: (v.categories as string[]) || [],
                           });
                           setIsVenuePopoverOpen(false);

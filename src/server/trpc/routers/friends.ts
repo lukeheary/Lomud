@@ -362,8 +362,7 @@ export const friendsRouter = router({
               venue: true,
             },
           },
-          venue: true,
-          organizer: true,
+          place: true,
         },
       });
 

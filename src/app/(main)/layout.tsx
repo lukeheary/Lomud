@@ -137,7 +137,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
           <div className="flex-1" />
 
           {/* Desktop Right Menu */}
-          <div className="hidden items-center gap-2 md:flex">
+          <div className="hidden items-center gap-2 md:flex md:gap-4">
             {/* Search button - only visible when scrolled on home/places/friends page */}
             <div
               className={cn(

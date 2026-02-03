@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ResponsiveSelect } from "@/components/ui/responsive-select";
 
 type FilterType = "all" | "venues" | "organizers" | "following";
 
@@ -156,41 +157,35 @@ function PlacesPageContent() {
         {/* Filters */}
         <div className="flex shrink-0 gap-2">
           {/* Type Filter */}
-          <Select
+          <ResponsiveSelect
             value={filterType}
             onValueChange={(value) => setFilterType(value as FilterType)}
-          >
-            <SelectTrigger className="w-full sm:w-[170px]">
-              <SelectValue placeholder="Filter" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Places</SelectItem>
-              <SelectItem value="venues">Venues</SelectItem>
-              <SelectItem value="organizers">Organizers</SelectItem>
-              <SelectItem value="following">Following</SelectItem>
-            </SelectContent>
-          </Select>
+            options={[
+              { value: "all", label: "All Places" },
+              { value: "venues", label: "Venues" },
+              { value: "organizers", label: "Organizers" },
+              { value: "following", label: "Following" },
+            ]}
+            placeholder="Filter"
+            title="Filter Places"
+            className="w-full sm:w-[170px]"
+          />
 
           {/* City Filter */}
-          <Select
+          <ResponsiveSelect
             value={effectiveCity ?? "all"}
             onValueChange={setSelectedCity}
-          >
-            <SelectTrigger className="w-full md:w-fit">
-              <SelectValue placeholder="Select city" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Cities</SelectItem>
-              {cities?.map((city) => (
-                <SelectItem
-                  key={`${city.city}-${city.state}`}
-                  value={city.city}
-                >
-                  {city.city}, {city.state}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            options={[
+              { value: "all", label: "All Cities" },
+              ...(cities?.map((city) => ({
+                value: city.city,
+                label: `${city.city}, ${city.state}`,
+              })) || []),
+            ]}
+            placeholder="Select city"
+            title="Select City"
+            className="w-full md:w-fit"
+          />
         </div>
       </div>
 
