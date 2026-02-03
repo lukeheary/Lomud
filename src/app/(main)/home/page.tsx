@@ -657,7 +657,7 @@ function HomePageContent() {
             return (
               <div key={dateKey}>
                 <div className="flex flex-col items-start">
-                  <div className="mb-2 flex w-full min-w-[100px] flex-row items-center justify-between">
+                  <div className="sticky top-16 z-20 -mx-4 mb-2 flex w-[calc(100%+2rem)] min-w-[100px] flex-row items-center justify-between bg-background px-4 py-2 md:-mx-8 md:w-[calc(100%+4rem)] md:px-8">
                     <div
                       className={cn(
                         "text-xl font-semibold",

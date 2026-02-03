@@ -117,18 +117,13 @@ export default function PlacePage() {
   return (
     <div className="min-h-screen bg-background pb-8">
       {/* Banner Area */}
-      <div className="mx-auto w-full max-w-4xl lg:px-4 lg:pt-4">
-        <div className="relative h-32 w-full overflow-hidden bg-muted md:h-48 lg:rounded-2xl">
-          <div className="h-full w-full bg-gradient-to-r from-primary/10 to-primary/30" />
-        </div>
-      </div>
 
       <div className="mx-auto max-w-4xl px-4">
-        <div className="relative pb-6">
+        <div className="relative">
           <div className="flex items-start justify-between">
             {/* Logo/Avatar */}
-            <div className="-mt-12 md:-mt-16">
-              <Avatar className="h-24 w-24 border-4 border-background shadow-md md:h-32 md:w-32">
+            <div className="mt-4">
+              <Avatar className="h-32 w-32 border-4 border-background shadow-md md:h-48 md:w-48">
                 {place.imageUrl ? (
                   <AvatarImage
                     src={place.imageUrl}
@@ -171,36 +166,41 @@ export default function PlacePage() {
           <div className="mt-4 space-y-4">
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+                <h1 className="text-3xl font-bold tracking-tight">
                   {place.name}
                 </h1>
               </div>
-              <p className="text-sm text-muted-foreground md:text-base">
+              <p className="text-muted-foreground md:text-base">
                 @{place.slug}
               </p>
 
               {place.description && (
-                <p className="mt-3 whitespace-pre-wrap text-[15px] leading-normal">
+                <p className="mt-3 whitespace-pre-wrap leading-normal">
                   {place.description}
                 </p>
               )}
             </div>
 
-            <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <TypeIcon className="h-4 w-4" />
-                <span>{isVenue ? "Venue" : "Organizer"}</span>
-              </div>
-              {(place.city || place.address) && (
+            <div className="flex flex-col gap-x-4 gap-y-2 text-sm text-muted-foreground">
+              {/*<div className="flex items-center gap-1">*/}
+              {/*  <TypeIcon className="h-4 w-4" />*/}
+              {/*  <span>{isVenue ? "Venue" : "Organizer"}</span>*/}
+              {/*</div>*/}
+              {isVenue ? (
+                <div className="flex items-center gap-1">
+                  <TypeIcon className="h-4 w-4" />
+                  {/*<MapPin className="h-4 w-4" />*/}
+                  <span>{place.address}</span>
+                </div>
+              ) : place.city && place.state ? (
                 <div className="flex items-center gap-1">
                   <MapPin className="h-4 w-4" />
                   <span>
-                    {place.city && place.state
-                      ? `${place.city}, ${place.state}`
-                      : place.address}
+                    {place.city}, {place.state}
                   </span>
                 </div>
-              )}
+              ) : null}
+
               {place.website && (
                 <a
                   href={place.website}
@@ -223,52 +223,46 @@ export default function PlacePage() {
                   <span>@{place.instagram}</span>
                 </a>
               )}
+
+              {isVenue && (place as any).hours && (
+                <VenueHoursDisplay hours={(place as any).hours as VenueHours} />
+              )}
             </div>
 
             {place.categories && place.categories.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {place.categories.map((cat) => (
-                  <Badge
-                    key={cat}
-                    variant="outline"
-                    className="rounded-full px-2 py-0 text-[10px] font-semibold uppercase tracking-wider"
-                  >
+                  <Badge key={cat} variant="secondary" className="capitalize">
                     {cat}
                   </Badge>
                 ))}
               </div>
             )}
 
-            <div className="flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-1">
-                <span className="font-bold">
-                  {(place as any).follows?.length || 0}
-                </span>
-                <span className="text-muted-foreground">
-                  {pluralize("follower", (place as any).follows?.length || 0)}
-                </span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="font-bold">
-                  {(place as any).events?.length || 0}
-                </span>
-                <span className="text-muted-foreground">
-                  {pluralize("event", (place as any).events?.length || 0)}
-                </span>
-              </div>
-            </div>
-
-            {isVenue && (place as any).hours && (
-              <div className="border-t pt-4">
-                <VenueHoursDisplay hours={(place as any).hours as VenueHours} />
-              </div>
-            )}
+            {/*<div className="flex items-center gap-4 text-sm">*/}
+            {/*  <div className="flex items-center gap-1">*/}
+            {/*    <span className="font-bold">*/}
+            {/*      {(place as any).follows?.length || 0}*/}
+            {/*    </span>*/}
+            {/*    <span className="text-muted-foreground">*/}
+            {/*      {pluralize("follower", (place as any).follows?.length || 0)}*/}
+            {/*    </span>*/}
+            {/*  </div>*/}
+            {/*  <div className="flex items-center gap-1">*/}
+            {/*    <span className="font-bold">*/}
+            {/*      {(place as any).events?.length || 0}*/}
+            {/*    </span>*/}
+            {/*    <span className="text-muted-foreground">*/}
+            {/*      {pluralize("event", (place as any).events?.length || 0)}*/}
+            {/*    </span>*/}
+            {/*  </div>*/}
+            {/*</div>*/}
           </div>
         </div>
       </div>
 
       <div className="mx-auto max-w-4xl px-0 pt-8">
-        <h2 className="px-4 pb-4 text-2xl font-bold md:px-0">Upcoming Events</h2>
+        <h2 className="px-4 pb-4 text-xl font-bold md:px-0">Upcoming Events</h2>
         <div className="px-4 md:px-0">
           {place.events && place.events.length > 0 ? (
             <EventCardGrid
@@ -289,7 +283,9 @@ export default function PlacePage() {
       {/* Previous Events */}
       {place.pastEvents && (place.pastEvents as any[]).length > 0 && (
         <div className="mx-auto max-w-4xl px-0 pt-8">
-          <h2 className="px-4 pb-4 text-2xl font-bold md:px-0">Previous Events</h2>
+          <h2 className="px-4 pb-4 text-xl font-bold md:px-0">
+            Previous Events
+          </h2>
           <div className="px-4 md:px-0">
             <EventCardGrid
               events={place.pastEvents as any}

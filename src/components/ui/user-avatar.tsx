@@ -40,7 +40,6 @@ export function UserAvatar({
             "#8b5a8d", // muted purple
             "#457b9d", // steel blue
             "#d4a373", // tan
-            "#bc6c25", // burnt sienna
             "#6a994e", // olive green
           ]}
         />

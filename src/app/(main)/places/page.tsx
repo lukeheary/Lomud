@@ -15,13 +15,6 @@ import { useNavbarSearch } from "@/contexts/nav-search-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building, Building2, MapPin, Loader2 } from "lucide-react";
 import { useQueryState } from "nuqs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ResponsiveSelect } from "@/components/ui/responsive-select";
 import { getDistanceMiles, type Coordinates } from "@/lib/geo";
 
@@ -97,14 +90,16 @@ function PlacesPageContent() {
   const referenceCity =
     selectedCity && selectedCity !== "all"
       ? selectedCity
-      : currentUser?.city ?? null;
+      : (currentUser?.city ?? null);
 
   const referenceCityRecord = useMemo(() => {
     if (!referenceCity || !cities) return null;
     const matches = cities.filter((city) => city.city === referenceCity);
     if (matches.length === 0) return null;
     if (currentUser?.state) {
-      const preferred = matches.find((city) => city.state === currentUser.state);
+      const preferred = matches.find(
+        (city) => city.state === currentUser.state
+      );
       if (preferred) return preferred;
     }
     return matches[0];
@@ -148,7 +143,12 @@ function PlacesPageContent() {
   const isReady = !isLoadingUser;
 
   // Determine place type filter
-  const placeType = filterType === "venues" ? "venue" : filterType === "organizers" ? "organizer" : undefined;
+  const placeType =
+    filterType === "venues"
+      ? "venue"
+      : filterType === "organizers"
+        ? "organizer"
+        : undefined;
 
   // Fetch places
   const { data: placesData, isLoading: isLoadingPlaces } =
@@ -248,7 +248,7 @@ function PlacesPageContent() {
             ]}
             placeholder="Filter"
             title="Filter Places"
-            className="w-full sm:w-[170px]"
+            className="w-40 sm:w-[170px]"
           />
 
           {/* City Filter */}
@@ -264,7 +264,7 @@ function PlacesPageContent() {
             ]}
             placeholder="Select city"
             title="Select City"
-            className="w-full md:w-fit"
+            className="w-48 grow"
           />
         </div>
       </div>
@@ -280,10 +280,7 @@ function PlacesPageContent() {
       {!isLoading && isReady && combinedItems.length > 0 && (
         <div className="grid gap-4 py-4 md:grid-cols-2 lg:grid-cols-3">
           {combinedItems.map((item) => (
-            <Link
-              key={`${item.type}-${item.id}`}
-              href={`/place/${item.slug}`}
-            >
+            <Link key={`${item.type}-${item.id}`} href={`/place/${item.slug}`}>
               <Card className="h-full cursor-pointer transition-colors hover:bg-accent/50">
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
@@ -320,7 +317,7 @@ function PlacesPageContent() {
 
       {/* Empty State */}
       {!isLoading && isReady && combinedItems.length === 0 && (
-        <Card>
+        <Card className={"mt-4"}>
           <CardContent className="py-12 text-center">
             <div className="mx-auto mb-4 flex justify-center gap-2">
               <Building className="h-10 w-10 text-muted-foreground" />

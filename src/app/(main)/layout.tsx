@@ -45,35 +45,17 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { signOut } = useClerk();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { data: adminCheck } = trpc.user.isAdmin.useQuery(undefined, {
-    retry: false,
-    refetchOnWindowFocus: false,
-  });
+  const { data: adminCheck } = trpc.user.isAdmin.useQuery();
   const isAdmin = adminCheck?.isAdmin ?? false;
 
-  const { data: user } = trpc.user.getCurrentUser.useQuery(undefined, {
-    retry: false,
-    refetchOnWindowFocus: false,
-  });
-  const { data: hasVenues } = trpc.user.hasVenues.useQuery(undefined, {
-    retry: false,
-    refetchOnWindowFocus: false,
-  });
-  const { data: hasOrganizers } = trpc.user.hasOrganizers.useQuery(undefined, {
-    retry: false,
-    refetchOnWindowFocus: false,
-  });
+  const { data: user } = trpc.user.getCurrentUser.useQuery();
+  const { data: hasVenues } = trpc.user.hasVenues.useQuery();
+  const { data: hasOrganizers } = trpc.user.hasOrganizers.useQuery();
   const { data: pendingRequests } = trpc.friends.listFriends.useQuery({
     statusFilter: "pending",
-  }, {
-    retry: false,
-    refetchOnWindowFocus: false,
   });
 
   const { showNavbarSearch, scrollToSearchAndFocus } = useNavbarSearch();
-
-  const receivedRequestsCount =
-    pendingRequests?.filter((f) => !f.isSender).length ?? 0;
 
   const isHome = pathname === "/home";
   const isPlaces = pathname === "/places";

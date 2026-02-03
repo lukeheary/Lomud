@@ -51,7 +51,7 @@ export function VenueHoursDisplay({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between rounded-md py-1 text-left text-sm font-medium transition-colors hover:bg-muted/50"
+        className="flex w-full items-center justify-between rounded-md text-left text-sm font-medium transition-colors"
       >
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4" />
@@ -70,7 +70,7 @@ export function VenueHoursDisplay({
       </button>
 
       {isOpen && (
-        <div className="space-y-1.5 pl-6 text-sm">
+        <div className="space-y-1.5 text-sm">
           {DAYS.map(({ key, label }) => {
             const dayHours = hours[key as keyof VenueHours];
             if (!dayHours) return null;
