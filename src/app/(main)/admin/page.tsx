@@ -12,34 +12,24 @@ import { Building, Building2, Calendar } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminPage() {
-  const { data: venues } = trpc.admin.listAllVenues.useQuery({});
-  const { data: organizers } = trpc.admin.listAllOrganizers.useQuery({});
-  // const { data: events } = trpc.event.list.useQuery({});
+  const { data: venues } = trpc.admin.listAllPlaces.useQuery({ type: "venue" });
+  const { data: organizers } = trpc.admin.listAllPlaces.useQuery({ type: "organizer" });
 
   const stats = [
     {
       label: "Total Venues",
       value: venues?.length ?? 0,
       icon: Building,
-      href: "/admin/venues",
+      href: "/admin/places",
       description: "Manage physical locations",
     },
     {
       label: "Total Organizers",
       value: organizers?.length ?? 0,
       icon: Building2,
-      href: "/admin/organizers",
+      href: "/admin/places",
       description: "Manage event creators",
     },
-    /*
-    {
-      label: "Total Events",
-      value: events?.length ?? 0,
-      icon: Calendar,
-      href: "/calendar",
-      description: "View all scheduled events",
-    },
-    */
   ];
 
   return (
@@ -76,19 +66,11 @@ export default function AdminPage() {
             <CardDescription>Common administrative tasks</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-2">
-            <Link href="/admin/venues">
+            <Link href="/admin/places">
               <Card className="p-4 hover:bg-accent">
                 <div className="flex items-center gap-3">
                   <Building className="h-4 w-4" />
-                  <div className="text-sm font-medium">Add a new Venue</div>
-                </div>
-              </Card>
-            </Link>
-            <Link href="/admin/organizers">
-              <Card className="p-4 hover:bg-accent">
-                <div className="flex items-center gap-3">
-                  <Building2 className="h-4 w-4" />
-                  <div className="text-sm font-medium">Add a new Organizer</div>
+                  <div className="text-sm font-medium">Manage Places</div>
                 </div>
               </Card>
             </Link>

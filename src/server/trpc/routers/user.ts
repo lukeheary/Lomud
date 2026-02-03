@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure } from "../init";
-import { users, venueMembers, organizerMembers } from "@/server/db/schema";
+import { users, placeMembers } from "@/server/db/schema";
 import { eq, and, ne } from "drizzle-orm";
 import { clerkClient } from "@clerk/nextjs/server";
 
@@ -17,17 +17,34 @@ export const userRouter = router({
   }),
 
   hasVenues: protectedProcedure.query(async ({ ctx }) => {
-    const memberships = await ctx.db.query.venueMembers.findMany({
-      where: eq(venueMembers.userId, ctx.auth.userId),
-      limit: 1,
+    // Get places where user is a member and type is venue
+    const memberships = await ctx.db.query.placeMembers.findMany({
+      where: eq(placeMembers.userId, ctx.auth.userId),
+      with: {
+        place: true,
+      },
+      limit: 10,
     });
 
-    return memberships.length > 0;
+    return memberships.some((m) => m.place.type === "venue");
   }),
 
   hasOrganizers: protectedProcedure.query(async ({ ctx }) => {
-    const memberships = await ctx.db.query.organizerMembers.findMany({
-      where: eq(organizerMembers.userId, ctx.auth.userId),
+    // Get places where user is a member and type is organizer
+    const memberships = await ctx.db.query.placeMembers.findMany({
+      where: eq(placeMembers.userId, ctx.auth.userId),
+      with: {
+        place: true,
+      },
+      limit: 10,
+    });
+
+    return memberships.some((m) => m.place.type === "organizer");
+  }),
+
+  hasPlaces: protectedProcedure.query(async ({ ctx }) => {
+    const memberships = await ctx.db.query.placeMembers.findMany({
+      where: eq(placeMembers.userId, ctx.auth.userId),
       limit: 1,
     });
 

@@ -49,7 +49,7 @@ export default function EditEventPage() {
   const [selectedVenue, setSelectedVenue] = useState<VenueData | null>(null);
   const [isCreatingNewVenue, setIsCreatingNewVenue] = useState(false);
 
-  const createVenueMutation = trpc.venue.createVenue.useMutation();
+  const createVenueMutation = trpc.place.createPlace.useMutation();
 
   const updateMutation = trpc.event.updateEvent.useMutation({
     onSuccess: () => {
@@ -134,6 +134,8 @@ export default function EditEventPage() {
       if (isCreatingNewVenue && selectedVenue) {
         try {
           const newVenue = await createVenueMutation.mutateAsync({
+            type: "venue",
+            slug: selectedVenue.slug || selectedVenue.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""),
             name: selectedVenue.name,
             address: selectedVenue.address || undefined,
             city: selectedVenue.city,

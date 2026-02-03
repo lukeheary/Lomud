@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
+  Building,
   Building2,
   Loader2,
   X,
@@ -42,19 +43,28 @@ import Link from "next/link";
 import { EventForm } from "@/components/events/event-form";
 import { CategoryMultiSelect } from "@/components/category-multi-select";
 import { SlugInstagramInput } from "@/components/slug-instagram-input";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 type ViewMode = "list" | "create" | "edit" | "members" | "create-event";
+type PlaceType = "venue" | "organizer";
 
-export default function AdminVenuesPage() {
+export default function AdminPlacesPage() {
   const { toast } = useToast();
   const utils = trpc.useUtils();
 
   // View mode state
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<PlaceType>("venue");
 
-  // Venue form state
-  const [venueForm, setVenueForm] = useState({
+  // Place form state
+  const [placeForm, setPlaceForm] = useState({
+    type: "venue" as PlaceType,
     slug: "",
     name: "",
     description: "",
@@ -74,19 +84,19 @@ export default function AdminVenuesPage() {
   const [placeSearch, setPlaceSearch] = useState("");
 
   // Edit mode state
-  const [editingVenueId, setEditingVenueId] = useState<string | null>(null);
+  const [editingPlaceId, setEditingPlaceId] = useState<string | null>(null);
 
   // Member management state
-  const [selectedVenue, setSelectedVenue] = useState<string>("");
+  const [selectedPlace, setSelectedPlace] = useState<string>("");
   const [userSearch, setUserSearch] = useState("");
   const [isSlugSynced, setIsSlugSynced] = useState(true);
 
   // Fetch data
-  const { data: venues } = trpc.admin.listAllVenues.useQuery({});
+  const { data: places } = trpc.admin.listAllPlaces.useQuery({ type: activeTab });
 
-  const { data: venueMembers } = trpc.venue.getVenueMembers.useQuery(
-    { venueId: selectedVenue },
-    { enabled: !!selectedVenue }
+  const { data: placeMembers } = trpc.place.getPlaceMembers.useQuery(
+    { placeId: selectedPlace },
+    { enabled: !!selectedPlace }
   );
 
   const { data: searchedUsers } = trpc.admin.searchUsers.useQuery(
@@ -96,7 +106,8 @@ export default function AdminVenuesPage() {
 
   // Mutations
   const clearForm = () => {
-    setVenueForm({
+    setPlaceForm({
+      type: activeTab,
       slug: "",
       name: "",
       description: "",
@@ -111,7 +122,7 @@ export default function AdminVenuesPage() {
       hours: null,
       categories: [],
     });
-    setEditingVenueId(null);
+    setEditingPlaceId(null);
     setPlaceSearch("");
     setIsSlugSynced(true);
   };
@@ -126,15 +137,15 @@ export default function AdminVenuesPage() {
       latitude?: number;
       longitude?: number;
     }) => {
-      // Generate slug from venue name
+      // Generate slug from place name
       const slug = place.name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "");
 
-      setVenueForm((prev) => ({
+      setPlaceForm((prev) => ({
         ...prev,
-        slug: slug.length >= 3 ? slug : `venue-${slug}`,
+        slug: slug.length >= 3 ? slug : `${prev.type}-${slug}`,
         name: place.name,
         address: place.address,
         city: place.city,
@@ -142,7 +153,7 @@ export default function AdminVenuesPage() {
         latitude: place.latitude || null,
         longitude: place.longitude || null,
         instagram: isSlugSynced
-          ? (slug.length >= 3 ? slug : `venue-${slug}`).replace(/-/g, "")
+          ? (slug.length >= 3 ? slug : `${prev.type}-${slug}`).replace(/-/g, "")
           : prev.instagram,
       }));
       setPlaceSearch(place.name);
@@ -150,12 +161,30 @@ export default function AdminVenuesPage() {
     [isSlugSynced]
   );
 
-  const createVenueMutation = trpc.admin.createVenue.useMutation({
+  const handleCitySelect = useCallback(
+    (place: {
+      name: string;
+      address: string;
+      city: string;
+      state: string;
+      formattedAddress: string;
+    }) => {
+      setPlaceForm((prev) => ({
+        ...prev,
+        city: place.city,
+        state: place.state,
+      }));
+      setPlaceSearch(place.city);
+    },
+    []
+  );
+
+  const createPlaceMutation = trpc.admin.createPlace.useMutation({
     onSuccess: () => {
-      toast({ title: "Success", description: "Venue created successfully" });
+      toast({ title: "Success", description: `${placeForm.type === "venue" ? "Venue" : "Organizer"} created successfully` });
       clearForm();
       setViewMode("list");
-      utils.admin.listAllVenues.invalidate();
+      utils.admin.listAllPlaces.invalidate();
     },
     onError: (error) => {
       toast({
@@ -166,12 +195,12 @@ export default function AdminVenuesPage() {
     },
   });
 
-  const updateVenueMutation = trpc.venue.updateVenue.useMutation({
+  const updatePlaceMutation = trpc.place.updatePlace.useMutation({
     onSuccess: () => {
-      toast({ title: "Success", description: "Venue updated successfully" });
+      toast({ title: "Success", description: `${placeForm.type === "venue" ? "Venue" : "Organizer"} updated successfully` });
       clearForm();
       setViewMode("list");
-      utils.admin.listAllVenues.invalidate();
+      utils.admin.listAllPlaces.invalidate();
     },
     onError: (error) => {
       toast({
@@ -182,48 +211,54 @@ export default function AdminVenuesPage() {
     },
   });
 
-  const handleEdit = (venue: any) => {
-    setEditingVenueId(venue.id);
-    setVenueForm({
-      slug: venue.slug,
-      name: venue.name,
-      description: venue.description || "",
-      imageUrl: venue.imageUrl || "",
-      address: venue.address || "",
-      city: venue.city,
-      state: venue.state,
-      website: venue.website || "",
-      instagram: venue.instagram || "",
-      latitude: venue.latitude || null,
-      longitude: venue.longitude || null,
-      hours: venue.hours || null,
-      categories: (venue.categories as string[]) || [],
+  const handleEdit = (place: any) => {
+    setEditingPlaceId(place.id);
+    setPlaceForm({
+      type: place.type,
+      slug: place.slug,
+      name: place.name,
+      description: place.description || "",
+      imageUrl: place.imageUrl || "",
+      address: place.address || "",
+      city: place.city || "",
+      state: place.state || "",
+      website: place.website || "",
+      instagram: place.instagram || "",
+      latitude: place.latitude || null,
+      longitude: place.longitude || null,
+      hours: place.hours || null,
+      categories: (place.categories as string[]) || [],
     });
-    setIsSlugSynced((venue.slug || "") === (venue.instagram || ""));
-    setPlaceSearch(venue.name);
+    setIsSlugSynced((place.slug || "") === (place.instagram || ""));
+    setPlaceSearch(place.name);
     setViewMode("edit");
   };
 
   const handleBack = () => {
     clearForm();
     setViewMode("list");
-    setSelectedVenue("");
+    setSelectedPlace("");
   };
 
-  const handleManageMembers = (venueId: string) => {
-    setSelectedVenue(venueId);
+  const handleManageMembers = (placeId: string) => {
+    setSelectedPlace(placeId);
     setViewMode("members");
   };
 
-  const handleCreateEvent = (venueId: string) => {
-    setSelectedVenue(venueId);
+  const handleCreateEvent = (placeId: string) => {
+    setSelectedPlace(placeId);
     setViewMode("create-event");
   };
 
-  const addVenueMemberMutation = trpc.admin.addVenueMember.useMutation({
+  const handleCreate = () => {
+    setPlaceForm((prev) => ({ ...prev, type: activeTab }));
+    setViewMode("create");
+  };
+
+  const addPlaceMemberMutation = trpc.admin.addPlaceMember.useMutation({
     onSuccess: () => {
-      toast({ title: "Success", description: "Member added to venue" });
-      utils.venue.getVenueMembers.invalidate();
+      toast({ title: "Success", description: "Member added" });
+      utils.place.getPlaceMembers.invalidate();
     },
     onError: (error) => {
       toast({
@@ -234,13 +269,13 @@ export default function AdminVenuesPage() {
     },
   });
 
-  const removeVenueMemberMutation = trpc.admin.removeVenueMember.useMutation({
+  const removePlaceMemberMutation = trpc.admin.removePlaceMember.useMutation({
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Member removed from venue",
+        description: "Member removed",
       });
-      utils.venue.getVenueMembers.invalidate();
+      utils.place.getPlaceMembers.invalidate();
     },
     onError: (error) => {
       toast({
@@ -251,12 +286,16 @@ export default function AdminVenuesPage() {
     },
   });
 
-  // Filter venues by search query
-  const filteredVenues = venues?.filter(
-    (venue) =>
-      venue.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      venue.city.toLowerCase().includes(searchQuery.toLowerCase())
+  // Filter places by search query
+  const filteredPlaces = places?.filter(
+    (place) =>
+      place.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (place.city && place.city.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  const isVenue = activeTab === "venue" || placeForm.type === "venue";
+  const typeLabel = isVenue ? "Venue" : "Organizer";
+  const TypeIcon = isVenue ? Building : Building2;
 
   // List View
   if (viewMode === "list") {
@@ -265,20 +304,33 @@ export default function AdminVenuesPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
-              Venue Management
+              Place Management
             </h1>
-            <p className="text-muted-foreground">Create and manage venues</p>
+            <p className="text-muted-foreground">Create and manage venues and organizers</p>
           </div>
-          <Button onClick={() => setViewMode("create")}>
+          <Button onClick={handleCreate}>
             <Plus className="mr-2 h-4 w-4" />
-            Create Venue
+            Create {activeTab === "venue" ? "Venue" : "Organizer"}
           </Button>
         </div>
+
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as PlaceType)}>
+          <TabsList>
+            <TabsTrigger value="venue">
+              <Building className="mr-2 h-4 w-4" />
+              Venues
+            </TabsTrigger>
+            <TabsTrigger value="organizer">
+              <Building2 className="mr-2 h-4 w-4" />
+              Organizers
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search venues..."
+            placeholder={`Search ${activeTab === "venue" ? "venues" : "organizers"}...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -286,27 +338,27 @@ export default function AdminVenuesPage() {
         </div>
 
         <div className="space-y-3">
-          {filteredVenues?.map((venue) => (
-            <Card key={venue.id}>
+          {filteredPlaces?.map((place) => (
+            <Card key={place.id}>
               <CardContent className="flex items-center justify-between p-4">
                 <div className="flex items-center gap-4">
-                  {venue.imageUrl ? (
+                  {place.imageUrl ? (
                     <div className="relative h-12 w-12 overflow-hidden rounded-md border">
                       <img
-                        src={venue.imageUrl}
-                        alt={venue.name}
+                        src={place.imageUrl}
+                        alt={place.name}
                         className="h-full w-full object-cover"
                       />
                     </div>
                   ) : (
                     <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-muted">
-                      <Building2 className="h-6 w-6 text-muted-foreground" />
+                      <TypeIcon className="h-6 w-6 text-muted-foreground" />
                     </div>
                   )}
                   <div>
-                    <div className="font-medium">{venue.name}</div>
+                    <div className="font-medium">{place.name}</div>
                     <div className="text-sm text-muted-foreground">
-                      {venue.city}, {venue.state}
+                      {place.city || "No City"}, {place.state || "No State"}
                     </div>
                   </div>
                 </div>
@@ -314,7 +366,7 @@ export default function AdminVenuesPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleCreateEvent(venue.id)}
+                    onClick={() => handleCreateEvent(place.id)}
                   >
                     <Calendar className="mr-2 h-4 w-4" />
                     Add Event
@@ -322,7 +374,7 @@ export default function AdminVenuesPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleManageMembers(venue.id)}
+                    onClick={() => handleManageMembers(place.id)}
                   >
                     <UsersIcon className="mr-2 h-4 w-4" />
                     Members
@@ -330,7 +382,7 @@ export default function AdminVenuesPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleEdit(venue)}
+                    onClick={() => handleEdit(place)}
                   >
                     Edit
                   </Button>
@@ -338,9 +390,9 @@ export default function AdminVenuesPage() {
               </CardContent>
             </Card>
           ))}
-          {!filteredVenues?.length && (
+          {!filteredPlaces?.length && (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              No venues found
+              No {activeTab === "venue" ? "venues" : "organizers"} found
             </p>
           )}
         </div>
@@ -358,192 +410,220 @@ export default function AdminVenuesPage() {
           </Button>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
-              {viewMode === "edit" ? "Edit Venue" : "Create Venue"}
+              {viewMode === "edit" ? `Edit ${typeLabel}` : `Create ${typeLabel}`}
             </h1>
             <p className="text-muted-foreground">
               {viewMode === "edit"
-                ? "Update venue information"
-                : "Add a new venue to the platform"}
+                ? `Update ${typeLabel.toLowerCase()} information`
+                : `Add a new ${typeLabel.toLowerCase()} to the platform`}
             </p>
           </div>
         </div>
 
         <Card>
           <CardContent className="space-y-4 pt-6">
-            <div>
-              <Label htmlFor="venue-search">Search Venue *</Label>
-              <GooglePlacesAutocomplete
-                value={placeSearch}
-                onChange={setPlaceSearch}
-                onPlaceSelect={handlePlaceSelect}
-                placeholder="Search for a venue (e.g. Big Night Live Boston)..."
-                searchType="establishment"
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                Start typing the venue name to auto-fill details
-              </p>
-            </div>
+            {isVenue && (
+              <div>
+                <Label htmlFor="place-search">Search {typeLabel} *</Label>
+                <GooglePlacesAutocomplete
+                  value={placeSearch}
+                  onChange={setPlaceSearch}
+                  onPlaceSelect={handlePlaceSelect}
+                  placeholder={`Search for a ${typeLabel.toLowerCase()} (e.g. Big Night Live Boston)...`}
+                  searchType="establishment"
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Start typing the {typeLabel.toLowerCase()} name to auto-fill details
+                </p>
+              </div>
+            )}
 
             <SlugInstagramInput
-              slug={venueForm.slug}
-              instagram={venueForm.instagram}
-              onSlugChange={(slug) => setVenueForm({ ...venueForm, slug })}
+              slug={placeForm.slug}
+              instagram={placeForm.instagram}
+              onSlugChange={(slug) => setPlaceForm({ ...placeForm, slug })}
               onInstagramChange={(instagram) =>
-                setVenueForm({ ...venueForm, instagram })
+                setPlaceForm({ ...placeForm, instagram })
               }
               onBothChange={(slug, instagram) =>
-                setVenueForm({ ...venueForm, slug, instagram })
+                setPlaceForm({ ...placeForm, slug, instagram })
               }
               isSynced={isSlugSynced}
               onSyncedChange={setIsSlugSynced}
-              slugPlaceholder="big-night-live"
-              idPrefix="venue"
+              slugPlaceholder={isVenue ? "big-night-live" : "after-brunch"}
+              idPrefix="place"
             />
             <div>
-              <Label htmlFor="venue-name">Name *</Label>
+              <Label htmlFor="place-name">Name *</Label>
               <Input
-                id="venue-name"
-                placeholder="Big Night Live"
-                value={venueForm.name}
+                id="place-name"
+                placeholder={isVenue ? "Big Night Live" : "After Brunch"}
+                value={placeForm.name}
                 onChange={(e) =>
-                  setVenueForm({ ...venueForm, name: e.target.value })
+                  setPlaceForm({ ...placeForm, name: e.target.value })
                 }
               />
             </div>
             <div>
-              <Label>Venue Image</Label>
+              <Label>{typeLabel} Image</Label>
               <S3Uploader
-                folder="venues"
-                currentImageUrl={venueForm.imageUrl}
+                folder={isVenue ? "venues" : "organizers"}
+                currentImageUrl={placeForm.imageUrl}
                 onUploadComplete={(url) =>
-                  setVenueForm({ ...venueForm, imageUrl: url })
+                  setPlaceForm({ ...placeForm, imageUrl: url })
                 }
                 onRemoveImage={() =>
-                  setVenueForm({ ...venueForm, imageUrl: "" })
+                  setPlaceForm({ ...placeForm, imageUrl: "" })
                 }
               />
             </div>
             <div>
-              <Label htmlFor="venue-description">Description</Label>
+              <Label htmlFor="place-description">Description</Label>
               <Textarea
-                id="venue-description"
-                placeholder="Boston's premier concert venue..."
-                value={venueForm.description}
+                id="place-description"
+                placeholder={isVenue ? "Boston's premier concert venue..." : "Boston's premier social events..."}
+                value={placeForm.description}
                 onChange={(e) =>
-                  setVenueForm({
-                    ...venueForm,
+                  setPlaceForm({
+                    ...placeForm,
                     description: e.target.value,
                   })
                 }
               />
             </div>
-            <div>
-              <Label htmlFor="venue-address">Address</Label>
-              <Input
-                id="venue-address"
-                placeholder="110 Causeway St"
-                value={venueForm.address}
-                onChange={(e) =>
-                  setVenueForm({ ...venueForm, address: e.target.value })
-                }
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="venue-city">City *</Label>
-                <Input
-                  id="venue-city"
-                  placeholder="Boston"
-                  value={venueForm.city}
-                  onChange={(e) =>
-                    setVenueForm({ ...venueForm, city: e.target.value })
-                  }
+
+            {isVenue ? (
+              <>
+                <div>
+                  <Label htmlFor="place-address">Address</Label>
+                  <Input
+                    id="place-address"
+                    placeholder="110 Causeway St"
+                    value={placeForm.address}
+                    onChange={(e) =>
+                      setPlaceForm({ ...placeForm, address: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="place-city">City *</Label>
+                    <Input
+                      id="place-city"
+                      placeholder="Boston"
+                      value={placeForm.city}
+                      onChange={(e) =>
+                        setPlaceForm({ ...placeForm, city: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="place-state">State *</Label>
+                    <Input
+                      id="place-state"
+                      placeholder="MA"
+                      maxLength={2}
+                      value={placeForm.state}
+                      onChange={(e) =>
+                        setPlaceForm({
+                          ...placeForm,
+                          state: e.target.value.toUpperCase(),
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="place-city">City</Label>
+                <GooglePlacesAutocomplete
+                  value={placeSearch}
+                  onChange={setPlaceSearch}
+                  onPlaceSelect={handleCitySelect}
+                  placeholder="Search for organizer city..."
+                  searchType="cities"
                 />
+                {placeForm.city && placeForm.state && (
+                  <p className="text-xs text-muted-foreground">
+                    Selected: {placeForm.city}, {placeForm.state}
+                  </p>
+                )}
               </div>
-              <div>
-                <Label htmlFor="venue-state">State *</Label>
-                <Input
-                  id="venue-state"
-                  placeholder="MA"
-                  maxLength={2}
-                  value={venueForm.state}
-                  onChange={(e) =>
-                    setVenueForm({
-                      ...venueForm,
-                      state: e.target.value.toUpperCase(),
-                    })
-                  }
-                />
-              </div>
-            </div>
+            )}
+
             <div>
-              <Label htmlFor="venue-website">Website</Label>
+              <Label htmlFor="place-website">Website</Label>
               <Input
-                id="venue-website"
-                placeholder="https://bignightlive.com"
-                value={venueForm.website}
+                id="place-website"
+                placeholder={isVenue ? "https://bignightlive.com" : "https://example.com"}
+                value={placeForm.website}
                 onChange={(e) =>
-                  setVenueForm({ ...venueForm, website: e.target.value })
+                  setPlaceForm({ ...placeForm, website: e.target.value })
                 }
               />
             </div>
-            <VenueHoursEditor
-              hours={venueForm.hours}
-              onChange={(hours) => setVenueForm({ ...venueForm, hours })}
-            />
-            <div>
-              <Label>Categories</Label>
-              <CategoryMultiSelect
-                value={venueForm.categories}
-                onChange={(categories) =>
-                  setVenueForm({ ...venueForm, categories })
-                }
-                placeholder="Select categories..."
-              />
-            </div>
+
+            {isVenue && (
+              <>
+                <VenueHoursEditor
+                  hours={placeForm.hours}
+                  onChange={(hours) => setPlaceForm({ ...placeForm, hours })}
+                />
+                <div>
+                  <Label>Categories</Label>
+                  <CategoryMultiSelect
+                    value={placeForm.categories}
+                    onChange={(categories) =>
+                      setPlaceForm({ ...placeForm, categories })
+                    }
+                    placeholder="Select categories..."
+                  />
+                </div>
+              </>
+            )}
+
             <div className="flex gap-2">
               {viewMode === "edit" ? (
                 <Button
                   onClick={() =>
-                    updateVenueMutation.mutate({
-                      venueId: editingVenueId!,
-                      ...venueForm,
-                      latitude: venueForm.latitude ?? undefined,
-                      longitude: venueForm.longitude ?? undefined,
+                    updatePlaceMutation.mutate({
+                      placeId: editingPlaceId!,
+                      ...placeForm,
+                      latitude: placeForm.latitude ?? undefined,
+                      longitude: placeForm.longitude ?? undefined,
                     })
                   }
                   disabled={
-                    updateVenueMutation.isPending ||
-                    !venueForm.slug ||
-                    !venueForm.name ||
-                    !venueForm.city ||
-                    !venueForm.state
+                    updatePlaceMutation.isPending ||
+                    !placeForm.slug ||
+                    !placeForm.name ||
+                    (isVenue && (!placeForm.city || !placeForm.state))
                   }
                 >
-                  {updateVenueMutation.isPending && (
+                  {updatePlaceMutation.isPending && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Update Venue
+                  Update {typeLabel}
                 </Button>
               ) : (
                 <Button
-                  onClick={() => createVenueMutation.mutate({
-                    ...venueForm,
-                    latitude: venueForm.latitude ?? undefined,
-                    longitude: venueForm.longitude ?? undefined,
+                  onClick={() => createPlaceMutation.mutate({
+                    ...placeForm,
+                    latitude: placeForm.latitude ?? undefined,
+                    longitude: placeForm.longitude ?? undefined,
                   })}
                   disabled={
-                    createVenueMutation.isPending ||
-                    !venueForm.slug ||
-                    !venueForm.name ||
-                    !venueForm.city ||
-                    !venueForm.state
+                    createPlaceMutation.isPending ||
+                    !placeForm.slug ||
+                    !placeForm.name ||
+                    (isVenue && (!placeForm.city || !placeForm.state))
                   }
                 >
-                  {createVenueMutation.isPending && (
+                  {createPlaceMutation.isPending && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Create Venue
+                  Create {typeLabel}
                 </Button>
               )}
               <Button variant="outline" onClick={handleBack}>
@@ -558,7 +638,7 @@ export default function AdminVenuesPage() {
 
   // Members View
   if (viewMode === "members") {
-    const currentVenue = venues?.find((v) => v.id === selectedVenue);
+    const currentPlace = places?.find((p) => p.id === selectedPlace);
 
     return (
       <div className="space-y-6">
@@ -570,7 +650,7 @@ export default function AdminVenuesPage() {
             <h1 className="text-3xl font-bold tracking-tight">
               Manage Members
             </h1>
-            <p className="text-muted-foreground">{currentVenue?.name}</p>
+            <p className="text-muted-foreground">{currentPlace?.name}</p>
           </div>
         </div>
 
@@ -580,7 +660,7 @@ export default function AdminVenuesPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-wrap gap-2">
-              {venueMembers?.map((member) => (
+              {placeMembers?.map((member) => (
                 <Badge
                   key={member.id}
                   variant="secondary"
@@ -589,8 +669,8 @@ export default function AdminVenuesPage() {
                   {member.user.username || member.user.email}
                   <button
                     onClick={() =>
-                      removeVenueMemberMutation.mutate({
-                        venueId: selectedVenue,
+                      removePlaceMemberMutation.mutate({
+                        placeId: selectedPlace,
                         userId: member.userId,
                       })
                     }
@@ -600,7 +680,7 @@ export default function AdminVenuesPage() {
                   </button>
                 </Badge>
               ))}
-              {!venueMembers?.length && (
+              {!placeMembers?.length && (
                 <p className="text-sm text-muted-foreground">No members yet</p>
               )}
             </div>
@@ -630,8 +710,8 @@ export default function AdminVenuesPage() {
                     <Button
                       size="sm"
                       onClick={() => {
-                        addVenueMemberMutation.mutate({
-                          venueId: selectedVenue,
+                        addPlaceMemberMutation.mutate({
+                          placeId: selectedPlace,
                           userId: user.id,
                         });
                         setUserSearch("");
@@ -652,7 +732,7 @@ export default function AdminVenuesPage() {
 
   // Create Event View
   if (viewMode === "create-event") {
-    const currentVenue = venues?.find((v) => v.id === selectedVenue);
+    const currentPlace = places?.find((p) => p.id === selectedPlace);
 
     return (
       <div className="space-y-6">
@@ -664,9 +744,10 @@ export default function AdminVenuesPage() {
         </div>
 
         <EventForm
-          venueId={selectedVenue}
+          venueId={currentPlace?.type === "venue" ? selectedPlace : undefined}
+          organizerId={currentPlace?.type === "organizer" ? selectedPlace : undefined}
           onSuccess={(eventId: string) => {
-            utils.admin.listAllVenues.invalidate();
+            utils.admin.listAllPlaces.invalidate();
             handleBack();
           }}
           onCancel={handleBack}

@@ -2,7 +2,7 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import { type Context } from "./context";
 import superjson from "superjson";
 import { db } from "../db";
-import { users, venueMembers, organizerMembers } from "../db/schema";
+import { users, placeMembers } from "../db/schema";
 import { eq, and } from "drizzle-orm";
 
 const t = initTRPC.context<Context>().create({
@@ -49,71 +49,36 @@ export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   });
 });
 
-// Venue member procedure - requires authentication and venue membership
-export const venueMemberProcedure = protectedProcedure.use(
+// Place member procedure - requires authentication and place membership
+export const placeMemberProcedure = protectedProcedure.use(
   async ({ ctx, next, input }) => {
-    const venueId = (input as any)?.venueId;
+    const placeId = (input as any)?.placeId;
 
-    if (!venueId) {
+    if (!placeId) {
       throw new TRPCError({
         code: "BAD_REQUEST",
-        message: "venueId is required",
+        message: "placeId is required",
       });
     }
 
-    const membership = await db.query.venueMembers.findFirst({
+    const membership = await db.query.placeMembers.findFirst({
       where: and(
-        eq(venueMembers.userId, ctx.auth.userId),
-        eq(venueMembers.venueId, venueId)
+        eq(placeMembers.userId, ctx.auth.userId),
+        eq(placeMembers.placeId, placeId)
       ),
     });
 
     if (!membership) {
       throw new TRPCError({
         code: "FORBIDDEN",
-        message: "You are not a member of this venue",
+        message: "You are not a member of this place",
       });
     }
 
     return next({
       ctx: {
         ...ctx,
-        venueMembership: membership,
-      },
-    });
-  }
-);
-
-// Organizer member procedure - requires authentication and organizer membership
-export const organizerMemberProcedure = protectedProcedure.use(
-  async ({ ctx, next, input }) => {
-    const organizerId = (input as any)?.organizerId;
-
-    if (!organizerId) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "organizerId is required",
-      });
-    }
-
-    const membership = await db.query.organizerMembers.findFirst({
-      where: and(
-        eq(organizerMembers.userId, ctx.auth.userId),
-        eq(organizerMembers.organizerId, organizerId)
-      ),
-    });
-
-    if (!membership) {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "You are not a member of this organizer",
-      });
-    }
-
-    return next({
-      ctx: {
-        ...ctx,
-        organizerMembership: membership,
+        placeMembership: membership,
       },
     });
   }

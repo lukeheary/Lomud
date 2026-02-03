@@ -7,37 +7,40 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EventCardGrid } from "@/components/events/event-card-grid";
-import { Users, Globe, Instagram, Heart, Loader2 } from "lucide-react";
+import { MapPin, Globe, Instagram, Heart, Loader2, Building, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@clerk/nextjs";
+import { VenueHoursDisplay } from "@/components/venue-hours-display";
+import { VenueHours } from "@/components/venue-hours-editor";
 import pluralize from "pluralize";
 
-export default function OrganizerPage() {
+export default function PlacePage() {
   const params = useParams();
   const slug = params.slug as string;
   const { userId } = useAuth();
   const { toast } = useToast();
   const utils = trpc.useUtils();
 
-  // Fetch organizer data
-  const { data: organizer, isLoading } =
-    trpc.organizer.getOrganizerBySlug.useQuery({ slug });
+  // Fetch place data
+  const { data: place, isLoading } = trpc.place.getPlaceBySlug.useQuery({
+    slug,
+  });
 
   // Check if following
-  const { data: isFollowing } = trpc.organizer.isFollowingOrganizer.useQuery(
-    { organizerId: organizer?.id || "" },
-    { enabled: !!organizer?.id }
+  const { data: isFollowing } = trpc.place.isFollowingPlace.useQuery(
+    { placeId: place?.id || "" },
+    { enabled: !!place?.id }
   );
 
   // Follow mutation
-  const followMutation = trpc.organizer.followOrganizer.useMutation({
+  const followMutation = trpc.place.followPlace.useMutation({
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "You are now following this organizer",
+        description: `You are now following this ${place?.type === "venue" ? "venue" : "organizer"}`,
       });
-      utils.organizer.isFollowingOrganizer.invalidate();
-      utils.organizer.getOrganizerBySlug.invalidate();
+      utils.place.isFollowingPlace.invalidate();
+      utils.place.getPlaceBySlug.invalidate();
     },
     onError: (error) => {
       toast({
@@ -49,14 +52,14 @@ export default function OrganizerPage() {
   });
 
   // Unfollow mutation
-  const unfollowMutation = trpc.organizer.unfollowOrganizer.useMutation({
+  const unfollowMutation = trpc.place.unfollowPlace.useMutation({
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "You unfollowed this organizer",
+        description: `You unfollowed this ${place?.type === "venue" ? "venue" : "organizer"}`,
       });
-      utils.organizer.isFollowingOrganizer.invalidate();
-      utils.organizer.getOrganizerBySlug.invalidate();
+      utils.place.isFollowingPlace.invalidate();
+      utils.place.getPlaceBySlug.invalidate();
     },
     onError: (error) => {
       toast({
@@ -68,12 +71,12 @@ export default function OrganizerPage() {
   });
 
   const handleFollowToggle = () => {
-    if (!organizer) return;
+    if (!place) return;
 
     if (isFollowing) {
-      unfollowMutation.mutate({ organizerId: organizer.id });
+      unfollowMutation.mutate({ placeId: place.id });
     } else {
-      followMutation.mutate({ organizerId: organizer.id });
+      followMutation.mutate({ placeId: place.id });
     }
   };
 
@@ -85,32 +88,38 @@ export default function OrganizerPage() {
     );
   }
 
-  if (!organizer) {
+  if (!place) {
     return (
       <div className="container mx-auto py-12 text-center">
-        <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-        <h2 className="mb-2 text-2xl font-bold">Organizer not found</h2>
+        <Building className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+        <h2 className="mb-2 text-2xl font-bold">Place not found</h2>
         <p className="mb-4 text-muted-foreground">
-          The organizer you&apos;re looking for doesn&apos;t exist
+          The place you&apos;re looking for doesn&apos;t exist
         </p>
+        <Link href="/places">
+          <Button>Browse Places</Button>
+        </Link>
       </div>
     );
   }
 
+  const isVenue = place.type === "venue";
+  const TypeIcon = isVenue ? Building : Building2;
+
   return (
     <div className="container mx-auto space-y-4 py-4">
-      {/* Organizer Header */}
+      {/* Place Header */}
       <Card>
         <CardContent className="pt-6">
           <div className="space-y-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h1 className="text-2xl font-bold md:text-3xl">
-                  {organizer.name}
-                </h1>
-                {organizer.description && (
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-bold md:text-3xl">{place.name}</h1>
+                </div>
+                {place.description && (
                   <p className="mt-2 text-muted-foreground">
-                    {organizer.description}
+                    {place.description}
                   </p>
                 )}
               </div>
@@ -132,9 +141,17 @@ export default function OrganizerPage() {
             </div>
 
             <div className="flex flex-wrap gap-4 text-sm">
-              {organizer.website && (
+              {(place.city || place.address) && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span>
+                    {place.city && place.state ? `${place.city}, ${place.state}` : place.address}
+                  </span>
+                </div>
+              )}
+              {place.website && (
                 <a
-                  href={organizer.website}
+                  href={place.website}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-primary hover:underline"
@@ -143,30 +160,38 @@ export default function OrganizerPage() {
                   <span>Website</span>
                 </a>
               )}
-              {organizer.instagram && (
+              {place.instagram && (
                 <a
-                  href={`https://instagram.com/${organizer.instagram}`}
+                  href={`https://instagram.com/${place.instagram}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-primary hover:underline"
                 >
                   <Instagram className="h-4 w-4" />
-                  <span>@{organizer.instagram}</span>
+                  <span>@{place.instagram}</span>
                 </a>
               )}
             </div>
 
             <div className="flex items-center gap-4">
+              <Badge variant="secondary">
+                <TypeIcon className="mr-1 h-3 w-3" />
+                {isVenue ? "Venue" : "Organizer"}
+              </Badge>
               <Badge variant="outline">
                 <Heart className="mr-1 h-3 w-3" />
-                {(organizer as any).follows?.length || 0}{" "}
-                {pluralize("follower", (organizer as any).follows?.length || 0)}
+                {(place as any).follows?.length || 0}{" "}
+                {pluralize("follower", (place as any).follows?.length || 0)}
               </Badge>
-              {/*<Badge variant="outline">*/}
-              {/*  {(organizer as any).events?.length || 0}{" "}*/}
-              {/*  {pluralize("event", (organizer as any).events?.length || 0)}*/}
-              {/*</Badge>*/}
+              <Badge variant="outline">
+                {(place as any).events?.length || 0}{" "}
+                {pluralize("event", (place as any).events?.length || 0)}
+              </Badge>
             </div>
+
+            {isVenue && (place as any).hours && (
+              <VenueHoursDisplay hours={(place as any).hours as VenueHours} />
+            )}
           </div>
         </CardContent>
       </Card>
@@ -176,9 +201,9 @@ export default function OrganizerPage() {
           <CardTitle>Upcoming Events</CardTitle>
         </CardHeader>
         <CardContent className={"px-0 md:p-6"}>
-          {organizer.events && organizer.events.length > 0 ? (
+          {place.events && place.events.length > 0 ? (
             <EventCardGrid
-              events={organizer.events as any}
+              events={place.events}
               columns={{ mobile: 1, tablet: 3, desktop: 4 }}
               gap="md"
             />
@@ -193,14 +218,14 @@ export default function OrganizerPage() {
       </Card>
 
       {/* Previous Events */}
-      {organizer.pastEvents && (organizer.pastEvents as any[]).length > 0 && (
+      {place.pastEvents && (place.pastEvents as any[]).length > 0 && (
         <Card className={"border-none bg-background"}>
           <CardHeader className={"px-0 md:px-6 md:pb-0 md:pt-6"}>
             <CardTitle>Previous Events</CardTitle>
           </CardHeader>
           <CardContent className={"px-0 md:p-6"}>
             <EventCardGrid
-              events={organizer.pastEvents as any}
+              events={place.pastEvents as any}
               columns={{ mobile: 1, tablet: 3, desktop: 4 }}
               gap="md"
             />

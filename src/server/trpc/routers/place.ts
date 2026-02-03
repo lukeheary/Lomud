@@ -5,40 +5,49 @@ import {
   friends,
   rsvps,
   users,
-  venueFollows,
-  venueMembers,
-  venues,
+  placeFollows,
+  placeMembers,
+  places,
 } from "../../db/schema";
 import { and, asc, desc, eq, gte, ilike, inArray, lt, or, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { logActivity } from "../../utils/activity-logger";
 import { filterValidCategories } from "@/lib/categories";
 
-export const venueRouter = router({
-  searchVenues: publicProcedure
-    .input(z.object({ query: z.string().optional() }))
+const placeTypeSchema = z.enum(["venue", "organizer"]);
+
+export const placeRouter = router({
+  searchPlaces: publicProcedure
+    .input(z.object({
+      query: z.string().optional(),
+      type: placeTypeSchema.optional(),
+    }))
     .query(async ({ ctx, input }) => {
       const conditions = [];
       if (input.query) {
-        conditions.push(ilike(venues.name, `%${input.query}%`));
+        conditions.push(ilike(places.name, `%${input.query}%`));
+      }
+      if (input.type) {
+        conditions.push(eq(places.type, input.type));
       }
 
-      return await ctx.db.query.venues.findMany({
+      return await ctx.db.query.places.findMany({
         where: conditions.length > 0 ? and(...conditions) : undefined,
         limit: 10,
-        orderBy: [asc(venues.name)],
+        orderBy: [asc(places.name)],
       });
     }),
 
-  createVenue: protectedProcedure
+  createPlace: protectedProcedure
     .input(
       z.object({
+        type: placeTypeSchema,
         name: z.string().min(1).max(255),
         description: z.string().optional(),
         imageUrl: z.string().url().optional().or(z.literal("")),
         address: z.string().optional(),
-        city: z.string().min(1).max(100),
-        state: z.string().length(2),
+        city: z.string().max(100).optional(),
+        state: z.string().length(2).optional(),
         latitude: z.number().optional(),
         longitude: z.number().optional(),
         website: z.string().url().optional().or(z.literal("")),
@@ -52,31 +61,32 @@ export const venueRouter = router({
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "");
 
-      if (slug.length < 3) slug = `venue-${slug}`;
+      if (slug.length < 3) slug = `${input.type}-${slug}`;
 
       // Check for collision
-      const existing = await ctx.db.query.venues.findFirst({
-        where: eq(venues.slug, slug),
+      const existing = await ctx.db.query.places.findFirst({
+        where: eq(places.slug, slug),
       });
 
       if (existing) {
         slug = `${slug}-${Math.random().toString(36).substring(2, 7)}`;
       }
 
-      const [venue] = await ctx.db
-        .insert(venues)
+      const [place] = await ctx.db
+        .insert(places)
         .values({
           ...input,
           slug,
         })
         .returning();
 
-      return venue;
+      return place;
     }),
 
-  listVenues: publicProcedure
+  listPlaces: publicProcedure
     .input(
       z.object({
+        type: placeTypeSchema.optional(),
         city: z.string().optional(),
         state: z.string().optional(),
         search: z.string().optional(),
@@ -88,10 +98,11 @@ export const venueRouter = router({
     .query(async ({ ctx, input }) => {
       const conditions = [];
 
-      if (input.city) conditions.push(eq(venues.city, input.city));
-      if (input.state) conditions.push(eq(venues.state, input.state));
+      if (input.type) conditions.push(eq(places.type, input.type));
+      if (input.city) conditions.push(eq(places.city, input.city));
+      if (input.state) conditions.push(eq(places.state, input.state));
       if (input.search) {
-        conditions.push(ilike(venues.name, `%${input.search}%`));
+        conditions.push(ilike(places.name, `%${input.search}%`));
       }
 
       if (input.followedOnly) {
@@ -99,28 +110,28 @@ export const venueRouter = router({
           return [];
         }
 
-        const followedVenueIds = await ctx.db
-          .select({ venueId: venueFollows.venueId })
-          .from(venueFollows)
-          .where(eq(venueFollows.userId, ctx.auth.userId));
+        const followedPlaceIds = await ctx.db
+          .select({ placeId: placeFollows.placeId })
+          .from(placeFollows)
+          .where(eq(placeFollows.userId, ctx.auth.userId));
 
-        if (followedVenueIds.length === 0) {
+        if (followedPlaceIds.length === 0) {
           return [];
         }
 
         conditions.push(
           inArray(
-            venues.id,
-            followedVenueIds.map((f) => f.venueId)
+            places.id,
+            followedPlaceIds.map((f) => f.placeId)
           )
         );
       }
 
-      return await ctx.db.query.venues.findMany({
+      return await ctx.db.query.places.findMany({
         where: conditions.length > 0 ? and(...conditions) : undefined,
         limit: input.limit,
         offset: input.offset,
-        orderBy: [desc(venues.createdAt)],
+        orderBy: [desc(places.createdAt)],
         with: {
           follows: true,
           members: true,
@@ -128,11 +139,11 @@ export const venueRouter = router({
       });
     }),
 
-  getVenueBySlug: publicProcedure
+  getPlaceBySlug: publicProcedure
     .input(z.object({ slug: z.string() }))
     .query(async ({ ctx, input }) => {
-      const venue = await ctx.db.query.venues.findFirst({
-        where: eq(venues.slug, input.slug),
+      const place = await ctx.db.query.places.findFirst({
+        where: eq(places.slug, input.slug),
         with: {
           follows: true,
           members: {
@@ -143,17 +154,22 @@ export const venueRouter = router({
         },
       });
 
-      if (!venue) {
+      if (!place) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Venue not found",
+          message: "Place not found",
         });
       }
 
       const now = new Date();
 
+      // Get events where this place is either the venue or the organizer
+      const eventCondition = place.type === "venue"
+        ? eq(events.venueId, place.id)
+        : eq(events.organizerId, place.id);
+
       const upcomingEvents = await ctx.db.query.events.findMany({
-        where: and(eq(events.venueId, venue.id), gte(events.startAt, now)),
+        where: and(eventCondition, gte(events.startAt, now)),
         orderBy: [asc(events.startAt)],
         with: {
           venue: true,
@@ -163,7 +179,7 @@ export const venueRouter = router({
       });
 
       const pastEvents = await ctx.db.query.events.findMany({
-        where: and(eq(events.venueId, venue.id), lt(events.startAt, now)),
+        where: and(eventCondition, lt(events.startAt, now)),
         orderBy: [desc(events.startAt)],
         limit: 12,
         with: {
@@ -226,7 +242,7 @@ export const venueRouter = router({
       }
 
       return {
-        ...venue,
+        ...place,
         events: upcomingEvents.map((e) => ({
           ...e,
           userRsvp: userRsvpMap.get(e.id) || null,
@@ -240,55 +256,55 @@ export const venueRouter = router({
       };
     }),
 
-  getVenueById: publicProcedure
+  getPlaceById: publicProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      const venue = await ctx.db.query.venues.findFirst({
-        where: eq(venues.id, input.id),
+      const place = await ctx.db.query.places.findFirst({
+        where: eq(places.id, input.id),
       });
 
-      if (!venue) {
+      if (!place) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Venue not found",
+          message: "Place not found",
         });
       }
 
-      return venue;
+      return place;
     }),
 
-  followVenue: protectedProcedure
-    .input(z.object({ venueId: z.string().uuid() }))
+  followPlace: protectedProcedure
+    .input(z.object({ placeId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       // Check if already following
-      const existing = await ctx.db.query.venueFollows.findFirst({
+      const existing = await ctx.db.query.placeFollows.findFirst({
         where: and(
-          eq(venueFollows.userId, ctx.auth.userId),
-          eq(venueFollows.venueId, input.venueId)
+          eq(placeFollows.userId, ctx.auth.userId),
+          eq(placeFollows.placeId, input.placeId)
         ),
       });
 
       if (existing) {
         throw new TRPCError({
           code: "CONFLICT",
-          message: "You are already following this venue",
+          message: "You are already following this place",
         });
       }
 
       const [follow] = await ctx.db
-        .insert(venueFollows)
+        .insert(placeFollows)
         .values({
           userId: ctx.auth.userId,
-          venueId: input.venueId,
+          placeId: input.placeId,
         })
         .returning();
 
       if (follow) {
         void logActivity({
           actorUserId: ctx.auth.userId,
-          type: "follow_venue",
-          entityType: "venue",
-          entityId: input.venueId,
+          type: "follow_place",
+          entityType: "place",
+          entityId: input.placeId,
           metadata: {},
         });
       }
@@ -296,15 +312,15 @@ export const venueRouter = router({
       return follow;
     }),
 
-  unfollowVenue: protectedProcedure
-    .input(z.object({ venueId: z.string().uuid() }))
+  unfollowPlace: protectedProcedure
+    .input(z.object({ placeId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       const result = await ctx.db
-        .delete(venueFollows)
+        .delete(placeFollows)
         .where(
           and(
-            eq(venueFollows.userId, ctx.auth.userId),
-            eq(venueFollows.venueId, input.venueId)
+            eq(placeFollows.userId, ctx.auth.userId),
+            eq(placeFollows.placeId, input.placeId)
           )
         )
         .returning();
@@ -312,69 +328,133 @@ export const venueRouter = router({
       if (result.length === 0) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "You are not following this venue",
+          message: "You are not following this place",
         });
       }
 
       return { success: true };
     }),
 
-  isFollowingVenue: protectedProcedure
-    .input(z.object({ venueId: z.string().uuid() }))
+  isFollowingPlace: protectedProcedure
+    .input(z.object({ placeId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      const follow = await ctx.db.query.venueFollows.findFirst({
+      const follow = await ctx.db.query.placeFollows.findFirst({
         where: and(
-          eq(venueFollows.userId, ctx.auth.userId),
-          eq(venueFollows.venueId, input.venueId)
+          eq(placeFollows.userId, ctx.auth.userId),
+          eq(placeFollows.placeId, input.placeId)
         ),
       });
 
       return !!follow;
     }),
 
-  listFollowedVenues: protectedProcedure.query(async ({ ctx }) => {
-    const followedVenues = await ctx.db.query.venueFollows.findMany({
-      where: eq(venueFollows.userId, ctx.auth.userId),
-      with: {
-        venue: {
-          with: {
-            follows: true,
-            members: true,
-          },
-        },
-      },
-      orderBy: [desc(venueFollows.createdAt)],
-    });
-
-    return followedVenues.map((f) => f.venue);
-  }),
-
-  getMyVenues: protectedProcedure.query(async ({ ctx }) => {
-    const myVenues = await ctx.db.query.venueMembers.findMany({
-      where: eq(venueMembers.userId, ctx.auth.userId),
-      with: {
-        venue: {
-          with: {
-            follows: true,
-            members: true,
-            events: {
-              where: gte(events.startAt, new Date()),
-              orderBy: [asc(events.startAt)],
-              limit: 5,
+  listFollowedPlaces: protectedProcedure
+    .input(z.object({ type: placeTypeSchema.optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      const followedPlaces = await ctx.db.query.placeFollows.findMany({
+        where: eq(placeFollows.userId, ctx.auth.userId),
+        with: {
+          place: {
+            with: {
+              follows: true,
+              members: true,
             },
           },
         },
-      },
-      orderBy: [desc(venueMembers.createdAt)],
-    });
+        orderBy: [desc(placeFollows.createdAt)],
+      });
 
-    return myVenues.map((m) => m.venue);
-  }),
+      let result = followedPlaces.map((f) => f.place);
 
-  updateVenue: protectedProcedure
+      if (input?.type) {
+        result = result.filter((p) => p.type === input.type);
+      }
+
+      return result;
+    }),
+
+  getMyPlaces: protectedProcedure
+    .input(z.object({ type: placeTypeSchema.optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      const myPlaces = await ctx.db.query.placeMembers.findMany({
+        where: eq(placeMembers.userId, ctx.auth.userId),
+        with: {
+          place: {
+            with: {
+              follows: true,
+              members: true,
+            },
+          },
+        },
+        orderBy: [desc(placeMembers.createdAt)],
+      });
+
+      let result = myPlaces.map((m) => m.place);
+
+      if (input?.type) {
+        result = result.filter((p) => p.type === input.type);
+      }
+
+      // Fetch upcoming events for each place
+      const placeIds = result.map((p) => p.id);
+      if (placeIds.length > 0) {
+        const upcomingEventsMap = new Map<string, any[]>();
+
+        // Get events where any of these places are venues
+        const venueEvents = await ctx.db.query.events.findMany({
+          where: and(
+            inArray(events.venueId, placeIds),
+            gte(events.startAt, new Date())
+          ),
+          orderBy: [asc(events.startAt)],
+          limit: 50,
+        });
+
+        // Get events where any of these places are organizers
+        const organizerEvents = await ctx.db.query.events.findMany({
+          where: and(
+            inArray(events.organizerId, placeIds),
+            gte(events.startAt, new Date())
+          ),
+          orderBy: [asc(events.startAt)],
+          limit: 50,
+        });
+
+        // Build map of place id to events
+        for (const event of venueEvents) {
+          if (event.venueId) {
+            if (!upcomingEventsMap.has(event.venueId)) {
+              upcomingEventsMap.set(event.venueId, []);
+            }
+            upcomingEventsMap.get(event.venueId)!.push(event);
+          }
+        }
+
+        for (const event of organizerEvents) {
+          if (event.organizerId) {
+            if (!upcomingEventsMap.has(event.organizerId)) {
+              upcomingEventsMap.set(event.organizerId, []);
+            }
+            upcomingEventsMap.get(event.organizerId)!.push(event);
+          }
+        }
+
+        return result.map((place) => ({
+          ...place,
+          events: (upcomingEventsMap.get(place.id) || []).slice(0, 5),
+        }));
+      }
+
+      return result.map((place) => ({
+        ...place,
+        events: [],
+      }));
+    }),
+
+  updatePlace: protectedProcedure
     .input(
       z.object({
-        venueId: z.string().uuid(),
+        placeId: z.string().uuid(),
         slug: z
           .string()
           .min(3)
@@ -385,7 +465,7 @@ export const venueRouter = router({
         description: z.string().optional(),
         imageUrl: z.string().url().optional().or(z.literal("")),
         address: z.string().optional(),
-        city: z.string().min(1).max(100).optional(),
+        city: z.string().max(100).optional(),
         state: z.string().length(2).optional(),
         website: z.string().url().optional().or(z.literal("")),
         instagram: z.string().max(100).optional(),
@@ -396,87 +476,87 @@ export const venueRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // Check if user is admin or venue member
+      // Check if user is admin or place member
       const user = await ctx.db.query.users.findFirst({
         where: eq(users.id, ctx.auth.userId),
       });
 
       const isAdmin = user?.role === "admin";
-      const isMember = await ctx.db.query.venueMembers.findFirst({
+      const isMember = await ctx.db.query.placeMembers.findFirst({
         where: and(
-          eq(venueMembers.userId, ctx.auth.userId),
-          eq(venueMembers.venueId, input.venueId)
+          eq(placeMembers.userId, ctx.auth.userId),
+          eq(placeMembers.placeId, input.placeId)
         ),
       });
 
       if (!isAdmin && !isMember) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "You do not have permission to update this venue",
+          message: "You do not have permission to update this place",
         });
       }
 
       // If slug is being updated, check if it's already taken
       if (input.slug) {
-        const existing = await ctx.db.query.venues.findFirst({
+        const existing = await ctx.db.query.places.findFirst({
           where: and(
-            eq(venues.slug, input.slug),
-            sql`${venues.id} != ${input.venueId}`
+            eq(places.slug, input.slug),
+            sql`${places.id} != ${input.placeId}`
           ),
         });
 
         if (existing) {
           throw new TRPCError({
             code: "CONFLICT",
-            message: "A venue with this slug already exists",
+            message: "A place with this slug already exists",
           });
         }
       }
 
-      const { venueId, categories, ...updates } = input;
+      const { placeId, categories, ...updates } = input;
 
       const [updated] = await ctx.db
-        .update(venues)
+        .update(places)
         .set({
           ...updates,
           categories: categories !== undefined ? filterValidCategories(categories) : undefined,
           updatedAt: new Date(),
         })
-        .where(eq(venues.id, venueId))
+        .where(eq(places.id, placeId))
         .returning();
 
       return updated;
     }),
 
-  getVenueMembers: protectedProcedure
-    .input(z.object({ venueId: z.string().uuid() }))
+  getPlaceMembers: protectedProcedure
+    .input(z.object({ placeId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      // Check if user is admin or venue member
+      // Check if user is admin or place member
       const user = await ctx.db.query.users.findFirst({
         where: eq(users.id, ctx.auth.userId),
       });
 
       const isAdmin = user?.role === "admin";
-      const isMember = await ctx.db.query.venueMembers.findFirst({
+      const isMember = await ctx.db.query.placeMembers.findFirst({
         where: and(
-          eq(venueMembers.userId, ctx.auth.userId),
-          eq(venueMembers.venueId, input.venueId)
+          eq(placeMembers.userId, ctx.auth.userId),
+          eq(placeMembers.placeId, input.placeId)
         ),
       });
 
       if (!isAdmin && !isMember) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "You do not have permission to view venue members",
+          message: "You do not have permission to view place members",
         });
       }
 
-      const members = await ctx.db.query.venueMembers.findMany({
-        where: eq(venueMembers.venueId, input.venueId),
+      const members = await ctx.db.query.placeMembers.findMany({
+        where: eq(placeMembers.placeId, input.placeId),
         with: {
           user: true,
         },
-        orderBy: [desc(venueMembers.createdAt)],
+        orderBy: [desc(placeMembers.createdAt)],
       });
 
       return members;

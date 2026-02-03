@@ -4,12 +4,11 @@ import {
   events,
   follows,
   friends,
-  organizerFollows,
-  organizerMembers,
+  placeFollows,
+  placeMembers,
+  places,
   rsvps,
   users,
-  venueFollows,
-  venueMembers,
 } from "../../db/schema";
 import { and, desc, eq, gte, ilike, inArray, lte, or, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
@@ -42,12 +41,12 @@ export const eventRouter = router({
       });
       const isAdmin = user?.role === "admin";
 
-      // If venueId provided, verify user is venue member or admin
+      // If venueId provided, verify user is place member or admin
       if (input.venueId && !isAdmin) {
-        const isMember = await ctx.db.query.venueMembers.findFirst({
+        const isMember = await ctx.db.query.placeMembers.findFirst({
           where: and(
-            eq(venueMembers.userId, ctx.auth.userId),
-            eq(venueMembers.venueId, input.venueId)
+            eq(placeMembers.userId, ctx.auth.userId),
+            eq(placeMembers.placeId, input.venueId)
           ),
         });
 
@@ -59,12 +58,12 @@ export const eventRouter = router({
         }
       }
 
-      // If organizerId provided, verify user is organizer member or admin
+      // If organizerId provided, verify user is place member or admin
       if (input.organizerId && !isAdmin) {
-        const isMember = await ctx.db.query.organizerMembers.findFirst({
+        const isMember = await ctx.db.query.placeMembers.findFirst({
           where: and(
-            eq(organizerMembers.userId, ctx.auth.userId),
-            eq(organizerMembers.organizerId, input.organizerId)
+            eq(placeMembers.userId, ctx.auth.userId),
+            eq(placeMembers.placeId, input.organizerId)
           ),
         });
 
@@ -168,25 +167,31 @@ export const eventRouter = router({
         );
       }
 
-      // Filter by followed businesses, venues, and organizers
+      // Filter by followed places (venues and organizers)
       if (input.followedOnly) {
         const userBusinessFollows = await ctx.db.query.follows.findMany({
           where: eq(follows.userId, ctx.auth.userId),
         });
-        const userVenueFollows = await ctx.db.query.venueFollows.findMany({
-          where: eq(venueFollows.userId, ctx.auth.userId),
+        const userPlaceFollows = await ctx.db.query.placeFollows.findMany({
+          where: eq(placeFollows.userId, ctx.auth.userId),
         });
-        const followedVenueIds = userVenueFollows.map((f) => f.venueId);
 
-        const userOrganizerFollows =
-          await ctx.db.query.organizerFollows.findMany({
-            where: eq(organizerFollows.userId, ctx.auth.userId),
+        // Get followed places and separate by type
+        const followedPlaceIds = userPlaceFollows.map((f) => f.placeId);
+
+        if (followedPlaceIds.length > 0) {
+          // Get the places to check their types
+          const followedPlaces = await ctx.db.query.places.findMany({
+            where: inArray(places.id, followedPlaceIds),
           });
-        const followedOrganizerIds = userOrganizerFollows.map(
-          (f) => f.organizerId
-        );
 
-        if (followedVenueIds.length > 0 || followedOrganizerIds.length > 0) {
+          const followedVenueIds = followedPlaces
+            .filter((p) => p.type === "venue")
+            .map((p) => p.id);
+          const followedOrganizerIds = followedPlaces
+            .filter((p) => p.type === "organizer")
+            .map((p) => p.id);
+
           const followConditions = [];
           if (followedVenueIds.length > 0) {
             followConditions.push(inArray(events.venueId, followedVenueIds));
@@ -196,7 +201,13 @@ export const eventRouter = router({
               inArray(events.organizerId, followedOrganizerIds)
             );
           }
-          conditions.push(or(...followConditions)!);
+
+          if (followConditions.length > 0) {
+            conditions.push(or(...followConditions)!);
+          } else {
+            // User follows nothing, return empty
+            return [];
+          }
         } else {
           // User follows nothing, return empty
           return [];

@@ -6,13 +6,10 @@ import ws from "ws";
 import * as schema from "./schema";
 import {
   users,
-  venues,
-  organizers,
+  places,
   events,
-  venueMembers,
-  organizerMembers,
-  venueFollows,
-  organizerFollows,
+  placeMembers,
+  placeFollows,
   activityEvents,
 } from "./schema";
 import { inArray } from "drizzle-orm";
@@ -30,23 +27,20 @@ async function main() {
   console.log("🌱 Seeding database...");
 
   // ---------------------------------------------------------------------------
-  // CLEAR (venues, organizers, events) + their dependent join rows
+  // CLEAR (places, events) + their dependent join rows
   // ---------------------------------------------------------------------------
-  console.log("🧹 Clearing existing venue/organizer/event data...");
+  console.log("🧹 Clearing existing place/event data...");
 
   // Delete dependents first to avoid FK violations
-  await db.delete(venueMembers);
-  await db.delete(venueFollows);
-  await db.delete(organizerMembers);
-  await db.delete(organizerFollows);
+  await db.delete(placeMembers);
+  await db.delete(placeFollows);
   await db.delete(activityEvents);
 
   // Then core tables
   await db.delete(events);
-  await db.delete(venues);
-  await db.delete(organizers);
+  await db.delete(places);
 
-  console.log("✓ Cleared venues, organizers, events (and related join tables)");
+  console.log("✓ Cleared places, events (and related join tables)");
 
   // ---------------------------------------------------------------------------
   // USERS (demo records; in prod you'd create via Clerk webhook)
@@ -108,13 +102,14 @@ async function main() {
   console.log(`✓ Seeded users (returned: ${insertedUsers.length})`);
 
   // ---------------------------------------------------------------------------
-  // VENUES (clubs/bars)
+  // PLACES (venues and organizers combined)
   // ---------------------------------------------------------------------------
-  console.log("Creating venues...");
+  console.log("Creating places (venues and organizers)...");
 
-  const venueData = [
-    // Boston
+  const placeData = [
+    // VENUES (Boston)
     {
+      type: "venue" as const,
       slug: "royale-boston",
       name: "Royale Boston",
       description:
@@ -137,6 +132,7 @@ async function main() {
       },
     },
     {
+      type: "venue" as const,
       slug: "bijou-boston",
       name: "Bijou Boston",
       description:
@@ -159,6 +155,7 @@ async function main() {
       },
     },
     {
+      type: "venue" as const,
       slug: "middlesex-lounge-cambridge",
       name: "The Middlesex Lounge",
       description:
@@ -181,8 +178,9 @@ async function main() {
       },
     },
 
-    // NYC
+    // VENUES (NYC)
     {
+      type: "venue" as const,
       slug: "elsewhere-brooklyn",
       name: "Elsewhere",
       description:
@@ -205,6 +203,7 @@ async function main() {
       },
     },
     {
+      type: "venue" as const,
       slug: "good-room-brooklyn",
       name: "Good Room",
       description:
@@ -226,148 +225,124 @@ async function main() {
         sunday: { open: "20:00", close: "04:00", closed: false },
       },
     },
-  ];
 
-  await db.insert(venues).values(venueData).onConflictDoNothing();
-
-  const venueRows = await db
-    .select({ id: venues.id, slug: venues.slug })
-    .from(venues)
-    .where(
-      inArray(
-        venues.slug,
-        venueData.map((v) => v.slug)
-      )
-    );
-
-  const venueIdBySlug = new Map(venueRows.map((v) => [v.slug, v.id]));
-
-  const missingVenueSlugs = venueData
-    .map((v) => v.slug)
-    .filter((s) => !venueIdBySlug.get(s));
-  if (missingVenueSlugs.length > 0) {
-    throw new Error(
-      `Missing venue IDs for slugs: ${missingVenueSlugs.join(", ")}`
-    );
-  }
-
-  console.log(`✓ Ensured ${venueRows.length} venues exist`);
-
-  // ---------------------------------------------------------------------------
-  // ORGANIZERS
-  // ---------------------------------------------------------------------------
-  console.log("Creating organizers...");
-
-  const organizerData = [
+    // ORGANIZERS
     {
+      type: "organizer" as const,
       slug: "midnight-moves",
       name: "Midnight Moves",
       description:
         "Dance-forward parties featuring house, disco, and tasteful late-night energy.",
       imageUrl: null,
+      city: null,
+      state: null,
       website: "https://midnightmoves.example.com",
       instagram: "midnightmoves",
     },
     {
+      type: "organizer" as const,
       slug: "neon-nights-collective",
       name: "Neon Nights Collective",
       description:
         "Electronic parties, DJ showcases, and themed club nights across Boston and NYC.",
       imageUrl: null,
+      city: null,
+      state: null,
       website: "https://neonnights.example.com",
       instagram: "neonnightscollective",
     },
     {
+      type: "organizer" as const,
       slug: "afterhours-society",
       name: "AfterHours Society",
       description:
         "Late-night DJ-driven events focused on underground house and techno.",
       imageUrl: null,
+      city: null,
+      state: null,
       website: "https://afterhours.example.com",
       instagram: "afterhourssociety",
     },
     {
+      type: "organizer" as const,
       slug: "rooftop-rituals",
       name: "Rooftop Rituals",
       description:
         "Seasonal rooftop parties with groove-forward lineups and sunset sets.",
       imageUrl: null,
+      city: null,
+      state: null,
       website: "https://rooftoprituals.example.com",
       instagram: "rooftoprituals",
     },
   ];
 
-  await db.insert(organizers).values(organizerData).onConflictDoNothing();
+  await db.insert(places).values(placeData).onConflictDoNothing();
 
-  const organizerRows = await db
-    .select({ id: organizers.id, slug: organizers.slug })
-    .from(organizers)
+  const placeRows = await db
+    .select({ id: places.id, slug: places.slug, type: places.type })
+    .from(places)
     .where(
       inArray(
-        organizers.slug,
-        organizerData.map((o) => o.slug)
+        places.slug,
+        placeData.map((p) => p.slug)
       )
     );
 
-  const organizerIdBySlug = new Map(organizerRows.map((o) => [o.slug, o.id]));
+  const placeIdBySlug = new Map(placeRows.map((p) => [p.slug, p.id]));
 
-  console.log(`✓ Ensured ${organizerRows.length} organizers exist`);
+  const missingSlugs = placeData
+    .map((p) => p.slug)
+    .filter((s) => !placeIdBySlug.get(s));
+  if (missingSlugs.length > 0) {
+    throw new Error(`Missing place IDs for slugs: ${missingSlugs.join(", ")}`);
+  }
+
+  console.log(`✓ Ensured ${placeRows.length} places exist`);
 
   // ---------------------------------------------------------------------------
   // MEMBERSHIPS (optional, but useful for demo data)
   // ---------------------------------------------------------------------------
-  console.log("Creating venue & organizer memberships...");
+  console.log("Creating place memberships...");
 
   const u1 = demoUserIds[0] ?? "user_demo_1";
   const u2 = demoUserIds[1] ?? "user_demo_2";
   const u3 = demoUserIds[2] ?? "user_demo_3";
   const u4 = demoUserIds[3] ?? "user_demo_4";
 
+  // Venue memberships
   await db
-    .insert(venueMembers)
+    .insert(placeMembers)
     .values([
-      { userId: u1, venueId: venueIdBySlug.get("royale-boston")! },
-      { userId: u3, venueId: venueIdBySlug.get("bijou-boston")! },
-      { userId: u2, venueId: venueIdBySlug.get("elsewhere-brooklyn")! },
-      { userId: u4, venueId: venueIdBySlug.get("good-room-brooklyn")! },
+      { userId: u1, placeId: placeIdBySlug.get("royale-boston")! },
+      { userId: u3, placeId: placeIdBySlug.get("bijou-boston")! },
+      { userId: u2, placeId: placeIdBySlug.get("elsewhere-brooklyn")! },
+      { userId: u4, placeId: placeIdBySlug.get("good-room-brooklyn")! },
     ])
     .onConflictDoNothing();
 
+  // Organizer memberships
   await db
-    .insert(organizerMembers)
+    .insert(placeMembers)
     .values([
-      {
-        userId: u1,
-        organizerId: organizerIdBySlug.get("neon-nights-collective")!,
-      },
-      { userId: u2, organizerId: organizerIdBySlug.get("midnight-moves")! },
-      { userId: u3, organizerId: organizerIdBySlug.get("afterhours-society")! },
-      { userId: u4, organizerId: organizerIdBySlug.get("rooftop-rituals")! },
+      { userId: u1, placeId: placeIdBySlug.get("neon-nights-collective")! },
+      { userId: u2, placeId: placeIdBySlug.get("midnight-moves")! },
+      { userId: u3, placeId: placeIdBySlug.get("afterhours-society")! },
+      { userId: u4, placeId: placeIdBySlug.get("rooftop-rituals")! },
     ])
     .onConflictDoNothing();
 
-  // Optional: some follows (updated to avoid removed venues)
+  // Place follows
   await db
-    .insert(venueFollows)
+    .insert(placeFollows)
     .values([
-      { userId: u1, venueId: venueIdBySlug.get("elsewhere-brooklyn")! },
-      { userId: u2, venueId: venueIdBySlug.get("royale-boston")! },
-      // REMOVED: public-records-brooklyn follow
-      // REMOVED: the-grand-boston follow
-      { userId: u3, venueId: venueIdBySlug.get("bijou-boston")! },
-      { userId: u4, venueId: venueIdBySlug.get("good-room-brooklyn")! },
-    ])
-    .onConflictDoNothing();
-
-  await db
-    .insert(organizerFollows)
-    .values([
-      { userId: u1, organizerId: organizerIdBySlug.get("midnight-moves")! },
-      { userId: u2, organizerId: organizerIdBySlug.get("afterhours-society")! },
-      {
-        userId: u3,
-        organizerId: organizerIdBySlug.get("neon-nights-collective")!,
-      },
+      { userId: u1, placeId: placeIdBySlug.get("elsewhere-brooklyn")! },
+      { userId: u2, placeId: placeIdBySlug.get("royale-boston")! },
+      { userId: u3, placeId: placeIdBySlug.get("bijou-boston")! },
+      { userId: u4, placeId: placeIdBySlug.get("good-room-brooklyn")! },
+      { userId: u1, placeId: placeIdBySlug.get("midnight-moves")! },
+      { userId: u2, placeId: placeIdBySlug.get("afterhours-society")! },
+      { userId: u3, placeId: placeIdBySlug.get("neon-nights-collective")! },
     ])
     .onConflictDoNothing();
 
@@ -398,8 +373,8 @@ async function main() {
     // Boston
     // -------------------
     {
-      venueId: venueIdBySlug.get("royale-boston")!,
-      organizerId: organizerIdBySlug.get("neon-nights-collective") ?? null,
+      venueId: placeIdBySlug.get("royale-boston")!,
+      organizerId: placeIdBySlug.get("neon-nights-collective") ?? null,
       createdByUserId: u1,
       title: "Neon Nights: Royale Takeover",
       description:
@@ -415,8 +390,8 @@ async function main() {
       visibility: "public" as const,
     },
     {
-      venueId: venueIdBySlug.get("bijou-boston")!,
-      organizerId: organizerIdBySlug.get("afterhours-society") ?? null,
+      venueId: placeIdBySlug.get("bijou-boston")!,
+      organizerId: placeIdBySlug.get("afterhours-society") ?? null,
       createdByUserId: u3,
       title: "AfterHours: Basement House Session",
       description:
@@ -432,8 +407,8 @@ async function main() {
       visibility: "public" as const,
     },
     {
-      venueId: venueIdBySlug.get("middlesex-lounge-cambridge")!,
-      organizerId: organizerIdBySlug.get("midnight-moves") ?? null,
+      venueId: placeIdBySlug.get("middlesex-lounge-cambridge")!,
+      organizerId: placeIdBySlug.get("midnight-moves") ?? null,
       createdByUserId: u3,
       title: "Middlesex: Disco Warmup + Late House",
       description:
@@ -451,8 +426,8 @@ async function main() {
 
     // Boston overlaps / test density
     {
-      venueId: venueIdBySlug.get("royale-boston")!,
-      organizerId: organizerIdBySlug.get("afterhours-society") ?? null,
+      venueId: placeIdBySlug.get("royale-boston")!,
+      organizerId: placeIdBySlug.get("afterhours-society") ?? null,
       createdByUserId: u3,
       title: "Royale Side Room: Tech House Hour",
       description:
@@ -468,7 +443,7 @@ async function main() {
       visibility: "public" as const,
     },
     {
-      venueId: venueIdBySlug.get("bijou-boston")!,
+      venueId: placeIdBySlug.get("bijou-boston")!,
       organizerId: null,
       createdByUserId: u1,
       title: "Guest List Thursdays: Local Selectors",
@@ -485,10 +460,10 @@ async function main() {
       visibility: "public" as const,
     },
 
-    // NEW: 8 Additional Boston Events (Days 0-7)
+    // Additional Boston Events (Days 0-7)
     {
-      venueId: venueIdBySlug.get("royale-boston")!,
-      organizerId: organizerIdBySlug.get("midnight-moves") ?? null,
+      venueId: placeIdBySlug.get("royale-boston")!,
+      organizerId: placeIdBySlug.get("midnight-moves") ?? null,
       createdByUserId: u1,
       title: "Midnight Moves: Opening Night",
       description:
@@ -504,7 +479,7 @@ async function main() {
       visibility: "public" as const,
     },
     {
-      venueId: venueIdBySlug.get("middlesex-lounge-cambridge")!,
+      venueId: placeIdBySlug.get("middlesex-lounge-cambridge")!,
       organizerId: null,
       createdByUserId: u3,
       title: "Sunday Sessions: Chill Vibes & Vinyl",
@@ -521,8 +496,8 @@ async function main() {
       visibility: "public" as const,
     },
     {
-      venueId: venueIdBySlug.get("bijou-boston")!,
-      organizerId: organizerIdBySlug.get("rooftop-rituals") ?? null,
+      venueId: placeIdBySlug.get("bijou-boston")!,
+      organizerId: placeIdBySlug.get("rooftop-rituals") ?? null,
       createdByUserId: u1,
       title: "Rooftop Rituals: Boston Underground",
       description:
@@ -538,8 +513,8 @@ async function main() {
       visibility: "public" as const,
     },
     {
-      venueId: venueIdBySlug.get("royale-boston")!,
-      organizerId: organizerIdBySlug.get("neon-nights-collective") ?? null,
+      venueId: placeIdBySlug.get("royale-boston")!,
+      organizerId: placeIdBySlug.get("neon-nights-collective") ?? null,
       createdByUserId: u1,
       title: "Neon Nights: Throwback Thursday",
       description:
@@ -555,8 +530,8 @@ async function main() {
       visibility: "public" as const,
     },
     {
-      venueId: venueIdBySlug.get("middlesex-lounge-cambridge")!,
-      organizerId: organizerIdBySlug.get("afterhours-society") ?? null,
+      venueId: placeIdBySlug.get("middlesex-lounge-cambridge")!,
+      organizerId: placeIdBySlug.get("afterhours-society") ?? null,
       createdByUserId: u3,
       title: "AfterHours: Cambridge Edition",
       description:
@@ -572,8 +547,8 @@ async function main() {
       visibility: "public" as const,
     },
     {
-      venueId: venueIdBySlug.get("bijou-boston")!,
-      organizerId: organizerIdBySlug.get("midnight-moves") ?? null,
+      venueId: placeIdBySlug.get("bijou-boston")!,
+      organizerId: placeIdBySlug.get("midnight-moves") ?? null,
       createdByUserId: u1,
       title: "Midnight Moves: Friday Groove Session",
       description:
@@ -589,7 +564,7 @@ async function main() {
       visibility: "public" as const,
     },
     {
-      venueId: venueIdBySlug.get("royale-boston")!,
+      venueId: placeIdBySlug.get("royale-boston")!,
       organizerId: null,
       createdByUserId: u3,
       title: "Saturday Night Live: Open Format",
@@ -606,8 +581,8 @@ async function main() {
       visibility: "public" as const,
     },
     {
-      venueId: venueIdBySlug.get("middlesex-lounge-cambridge")!,
-      organizerId: organizerIdBySlug.get("rooftop-rituals") ?? null,
+      venueId: placeIdBySlug.get("middlesex-lounge-cambridge")!,
+      organizerId: placeIdBySlug.get("rooftop-rituals") ?? null,
       createdByUserId: u3,
       title: "Rooftop Rituals: Sunday Wind Down",
       description:
@@ -625,7 +600,7 @@ async function main() {
 
     // Additional Day 0 events for density
     {
-      venueId: venueIdBySlug.get("bijou-boston")!,
+      venueId: placeIdBySlug.get("bijou-boston")!,
       organizerId: null,
       createdByUserId: u3,
       title: "Bijou Happy Hour: House Warmup",
@@ -642,8 +617,8 @@ async function main() {
       visibility: "public" as const,
     },
     {
-      venueId: venueIdBySlug.get("middlesex-lounge-cambridge")!,
-      organizerId: organizerIdBySlug.get("midnight-moves") ?? null,
+      venueId: placeIdBySlug.get("middlesex-lounge-cambridge")!,
+      organizerId: placeIdBySlug.get("midnight-moves") ?? null,
       createdByUserId: u3,
       title: "Midnight Moves: Cambridge Kickoff",
       description:
@@ -659,8 +634,8 @@ async function main() {
       visibility: "public" as const,
     },
     {
-      venueId: venueIdBySlug.get("elsewhere-brooklyn")!,
-      organizerId: organizerIdBySlug.get("midnight-moves") ?? null,
+      venueId: placeIdBySlug.get("elsewhere-brooklyn")!,
+      organizerId: placeIdBySlug.get("midnight-moves") ?? null,
       createdByUserId: u2,
       title: "Midnight Moves: Brooklyn Opening Party",
       description:
@@ -676,8 +651,8 @@ async function main() {
       visibility: "public" as const,
     },
     {
-      venueId: venueIdBySlug.get("good-room-brooklyn")!,
-      organizerId: organizerIdBySlug.get("neon-nights-collective") ?? null,
+      venueId: placeIdBySlug.get("good-room-brooklyn")!,
+      organizerId: placeIdBySlug.get("neon-nights-collective") ?? null,
       createdByUserId: u4,
       title: "Neon Nights: Brooklyn Deep House Session",
       description:
@@ -697,8 +672,8 @@ async function main() {
     // NYC / Brooklyn
     // ----------
     {
-      venueId: venueIdBySlug.get("elsewhere-brooklyn")!,
-      organizerId: organizerIdBySlug.get("rooftop-rituals") ?? null,
+      venueId: placeIdBySlug.get("elsewhere-brooklyn")!,
+      organizerId: placeIdBySlug.get("rooftop-rituals") ?? null,
       createdByUserId: u2,
       title: "Rooftop Rituals: Sunset Grooves",
       description:
@@ -714,8 +689,8 @@ async function main() {
       visibility: "public" as const,
     },
     {
-      venueId: venueIdBySlug.get("good-room-brooklyn")!,
-      organizerId: organizerIdBySlug.get("afterhours-society") ?? null,
+      venueId: placeIdBySlug.get("good-room-brooklyn")!,
+      organizerId: placeIdBySlug.get("afterhours-society") ?? null,
       createdByUserId: u4,
       title: "Good Room: All-Night House Marathon",
       description:
@@ -733,8 +708,8 @@ async function main() {
 
     // NYC test density / overlaps
     {
-      venueId: venueIdBySlug.get("elsewhere-brooklyn")!,
-      organizerId: organizerIdBySlug.get("neon-nights-collective") ?? null,
+      venueId: placeIdBySlug.get("elsewhere-brooklyn")!,
+      organizerId: placeIdBySlug.get("neon-nights-collective") ?? null,
       createdByUserId: u2,
       title: "Elsewhere Warmup: Vinyl-Only Hour",
       description:
@@ -750,8 +725,8 @@ async function main() {
       visibility: "public" as const,
     },
     {
-      venueId: venueIdBySlug.get("good-room-brooklyn")!,
-      organizerId: organizerIdBySlug.get("midnight-moves") ?? null,
+      venueId: placeIdBySlug.get("good-room-brooklyn")!,
+      organizerId: placeIdBySlug.get("midnight-moves") ?? null,
       createdByUserId: u4,
       title: "Good Room (Front Bar): Disco Happy Hour",
       description:

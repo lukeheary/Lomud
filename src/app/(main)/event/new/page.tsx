@@ -19,13 +19,7 @@ function NewEventPageContent() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          href={
-            venueId
-              ? `/venue/${venueId}`
-              : organizerId
-                ? `/organizer/${organizerId}`
-                : "/home"
-          }
+          href="/home"
         >
           <Button variant="ghost" size="icon">
             <ArrowLeft className="h-5 w-5" />

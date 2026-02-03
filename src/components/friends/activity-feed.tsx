@@ -75,7 +75,7 @@ function ActivityItem({ activity }: ActivityItemProps) {
                 at{" "}
                 {activity.event.venue?.slug ? (
                   <Link
-                    href={`/venue/${activity.event.venue.slug}`}
+                    href={`/place/${activity.event.venue.slug}`}
                     className="font-medium text-primary hover:underline"
                   >
                     {activity.event.venueName}
@@ -105,7 +105,7 @@ function ActivityItem({ activity }: ActivityItemProps) {
                 at{" "}
                 {activity.event.venue?.slug ? (
                   <Link
-                    href={`/venue/${activity.event.venue.slug}`}
+                    href={`/place/${activity.event.venue.slug}`}
                     className="font-medium text-primary hover:underline"
                   >
                     {activity.event.venueName}
@@ -125,7 +125,7 @@ function ActivityItem({ activity }: ActivityItemProps) {
             {actorName} started following{" "}
             {activity.venue?.slug ? (
               <Link
-                href={`/venue/${activity.venue.slug}`}
+                href={`/place/${activity.venue.slug}`}
                 className="font-medium text-primary hover:underline"
               >
                 {entityName}
@@ -141,7 +141,7 @@ function ActivityItem({ activity }: ActivityItemProps) {
             {actorName} started following{" "}
             {activity.organizer?.slug ? (
               <Link
-                href={`/organizer/${activity.organizer.slug}`}
+                href={`/place/${activity.organizer.slug}`}
                 className="font-medium text-primary hover:underline"
               >
                 {entityName}
@@ -167,7 +167,7 @@ function ActivityItem({ activity }: ActivityItemProps) {
                 at{" "}
                 {activity.event.venue?.slug ? (
                   <Link
-                    href={`/venue/${activity.event.venue.slug}`}
+                    href={`/place/${activity.event.venue.slug}`}
                     className="font-medium text-primary hover:underline"
                   >
                     {activity.event.venueName}

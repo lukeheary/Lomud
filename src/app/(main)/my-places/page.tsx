@@ -1,0 +1,195 @@
+"use client";
+
+import Link from "next/link";
+import { trpc } from "@/lib/trpc";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Building,
+  Building2,
+  MapPin,
+  Calendar,
+  Users as UsersIcon,
+  Loader2,
+} from "lucide-react";
+import pluralize from "pluralize";
+
+export default function MyPlacesPage() {
+  const { data: myPlaces, isLoading } = trpc.place.getMyPlaces.useQuery();
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  const venues = myPlaces?.filter((p) => p.type === "venue") || [];
+  const organizers = myPlaces?.filter((p) => p.type === "organizer") || [];
+
+  return (
+    <div className="container mx-auto space-y-8 py-4">
+      {/* Venues Section */}
+      <div className="space-y-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+            My Venues
+          </h1>
+          <p className="text-muted-foreground">Venues where you are a member</p>
+        </div>
+
+        {venues.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {venues.map((place) => (
+              <Card
+                key={place.id}
+                className="transition-colors hover:bg-accent/50"
+              >
+                <CardHeader className={"pb-2"}>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-lg">{place.name}</CardTitle>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {place.description && (
+                    <p className="line-clamp-2 text-sm text-muted-foreground">
+                      {place.description}
+                    </p>
+                  )}
+
+                  {place.city && place.state && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <MapPin className="h-4 w-4" />
+                      <span>
+                        {place.city}, {place.state}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">
+                      <UsersIcon className="mr-1 h-3 w-3" />
+                      {(place as any).members?.length || 0}{" "}
+                      {pluralize("member", (place as any).members?.length || 0)}
+                    </Badge>
+                    <Badge variant="outline">
+                      <Calendar className="mr-1 h-3 w-3" />
+                      {(place as any).events?.length || 0} upcoming
+                    </Badge>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Link href={`/place/${place.slug}`} className="flex-1">
+                      <Button variant="outline" className="w-full">
+                        View Venue
+                      </Button>
+                    </Link>
+                    <Link
+                      href={`/event/new?venueId=${place.id}`}
+                      className={"flex-1"}
+                    >
+                      <Button className={"w-full"}>Create Event</Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <Building className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+              <h3 className="mb-2 text-lg font-semibold">No venues yet</h3>
+              <p className="mb-4 text-muted-foreground">
+                You are not a member of any venues. Contact an admin to be added
+                to a venue.
+              </p>
+              <Link href="/places?filter=venues">
+                <Button>Browse Venues</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Organizers Section */}
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
+            My Organizers
+          </h2>
+          <p className="text-muted-foreground">
+            Organizers where you are a member
+          </p>
+        </div>
+
+        {organizers.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {organizers.map((place) => (
+              <Card
+                key={place.id}
+                className="transition-colors hover:bg-accent/50"
+              >
+                <CardHeader className={"pb-2"}>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-lg">{place.name}</CardTitle>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {place.description && (
+                    <p className="line-clamp-2 text-sm text-muted-foreground">
+                      {place.description}
+                    </p>
+                  )}
+
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">
+                      <UsersIcon className="mr-1 h-3 w-3" />
+                      {(place as any).members?.length || 0}{" "}
+                      {pluralize("member", (place as any).members?.length || 0)}
+                    </Badge>
+                    <Badge variant="outline">
+                      <Calendar className="mr-1 h-3 w-3" />
+                      {(place as any).events?.length || 0} upcoming
+                    </Badge>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Link href={`/place/${place.slug}`} className="flex-1">
+                      <Button variant="outline" className={"w-full"}>
+                        View Organizer
+                      </Button>
+                    </Link>
+                    <Link
+                      href={`/event/new?organizerId=${place.id}`}
+                      className={"flex-1"}
+                    >
+                      <Button className={"w-full"}>Create Event</Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+              <h3 className="mb-2 text-lg font-semibold">No organizers yet</h3>
+              <p className="mb-4 text-muted-foreground">
+                You are not a member of any organizers. Contact an admin to be
+                added to an organizer.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}

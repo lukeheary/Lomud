@@ -46,7 +46,7 @@ export function EventForm({
   const [isCreatingNewVenue, setIsCreatingNewVenue] = useState(false);
 
   const { data: venue, isLoading: isLoadingVenue } =
-    trpc.venue.getVenueById.useQuery(
+    trpc.place.getPlaceById.useQuery(
       { id: venueId as string },
       { enabled: !!venueId }
     );
@@ -71,7 +71,7 @@ export function EventForm({
     }
   }, [venue]);
 
-  const createVenueMutation = trpc.venue.createVenue.useMutation();
+  const createVenueMutation = trpc.place.createPlace.useMutation();
 
   const createMutation = trpc.event.createEvent.useMutation({
     onSuccess: (data) => {
@@ -121,6 +121,8 @@ export function EventForm({
     if (isCreatingNewVenue && selectedVenue) {
       try {
         const newVenue = await createVenueMutation.mutateAsync({
+          type: "venue",
+          slug: selectedVenue.slug || selectedVenue.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""),
           name: selectedVenue.name,
           address: selectedVenue.address || undefined,
           city: selectedVenue.city,

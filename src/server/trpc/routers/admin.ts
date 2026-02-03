@@ -1,24 +1,25 @@
 import { z } from "zod";
 import { router, adminProcedure } from "../init";
 import {
-  venues,
-  organizers,
-  venueMembers,
-  organizerMembers,
+  places,
+  placeMembers,
   users,
 } from "../../db/schema";
 import { eq, and, or, ilike, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { filterValidCategories } from "@/lib/categories";
 
+const placeTypeSchema = z.enum(["venue", "organizer"]);
+
 export const adminRouter = router({
   // ============================================================================
-  // VENUE MANAGEMENT
+  // PLACE MANAGEMENT
   // ============================================================================
 
-  createVenue: adminProcedure
+  createPlace: adminProcedure
     .input(
       z.object({
+        type: placeTypeSchema,
         slug: z
           .string()
           .min(3)
@@ -31,8 +32,8 @@ export const adminRouter = router({
         description: z.string().optional(),
         imageUrl: z.string().url().optional().or(z.literal("")),
         address: z.string().optional(),
-        city: z.string().min(1).max(100),
-        state: z.string().length(2, "State must be 2-letter code"),
+        city: z.string().max(100).optional(),
+        state: z.string().length(2, "State must be 2-letter code").optional(),
         latitude: z.number().optional(),
         longitude: z.number().optional(),
         website: z.string().url().optional().or(z.literal("")),
@@ -43,33 +44,33 @@ export const adminRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       // Check if slug already exists
-      const existing = await ctx.db.query.venues.findFirst({
-        where: eq(venues.slug, input.slug),
+      const existing = await ctx.db.query.places.findFirst({
+        where: eq(places.slug, input.slug),
       });
 
       if (existing) {
         throw new TRPCError({
           code: "CONFLICT",
-          message: "A venue with this slug already exists",
+          message: "A place with this slug already exists",
         });
       }
 
       const { categories, ...rest } = input;
-      const [venue] = await ctx.db
-        .insert(venues)
+      const [place] = await ctx.db
+        .insert(places)
         .values({
           ...rest,
           categories: filterValidCategories(categories || []),
         })
         .returning();
 
-      return venue;
+      return place;
     }),
 
-  addVenueMember: adminProcedure
+  addPlaceMember: adminProcedure
     .input(
       z.object({
-        venueId: z.string().uuid(),
+        placeId: z.string().uuid(),
         userId: z.string(),
       })
     )
@@ -86,58 +87,58 @@ export const adminRouter = router({
         });
       }
 
-      // Check if venue exists
-      const venue = await ctx.db.query.venues.findFirst({
-        where: eq(venues.id, input.venueId),
+      // Check if place exists
+      const place = await ctx.db.query.places.findFirst({
+        where: eq(places.id, input.placeId),
       });
 
-      if (!venue) {
+      if (!place) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Venue not found",
+          message: "Place not found",
         });
       }
 
       // Check if already a member
-      const existing = await ctx.db.query.venueMembers.findFirst({
+      const existing = await ctx.db.query.placeMembers.findFirst({
         where: and(
-          eq(venueMembers.userId, input.userId),
-          eq(venueMembers.venueId, input.venueId)
+          eq(placeMembers.userId, input.userId),
+          eq(placeMembers.placeId, input.placeId)
         ),
       });
 
       if (existing) {
         throw new TRPCError({
           code: "CONFLICT",
-          message: "User is already a member of this venue",
+          message: "User is already a member of this place",
         });
       }
 
       const [member] = await ctx.db
-        .insert(venueMembers)
+        .insert(placeMembers)
         .values({
           userId: input.userId,
-          venueId: input.venueId,
+          placeId: input.placeId,
         })
         .returning();
 
       return member;
     }),
 
-  removeVenueMember: adminProcedure
+  removePlaceMember: adminProcedure
     .input(
       z.object({
-        venueId: z.string().uuid(),
+        placeId: z.string().uuid(),
         userId: z.string(),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const result = await ctx.db
-        .delete(venueMembers)
+        .delete(placeMembers)
         .where(
           and(
-            eq(venueMembers.userId, input.userId),
-            eq(venueMembers.venueId, input.venueId)
+            eq(placeMembers.userId, input.userId),
+            eq(placeMembers.placeId, input.placeId)
           )
         )
         .returning();
@@ -145,16 +146,17 @@ export const adminRouter = router({
       if (result.length === 0) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Venue membership not found",
+          message: "Place membership not found",
         });
       }
 
       return { success: true };
     }),
 
-  listAllVenues: adminProcedure
+  listAllPlaces: adminProcedure
     .input(
       z.object({
+        type: placeTypeSchema.optional(),
         search: z.string().optional(),
         limit: z.number().min(1).max(100).default(50),
         offset: z.number().min(0).default(0),
@@ -163,185 +165,24 @@ export const adminRouter = router({
     .query(async ({ ctx, input }) => {
       const conditions = [];
 
-      if (input.search) {
-        conditions.push(
-          or(
-            ilike(venues.name, `%${input.search}%`),
-            ilike(venues.slug, `%${input.search}%`)
-          )!
-        );
+      if (input.type) {
+        conditions.push(eq(places.type, input.type));
       }
-
-      const results = await ctx.db.query.venues.findMany({
-        where: conditions.length > 0 ? and(...conditions) : undefined,
-        limit: input.limit,
-        offset: input.offset,
-        orderBy: [desc(venues.createdAt)],
-        with: {
-          members: true,
-          follows: true,
-        },
-      });
-
-      return results;
-    }),
-
-  // ============================================================================
-  // ORGANIZER MANAGEMENT
-  // ============================================================================
-
-  createOrganizer: adminProcedure
-    .input(
-      z.object({
-        slug: z
-          .string()
-          .min(3)
-          .max(100)
-          .regex(
-            /^[a-z0-9-]+$/,
-            "Slug must be lowercase alphanumeric with hyphens"
-          ),
-        name: z.string().min(1).max(255),
-        description: z.string().optional(),
-        imageUrl: z.string().url().optional().or(z.literal("")),
-        city: z.string().max(100).optional(),
-        state: z.string().length(2, "State must be 2-letter code").optional(),
-        website: z.string().url().optional().or(z.literal("")),
-        instagram: z.string().max(100).optional(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      // Check if slug already exists
-      const existing = await ctx.db.query.organizers.findFirst({
-        where: eq(organizers.slug, input.slug),
-      });
-
-      if (existing) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "An organizer with this slug already exists",
-        });
-      }
-
-      const [organizer] = await ctx.db
-        .insert(organizers)
-        .values(input)
-        .returning();
-
-      return organizer;
-    }),
-
-  addOrganizerMember: adminProcedure
-    .input(
-      z.object({
-        organizerId: z.string().uuid(),
-        userId: z.string(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      // Check if user exists
-      const user = await ctx.db.query.users.findFirst({
-        where: eq(users.id, input.userId),
-      });
-
-      if (!user) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "User not found",
-        });
-      }
-
-      // Check if organizer exists
-      const organizer = await ctx.db.query.organizers.findFirst({
-        where: eq(organizers.id, input.organizerId),
-      });
-
-      if (!organizer) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Organizer not found",
-        });
-      }
-
-      // Check if already a member
-      const existing = await ctx.db.query.organizerMembers.findFirst({
-        where: and(
-          eq(organizerMembers.userId, input.userId),
-          eq(organizerMembers.organizerId, input.organizerId)
-        ),
-      });
-
-      if (existing) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "User is already a member of this organizer",
-        });
-      }
-
-      const [member] = await ctx.db
-        .insert(organizerMembers)
-        .values({
-          userId: input.userId,
-          organizerId: input.organizerId,
-        })
-        .returning();
-
-      return member;
-    }),
-
-  removeOrganizerMember: adminProcedure
-    .input(
-      z.object({
-        organizerId: z.string().uuid(),
-        userId: z.string(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const result = await ctx.db
-        .delete(organizerMembers)
-        .where(
-          and(
-            eq(organizerMembers.userId, input.userId),
-            eq(organizerMembers.organizerId, input.organizerId)
-          )
-        )
-        .returning();
-
-      if (result.length === 0) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Organizer membership not found",
-        });
-      }
-
-      return { success: true };
-    }),
-
-  listAllOrganizers: adminProcedure
-    .input(
-      z.object({
-        search: z.string().optional(),
-        limit: z.number().min(1).max(100).default(50),
-        offset: z.number().min(0).default(0),
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      const conditions = [];
 
       if (input.search) {
         conditions.push(
           or(
-            ilike(organizers.name, `%${input.search}%`),
-            ilike(organizers.slug, `%${input.search}%`)
+            ilike(places.name, `%${input.search}%`),
+            ilike(places.slug, `%${input.search}%`)
           )!
         );
       }
 
-      const results = await ctx.db.query.organizers.findMany({
+      const results = await ctx.db.query.places.findMany({
         where: conditions.length > 0 ? and(...conditions) : undefined,
         limit: input.limit,
         offset: input.offset,
-        orderBy: [desc(organizers.createdAt)],
+        orderBy: [desc(places.createdAt)],
         with: {
           members: true,
           follows: true,

@@ -98,10 +98,14 @@ function PlacesPageContent() {
   // Don't run queries until we know the user's city (to avoid flash of "all cities")
   const isReady = !isLoadingUser;
 
-  // Fetch venues (unless filtering to organizers only)
-  const { data: venues, isLoading: isLoadingVenues } =
-    trpc.venue.listVenues.useQuery(
+  // Determine place type filter
+  const placeType = filterType === "venues" ? "venue" : filterType === "organizers" ? "organizer" : undefined;
+
+  // Fetch places
+  const { data: placesData, isLoading: isLoadingPlaces } =
+    trpc.place.listPlaces.useQuery(
       {
+        type: placeType,
         search: searchQuery || undefined,
         city:
           effectiveCity && effectiveCity !== "all" ? effectiveCity : undefined,
@@ -109,72 +113,28 @@ function PlacesPageContent() {
         limit: 50,
       },
       {
-        enabled: isReady && filterType !== "organizers",
+        enabled: isReady,
       }
     );
 
-  // Fetch organizers (unless filtering to venues only)
-  const { data: organizers, isLoading: isLoadingOrganizers } =
-    trpc.organizer.listOrganizers.useQuery(
-      {
-        search: searchQuery || undefined,
-        city:
-          effectiveCity && effectiveCity !== "all" ? effectiveCity : undefined,
-        followedOnly: filterType === "following",
-        limit: 50,
-      },
-      {
-        enabled: isReady && filterType !== "venues",
-      }
-    );
-
-  // Combine and sort venues and organizers alphabetically
+  // Combine and sort places alphabetically
   const combinedItems = useMemo(() => {
-    const items: Array<{
-      type: "venue" | "organizer";
-      id: string;
-      name: string;
-      description: string | null;
-      city: string | null;
-      state: string | null;
-      slug: string;
-    }> = [];
+    if (!placesData) return [];
 
-    if (filterType !== "organizers" && venues) {
-      venues.forEach((venue) => {
-        items.push({
-          type: "venue",
-          id: venue.id,
-          name: venue.name,
-          description: venue.description,
-          city: venue.city,
-          state: venue.state,
-          slug: venue.slug,
-        });
-      });
-    }
+    return placesData
+      .map((place) => ({
+        type: place.type,
+        id: place.id,
+        name: place.name,
+        description: place.description,
+        city: place.city,
+        state: place.state,
+        slug: place.slug,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [placesData]);
 
-    if (filterType !== "venues" && organizers) {
-      organizers.forEach((organizer) => {
-        items.push({
-          type: "organizer",
-          id: organizer.id,
-          name: organizer.name,
-          description: organizer.description,
-          city: organizer.city,
-          state: organizer.state,
-          slug: organizer.slug,
-        });
-      });
-    }
-
-    // Sort alphabetically by name
-    return items.sort((a, b) => a.name.localeCompare(b.name));
-  }, [venues, organizers, filterType]);
-
-  const isLoading =
-    (filterType !== "organizers" && isLoadingVenues) ||
-    (filterType !== "venues" && isLoadingOrganizers);
+  const isLoading = isLoadingPlaces;
 
   return (
     <div className="container mx-auto py-4">
@@ -247,11 +207,7 @@ function PlacesPageContent() {
           {combinedItems.map((item) => (
             <Link
               key={`${item.type}-${item.id}`}
-              href={
-                item.type === "venue"
-                  ? `/venue/${item.slug}`
-                  : `/organizer/${item.slug}`
-              }
+              href={`/place/${item.slug}`}
             >
               <Card className="h-full cursor-pointer transition-colors hover:bg-accent/50">
                 <CardHeader className="pb-2">

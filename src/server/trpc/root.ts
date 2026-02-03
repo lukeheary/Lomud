@@ -1,14 +1,12 @@
 import { router } from "./init";
-import { venueRouter } from "./routers/venue";
-import { organizerRouter } from "./routers/organizer";
+import { placeRouter } from "./routers/place";
 import { adminRouter } from "./routers/admin";
 import { eventRouter } from "./routers/event";
 import { friendsRouter } from "./routers/friends";
 import { userRouter } from "./routers/user";
 
 export const appRouter = router({
-  venue: venueRouter,
-  organizer: organizerRouter,
+  place: placeRouter,
   admin: adminRouter,
   event: eventRouter,
   friends: friendsRouter,

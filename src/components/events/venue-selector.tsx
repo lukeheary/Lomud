@@ -53,8 +53,8 @@ export function VenueSelector({
   const [isSlugSynced, setIsSlugSynced] = useState(true);
 
   const { data: searchResults, isLoading: isSearchingVenues } =
-    trpc.venue.searchVenues.useQuery(
-      { query: venueSearch },
+    trpc.place.searchPlaces.useQuery(
+      { query: venueSearch, type: "venue" },
       { enabled: venueSearch.length > 2 }
     );
 

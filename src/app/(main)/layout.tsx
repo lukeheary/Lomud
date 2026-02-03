@@ -64,8 +64,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
   const isPlaces = pathname === "/places";
   const isFriends = pathname === "/friends";
   const isProfile = pathname === "/profile";
-  const isMyVenues = pathname === "/my-venues";
-  const isMyOrganizers = pathname === "/my-organizers";
+  const isMyPlaces = pathname === "/my-places";
   const isAdminPage = pathname?.startsWith("/admin");
 
   const handleSignOut = async () => {
@@ -178,25 +177,14 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                     My Profile
                   </Link>
                 </DropdownMenuItem>
-                {hasVenues && (
+                {(hasVenues || hasOrganizers) && (
                   <DropdownMenuItem asChild>
                     <Link
-                      href="/my-venues"
+                      href="/my-places"
                       className="flex cursor-pointer items-center gap-4"
                     >
                       <Building2 className="h-4 w-4" />
-                      My Venues
-                    </Link>
-                  </DropdownMenuItem>
-                )}
-                {hasOrganizers && (
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href="/my-organizers"
-                      className="flex cursor-pointer items-center gap-4"
-                    >
-                      <Users className="h-4 w-4" />
-                      My Organizers
+                      My Places
                     </Link>
                   </DropdownMenuItem>
                 )}
@@ -311,27 +299,15 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                         My Profile
                       </Button>
                     </Link>
-                    {hasVenues && (
-                      <Link href="/my-venues" onClick={closeMobileMenu}>
+                    {(hasVenues || hasOrganizers) && (
+                      <Link href="/my-places" onClick={closeMobileMenu}>
                         <Button
                           variant="ghost"
-                          className={`w-full justify-start px-4 text-base ${isMyVenues ? "text-foreground" : "text-muted-foreground"}`}
+                          className={`w-full justify-start px-4 text-base ${isMyPlaces ? "text-foreground" : "text-muted-foreground"}`}
                           size="lg"
                         >
                           <Building2 className="mr-3 h-5 w-5" />
-                          My Venues
-                        </Button>
-                      </Link>
-                    )}
-                    {hasOrganizers && (
-                      <Link href="/my-organizers" onClick={closeMobileMenu}>
-                        <Button
-                          variant="ghost"
-                          className={`w-full justify-start px-4 text-base ${isMyOrganizers ? "text-foreground" : "text-muted-foreground"}`}
-                          size="lg"
-                        >
-                          <Users className="mr-3 h-5 w-5" />
-                          My Organizers
+                          My Places
                         </Button>
                       </Link>
                     )}
