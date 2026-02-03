@@ -103,6 +103,29 @@ export const usersRelations = relations(users, ({ many }) => ({
 }));
 
 // ============================================================================
+// CITIES TABLE
+// ============================================================================
+export const cities = pgTable(
+  "cities",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    name: varchar("name", { length: 100 }).notNull(),
+    state: varchar("state", { length: 2 }).notNull(),
+    latitude: doublePrecision("latitude").notNull(),
+    longitude: doublePrecision("longitude").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    nameStateIdx: uniqueIndex("cities_name_state_idx").on(
+      table.name,
+      table.state
+    ),
+    stateIdx: index("cities_state_idx").on(table.state),
+  })
+);
+
+// ============================================================================
 // PLACES TABLE (unified venues + organizers)
 // ============================================================================
 export const places = pgTable(

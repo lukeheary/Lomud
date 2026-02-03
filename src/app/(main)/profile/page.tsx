@@ -18,7 +18,11 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const utils = trpc.useUtils();
 
-  const { data: user, isLoading } = trpc.user.getCurrentUser.useQuery();
+  const {
+    data: user,
+    isLoading,
+    isError,
+  } = trpc.user.getCurrentUser.useQuery();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -70,17 +74,20 @@ export default function ProfilePage() {
     });
   };
 
-  const handleCitySelect = useCallback((place: {
-    name: string;
-    address: string;
-    city: string;
-    state: string;
-    formattedAddress: string;
-  }) => {
-    setCity(place.city);
-    setState(place.state);
-    setSearchCity(place.city);
-  }, []);
+  const handleCitySelect = useCallback(
+    (place: {
+      name: string;
+      address: string;
+      city: string;
+      state: string;
+      formattedAddress: string;
+    }) => {
+      setCity(place.city);
+      setState(place.state);
+      setSearchCity(place.city);
+    },
+    []
+  );
 
   const handleSave = () => {
     updateProfileMutation.mutate({
@@ -112,10 +119,14 @@ export default function ProfilePage() {
     );
   }
 
-  if (!user) {
+  if (!user || isError) {
     return (
       <div className="container mx-auto py-12 text-center">
-        <p className="text-muted-foreground">User not found</p>
+        <p className="text-muted-foreground">
+          {isError
+            ? "Error loading profile. Please try again."
+            : "User not found"}
+        </p>
       </div>
     );
   }
@@ -134,9 +145,9 @@ export default function ProfilePage() {
         <CardContent className="space-y-6">
           {/* Profile Image */}
           <div className="flex items-center gap-6">
-            <UserAvatar 
-              src={imageUrl || user.imageUrl} 
-              name={firstName || user.firstName} 
+            <UserAvatar
+              src={imageUrl || user.imageUrl}
+              name={firstName || user.firstName}
               className="h-24 w-24"
             />
             <div className="space-y-2">

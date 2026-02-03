@@ -6,6 +6,7 @@ import ws from "ws";
 import * as schema from "./schema";
 import {
   users,
+  cities,
   places,
   events,
   placeMembers,
@@ -38,6 +39,7 @@ async function main() {
 
   // Then core tables
   await db.delete(events);
+  await db.delete(cities);
   await db.delete(places);
 
   console.log("✓ Cleared places, events (and related join tables)");
@@ -100,6 +102,22 @@ async function main() {
       : ["user_demo_1", "user_demo_2", "user_demo_3", "user_demo_4"];
 
   console.log(`✓ Seeded users (returned: ${insertedUsers.length})`);
+
+  // ---------------------------------------------------------------------------
+  // CITIES (for distance-based filtering)
+  // ---------------------------------------------------------------------------
+  console.log("Creating cities...");
+
+  const cityData = [
+    { name: "Boston", state: "MA", latitude: 42.3601, longitude: -71.0589 },
+    { name: "Cambridge", state: "MA", latitude: 42.3736, longitude: -71.1097 },
+    { name: "Brooklyn", state: "NY", latitude: 40.6782, longitude: -73.9442 },
+    { name: "New York", state: "NY", latitude: 40.7128, longitude: -74.006 },
+  ];
+
+  await db.insert(cities).values(cityData).onConflictDoNothing();
+
+  console.log(`✓ Seeded cities (${cityData.length})`);
 
   // ---------------------------------------------------------------------------
   // PLACES (venues and organizers combined)

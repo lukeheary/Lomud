@@ -168,11 +168,15 @@ export default function AdminPlacesPage() {
       city: string;
       state: string;
       formattedAddress: string;
+      latitude?: number;
+      longitude?: number;
     }) => {
       setPlaceForm((prev) => ({
         ...prev,
         city: place.city,
         state: place.state,
+        latitude: place.latitude ?? null,
+        longitude: place.longitude ?? null,
       }));
       setPlaceSearch(place.city);
     },

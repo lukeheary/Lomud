@@ -70,6 +70,7 @@ import {
 } from "@/components/friends/activity-feed";
 import { CATEGORY_LABELS, type Category } from "@/lib/categories";
 import { useNavbarSearch } from "@/contexts/nav-search-context";
+import { getDistanceMiles, type Coordinates } from "@/lib/geo";
 
 type ViewMode = "week" | "month";
 
@@ -134,6 +135,53 @@ function HomePageContent() {
 
   // Navbar search context for navbar search button
   const { setShowNavbarSearch, registerScrollToSearch } = useNavbarSearch();
+
+  const referenceCity =
+    selectedCity && selectedCity !== "all"
+      ? selectedCity
+      : currentUser?.city ?? null;
+
+  const referenceCityRecord = useMemo(() => {
+    if (!referenceCity || !cities) return null;
+    const matches = cities.filter((city) => city.city === referenceCity);
+    if (matches.length === 0) return null;
+    if (currentUser?.state) {
+      const preferred = matches.find((city) => city.state === currentUser.state);
+      if (preferred) return preferred;
+    }
+    return matches[0];
+  }, [referenceCity, cities, currentUser?.state]);
+
+  const referenceCoords = useMemo<Coordinates | null>(() => {
+    if (
+      referenceCityRecord?.latitude == null ||
+      referenceCityRecord?.longitude == null
+    ) {
+      return null;
+    }
+    return {
+      latitude: referenceCityRecord.latitude,
+      longitude: referenceCityRecord.longitude,
+    };
+  }, [referenceCityRecord]);
+
+  const cityDistanceMap = useMemo(() => {
+    if (!cities || !referenceCoords) return new Map<string, number>();
+
+    const map = new Map<string, number>();
+    cities.forEach((city) => {
+      if (city.latitude == null || city.longitude == null) return;
+      const distance = getDistanceMiles(referenceCoords, {
+        latitude: city.latitude,
+        longitude: city.longitude,
+      });
+      if (distance != null) {
+        map.set(`${city.city}|${city.state}`, distance);
+      }
+    });
+
+    return map;
+  }, [cities, referenceCoords]);
 
   // Determine the effective city: use URL param if set, otherwise user's city
   const effectiveCity = selectedCity ?? currentUser?.city ?? null;
@@ -231,12 +279,48 @@ function HomePageContent() {
     );
 
   // Group events by day
+  const sortedEvents = useMemo(() => {
+    if (!events || !referenceCoords) return events ?? [];
+
+    const nextEvents = [...events];
+    nextEvents.sort((a, b) => {
+      const aDistance =
+        cityDistanceMap.get(`${a.city}|${a.state}`) ?? Number.POSITIVE_INFINITY;
+      const bDistance =
+        cityDistanceMap.get(`${b.city}|${b.state}`) ?? Number.POSITIVE_INFINITY;
+
+      if (aDistance !== bDistance) return aDistance - bDistance;
+
+      return new Date(a.startAt).getTime() - new Date(b.startAt).getTime();
+    });
+
+    return nextEvents;
+  }, [events, referenceCoords, cityDistanceMap]);
+
+  const sortedRecentEvents = useMemo(() => {
+    if (!recentEvents || !referenceCoords) return recentEvents ?? [];
+
+    const nextEvents = [...recentEvents];
+    nextEvents.sort((a, b) => {
+      const aDistance =
+        cityDistanceMap.get(`${a.city}|${a.state}`) ?? Number.POSITIVE_INFINITY;
+      const bDistance =
+        cityDistanceMap.get(`${b.city}|${b.state}`) ?? Number.POSITIVE_INFINITY;
+
+      if (aDistance !== bDistance) return aDistance - bDistance;
+
+      return new Date(a.startAt).getTime() - new Date(b.startAt).getTime();
+    });
+
+    return nextEvents;
+  }, [recentEvents, referenceCoords, cityDistanceMap]);
+
   const eventsByDay = useMemo(() => {
-    if (!events) return {};
+    if (!sortedEvents.length) return {};
 
     const grouped: Record<string, typeof events> = {};
 
-    events.forEach((event) => {
+    sortedEvents.forEach((event) => {
       const dateKey = format(new Date(event.startAt), "yyyy-MM-dd");
       if (!grouped[dateKey]) {
         grouped[dateKey] = [];
@@ -245,7 +329,7 @@ function HomePageContent() {
     });
 
     return grouped;
-  }, [events]);
+  }, [sortedEvents]);
 
   const handlePrevious = async () => {
     if (viewMode === "week") {
@@ -524,7 +608,7 @@ function HomePageContent() {
             </div>
           ) : (
             <EventCardGrid
-              events={recentEvents}
+              events={sortedRecentEvents}
               columns={{ mobile: 1, tablet: 3, desktop: 4 }}
               gap="md"
             />
@@ -545,7 +629,7 @@ function HomePageContent() {
             </div>
           ) : (
             <EventCardGrid
-              events={events}
+              events={sortedEvents}
               columns={{ mobile: 1, tablet: 3, desktop: 4 }}
               gap="md"
             />

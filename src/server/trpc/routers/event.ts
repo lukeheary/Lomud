@@ -7,6 +7,7 @@ import {
   placeFollows,
   placeMembers,
   places,
+  cities,
   rsvps,
   users,
 } from "../../db/schema";
@@ -129,12 +130,17 @@ export const eventRouter = router({
         category: z.string().optional(),
         city: z.string().optional(),
         state: z.string().optional(),
+        radiusMiles: z.number().min(1).max(200).optional(),
         search: z.string().optional(),
         limit: z.number().min(1).max(100).default(50),
         offset: z.number().min(0).default(0),
       })
     )
     .query(async ({ ctx, input }) => {
+      const currentUser = await ctx.db.query.users.findFirst({
+        where: eq(users.id, ctx.auth.userId),
+      });
+
       // Build where conditions
       const conditions = [
         gte(events.startAt, input.startDate),
@@ -151,9 +157,69 @@ export const eventRouter = router({
 
       // Add location filters
       if (input.city) {
-        conditions.push(eq(events.city, input.city));
-      }
-      if (input.state) {
+        const resolvedState = input.state ?? currentUser?.state ?? undefined;
+        const cityConditions = [eq(cities.name, input.city)];
+        if (resolvedState) {
+          cityConditions.push(eq(cities.state, resolvedState));
+        }
+
+        let originCity = await ctx.db.query.cities.findFirst({
+          where: and(...cityConditions),
+        });
+        if (!originCity && resolvedState) {
+          originCity = await ctx.db.query.cities.findFirst({
+            where: eq(cities.name, input.city),
+          });
+        }
+
+        if (originCity?.latitude != null && originCity?.longitude != null) {
+          const radiusMiles = input.radiusMiles ?? 15;
+
+          const distanceSql = sql`
+            (
+              3959 * 2 * asin(
+                sqrt(
+                  pow(sin(radians(${originCity.latitude} - ${cities.latitude}) / 2), 2) +
+                  cos(radians(${originCity.latitude})) * cos(radians(${cities.latitude})) *
+                  pow(sin(radians(${originCity.longitude} - ${cities.longitude}) / 2), 2)
+                )
+              )
+            )
+          `;
+
+          const nearbyEventIds = await ctx.db
+            .select({ id: events.id })
+            .from(events)
+            .innerJoin(
+              cities,
+              and(eq(cities.name, events.city), eq(cities.state, events.state))
+            )
+            .where(
+              and(
+                gte(events.startAt, input.startDate),
+                lte(events.startAt, input.endDate),
+                eq(events.visibility, "public"),
+                sql`${distanceSql} <= ${radiusMiles}`
+              )
+            );
+
+          if (nearbyEventIds.length === 0) {
+            return [];
+          }
+
+          conditions.push(
+            inArray(
+              events.id,
+              nearbyEventIds.map((row) => row.id)
+            )
+          );
+        } else {
+          conditions.push(eq(events.city, input.city));
+          if (input.state) {
+            conditions.push(eq(events.state, input.state));
+          }
+        }
+      } else if (input.state) {
         conditions.push(eq(events.state, input.state));
       }
 
@@ -274,11 +340,6 @@ export const eventRouter = router({
 
       // Create a map of event IDs to RSVPs
       const rsvpMap = new Map(userRsvps.map((r) => [r.eventId, r]));
-
-      // Fetch current user data
-      const currentUser = await ctx.db.query.users.findFirst({
-        where: eq(users.id, ctx.auth.userId),
-      });
 
       // Fetch user's friends (bidirectional - where user is either sender or receiver)
       const userFriends = await ctx.db.query.friends.findMany({
@@ -587,12 +648,48 @@ export const eventRouter = router({
 
   getAvailableCities: publicProcedure.query(async ({ ctx }) => {
     // Get unique cities that have public events
-
-    return await ctx.db
+    const cityRows = await ctx.db
       .selectDistinct({ city: events.city, state: events.state })
       .from(events)
       .where(eq(events.visibility, "public"))
       .orderBy(events.city);
+
+    if (cityRows.length === 0) {
+      return [];
+    }
+
+    const cityConditions = cityRows.map((row) =>
+      and(eq(cities.name, row.city), eq(cities.state, row.state))
+    );
+
+    const cityCoords = cityConditions.length
+      ? await ctx.db
+          .select({
+            name: cities.name,
+            state: cities.state,
+            latitude: cities.latitude,
+            longitude: cities.longitude,
+          })
+          .from(cities)
+          .where(or(...cityConditions))
+      : [];
+
+    const coordsMap = new Map(
+      cityCoords.map((row) => [
+        `${row.name}|${row.state}`,
+        { latitude: row.latitude, longitude: row.longitude },
+      ])
+    );
+
+    return cityRows.map((row) => {
+      const coords = coordsMap.get(`${row.city}|${row.state}`);
+      return {
+        city: row.city,
+        state: row.state,
+        latitude: coords?.latitude ?? null,
+        longitude: coords?.longitude ?? null,
+      };
+    });
   }),
 
   getRecentlyAddedEvents: protectedProcedure
@@ -600,9 +697,14 @@ export const eventRouter = router({
       z.object({
         limit: z.number().min(1).max(20).default(8),
         city: z.string().optional(),
+        radiusMiles: z.number().min(1).max(200).optional(),
       })
     )
     .query(async ({ ctx, input }) => {
+      const currentUser = await ctx.db.query.users.findFirst({
+        where: eq(users.id, ctx.auth.userId),
+      });
+
       const now = new Date();
 
       const conditions = [
@@ -611,7 +713,63 @@ export const eventRouter = router({
       ];
 
       if (input.city) {
-        conditions.push(eq(events.city, input.city));
+        const cityConditions = [eq(cities.name, input.city)];
+        if (currentUser?.state) {
+          cityConditions.push(eq(cities.state, currentUser.state));
+        }
+
+        let originCity = await ctx.db.query.cities.findFirst({
+          where: and(...cityConditions),
+        });
+        if (!originCity && currentUser?.state) {
+          originCity = await ctx.db.query.cities.findFirst({
+            where: eq(cities.name, input.city),
+          });
+        }
+
+        if (originCity?.latitude != null && originCity?.longitude != null) {
+          const radiusMiles = input.radiusMiles ?? 15;
+
+          const distanceSql = sql`
+            (
+              3959 * 2 * asin(
+                sqrt(
+                  pow(sin(radians(${originCity.latitude} - ${cities.latitude}) / 2), 2) +
+                  cos(radians(${originCity.latitude})) * cos(radians(${cities.latitude})) *
+                  pow(sin(radians(${originCity.longitude} - ${cities.longitude}) / 2), 2)
+                )
+              )
+            )
+          `;
+
+          const nearbyEventIds = await ctx.db
+            .select({ id: events.id })
+            .from(events)
+            .innerJoin(
+              cities,
+              and(eq(cities.name, events.city), eq(cities.state, events.state))
+            )
+            .where(
+              and(
+                eq(events.visibility, "public"),
+                gte(events.startAt, now),
+                sql`${distanceSql} <= ${radiusMiles}`
+              )
+            );
+
+          if (nearbyEventIds.length === 0) {
+            return [];
+          }
+
+          conditions.push(
+            inArray(
+              events.id,
+              nearbyEventIds.map((row) => row.id)
+            )
+          );
+        } else {
+          conditions.push(eq(events.city, input.city));
+        }
       }
 
       const recentEvents = await ctx.db.query.events.findMany({
@@ -640,10 +798,7 @@ export const eventRouter = router({
       // Create a map of event IDs to RSVPs
       const rsvpMap = new Map(userRsvps.map((r) => [r.eventId, r]));
 
-      // Fetch current user data
-      const currentUser = await ctx.db.query.users.findFirst({
-        where: eq(users.id, ctx.auth.userId),
-      });
+      // currentUser already fetched above
 
       // Fetch user's friends
       const userFriends = await ctx.db.query.friends.findMany({

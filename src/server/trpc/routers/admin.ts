@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { router, adminProcedure } from "../init";
 import {
+  cities,
   places,
   placeMembers,
   users,
@@ -63,6 +64,23 @@ export const adminRouter = router({
           categories: filterValidCategories(categories || []),
         })
         .returning();
+
+      if (
+        input.city &&
+        input.state &&
+        input.latitude != null &&
+        input.longitude != null
+      ) {
+        await ctx.db
+          .insert(cities)
+          .values({
+            name: input.city,
+            state: input.state,
+            latitude: input.latitude,
+            longitude: input.longitude,
+          })
+          .onConflictDoNothing();
+      }
 
       return place;
     }),

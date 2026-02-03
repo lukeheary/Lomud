@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ResponsiveSelect } from "@/components/ui/responsive-select";
+import { getDistanceMiles, type Coordinates } from "@/lib/geo";
 
 type FilterType = "all" | "venues" | "organizers" | "following";
 
@@ -93,6 +94,53 @@ function PlacesPageContent() {
   // Get available cities
   const { data: cities } = trpc.event.getAvailableCities.useQuery();
 
+  const referenceCity =
+    selectedCity && selectedCity !== "all"
+      ? selectedCity
+      : currentUser?.city ?? null;
+
+  const referenceCityRecord = useMemo(() => {
+    if (!referenceCity || !cities) return null;
+    const matches = cities.filter((city) => city.city === referenceCity);
+    if (matches.length === 0) return null;
+    if (currentUser?.state) {
+      const preferred = matches.find((city) => city.state === currentUser.state);
+      if (preferred) return preferred;
+    }
+    return matches[0];
+  }, [referenceCity, cities, currentUser?.state]);
+
+  const referenceCoords = useMemo<Coordinates | null>(() => {
+    if (
+      referenceCityRecord?.latitude == null ||
+      referenceCityRecord?.longitude == null
+    ) {
+      return null;
+    }
+    return {
+      latitude: referenceCityRecord.latitude,
+      longitude: referenceCityRecord.longitude,
+    };
+  }, [referenceCityRecord]);
+
+  const cityDistanceMap = useMemo(() => {
+    if (!cities || !referenceCoords) return new Map<string, number>();
+
+    const map = new Map<string, number>();
+    cities.forEach((city) => {
+      if (city.latitude == null || city.longitude == null) return;
+      const distance = getDistanceMiles(referenceCoords, {
+        latitude: city.latitude,
+        longitude: city.longitude,
+      });
+      if (distance != null) {
+        map.set(`${city.city}|${city.state}`, distance);
+      }
+    });
+
+    return map;
+  }, [cities, referenceCoords]);
+
   // Determine the effective city: use URL param if set, otherwise user's city
   const effectiveCity = selectedCity ?? currentUser?.city ?? null;
 
@@ -131,9 +179,41 @@ function PlacesPageContent() {
         city: place.city,
         state: place.state,
         slug: place.slug,
+        latitude: place.latitude,
+        longitude: place.longitude,
       }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [placesData]);
+      .sort((a, b) => {
+        if (referenceCoords) {
+          const aDistance =
+            getDistanceMiles(
+              a.latitude != null && a.longitude != null
+                ? { latitude: a.latitude, longitude: a.longitude }
+                : null,
+              referenceCoords
+            ) ??
+            (a.city && a.state
+              ? cityDistanceMap.get(`${a.city}|${a.state}`)
+              : null) ??
+            Number.POSITIVE_INFINITY;
+
+          const bDistance =
+            getDistanceMiles(
+              b.latitude != null && b.longitude != null
+                ? { latitude: b.latitude, longitude: b.longitude }
+                : null,
+              referenceCoords
+            ) ??
+            (b.city && b.state
+              ? cityDistanceMap.get(`${b.city}|${b.state}`)
+              : null) ??
+            Number.POSITIVE_INFINITY;
+
+          if (aDistance !== bDistance) return aDistance - bDistance;
+        }
+
+        return a.name.localeCompare(b.name);
+      });
+  }, [placesData, referenceCoords, cityDistanceMap]);
 
   const isLoading = isLoadingPlaces;
 

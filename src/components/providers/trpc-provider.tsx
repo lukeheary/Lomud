@@ -7,7 +7,23 @@ import superjson from "superjson";
 import { trpc } from "@/lib/trpc";
 
 export function TRPCProvider({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            retry: false,
+            refetchOnWindowFocus: false,
+            throwOnError: false,
+            staleTime: 1000 * 60, // 1 minute
+          },
+          mutations: {
+            retry: false,
+            throwOnError: false,
+          },
+        },
+      })
+  );
   const [trpcClient] = useState(() =>
     trpc.createClient({
       links: [

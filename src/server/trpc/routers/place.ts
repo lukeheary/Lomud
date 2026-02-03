@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../init";
 import {
+  cities,
   events,
   friends,
   rsvps,
@@ -79,6 +80,23 @@ export const placeRouter = router({
           slug,
         })
         .returning();
+
+      if (
+        input.city &&
+        input.state &&
+        input.latitude != null &&
+        input.longitude != null
+      ) {
+        await ctx.db
+          .insert(cities)
+          .values({
+            name: input.city,
+            state: input.state,
+            latitude: input.latitude,
+            longitude: input.longitude,
+          })
+          .onConflictDoNothing();
+      }
 
       return place;
     }),
