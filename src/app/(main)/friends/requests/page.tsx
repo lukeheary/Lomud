@@ -95,7 +95,7 @@ function RequestsPageContent() {
                     firstName: req.friend?.firstName || null,
                     lastName: req.friend?.lastName || null,
                     username: req.friend?.username || null,
-                    imageUrl: req.friend?.imageUrl || null,
+                    avatarImageUrl: req.friend?.avatarImageUrl || null,
                   })}
                   renderAction={(request) => (
                     <div className="flex gap-2">
@@ -142,7 +142,7 @@ function RequestsPageContent() {
                     firstName: req.friend?.firstName || null,
                     lastName: req.friend?.lastName || null,
                     username: req.friend?.username || null,
-                    imageUrl: req.friend?.imageUrl || null,
+                    avatarImageUrl: req.friend?.avatarImageUrl || null,
                   })}
                   renderAction={() => (
                     <Badge variant="outline">Pending</Badge>

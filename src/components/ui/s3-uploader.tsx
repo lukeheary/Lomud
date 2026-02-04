@@ -17,6 +17,7 @@ interface S3UploaderProps {
   className?: string;
   buttonText?: string;
   maxSizeMB?: number;
+  aspectRatio?: "video" | "square";
 }
 
 export function S3Uploader({
@@ -29,10 +30,12 @@ export function S3Uploader({
   className,
   buttonText = "Upload Image",
   maxSizeMB = 4,
+  aspectRatio = "video",
 }: S3UploaderProps) {
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (file: File) => {
@@ -86,7 +89,11 @@ export function S3Uploader({
         description: "Image uploaded successfully",
       });
 
+      // Store clean URL without cache-busting parameter
       onUploadComplete(data.url);
+
+      // Force update the preview by setting local state with cache-busted URL
+      setPreviewUrl(`${data.url}?t=${Date.now()}`);
     } catch (error) {
       console.error("Upload error:", error);
       toast({
@@ -133,6 +140,7 @@ export function S3Uploader({
 
   const handleRemove = (e: React.MouseEvent) => {
     e.stopPropagation();
+    setPreviewUrl(null);
     if (onRemoveImage) {
       onRemoveImage();
     }
@@ -173,15 +181,22 @@ export function S3Uploader({
   }
 
   // Dropzone variant
-  if (currentImageUrl) {
+  const displayUrl = previewUrl || currentImageUrl;
+  if (displayUrl) {
     return (
       <div className={cn("relative w-full", className)}>
-        <div className="relative aspect-video w-full overflow-hidden rounded-lg border">
+        <div
+          className={cn(
+            "relative w-full overflow-hidden rounded-lg border",
+            aspectRatio === "square" ? "aspect-square" : "aspect-video"
+          )}
+        >
           <Image
-            src={currentImageUrl}
+            src={displayUrl}
             alt="Uploaded image"
             fill
             className="object-cover"
+            unoptimized
           />
         </div>
         {onRemoveImage && (

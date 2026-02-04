@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "lomud.s3.us-east-2.amazonaws.com",
+        hostname: "whoisgoing.s3.us-east-2.amazonaws.com",
         pathname: "/**",
       },
     ],

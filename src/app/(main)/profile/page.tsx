@@ -26,7 +26,7 @@ export default function ProfilePage() {
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [avatarImageUrl, setImageUrl] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [searchCity, setSearchCity] = useState("");
@@ -37,7 +37,7 @@ export default function ProfilePage() {
     if (user) {
       setFirstName(user.firstName || "");
       setLastName(user.lastName || "");
-      setImageUrl(user.imageUrl || "");
+      setImageUrl(user.avatarImageUrl || "");
       setCity(user.city || "");
       setState(user.state || "");
       setSearchCity(user.city || "");
@@ -70,7 +70,7 @@ export default function ProfilePage() {
     setImageUrl(url);
     // Immediately update the profile with the new image URL
     updateProfileMutation.mutate({
-      imageUrl: url,
+      avatarImageUrl: url,
     });
   };
 
@@ -93,7 +93,7 @@ export default function ProfilePage() {
     updateProfileMutation.mutate({
       firstName: firstName || undefined,
       lastName: lastName || undefined,
-      imageUrl: imageUrl || undefined,
+      avatarImageUrl: avatarImageUrl || undefined,
       city: city || undefined,
       state: state || undefined,
     });
@@ -103,7 +103,7 @@ export default function ProfilePage() {
     if (user) {
       setFirstName(user.firstName || "");
       setLastName(user.lastName || "");
-      setImageUrl(user.imageUrl || "");
+      setImageUrl(user.avatarImageUrl || "");
       setCity(user.city || "");
       setState(user.state || "");
       setSearchCity(user.city || "");
@@ -146,14 +146,14 @@ export default function ProfilePage() {
           {/* Profile Image */}
           <div className="flex items-center gap-6">
             <UserAvatar
-              src={imageUrl || user.imageUrl}
+              src={avatarImageUrl || user.avatarImageUrl}
               name={firstName || user.firstName}
               className="h-24 w-24"
             />
             <div className="space-y-2">
               <S3Uploader
-                folder={`profiles/${user.id}`}
-                fileName="avatar.png"
+                folder={`users/${user.id}`}
+                fileName="avatarImage.png"
                 onUploadComplete={handleImageUpload}
                 variant="button"
                 buttonText="Upload Profile Image"

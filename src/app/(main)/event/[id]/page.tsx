@@ -145,7 +145,7 @@ export default function EventPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Image Modal */}
-      {isImageModalOpen && event.imageUrl && (
+      {isImageModalOpen && event.coverImageUrl && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xl"
           onClick={() => setIsImageModalOpen(false)}
@@ -163,7 +163,7 @@ export default function EventPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <Image
-              src={event.imageUrl}
+              src={event.coverImageUrl}
               alt={event.title}
               width={1200}
               height={800}
@@ -176,13 +176,13 @@ export default function EventPage() {
       {/* Cover Image - Banner style on all screens */}
       <div className="mx-auto w-full max-w-4xl lg:px-4 lg:pt-4">
         <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted lg:aspect-auto lg:h-[400px] lg:rounded-2xl">
-          {event.imageUrl ? (
+          {event.coverImageUrl ? (
             <div
               className="relative h-full w-full cursor-pointer"
               onClick={() => setIsImageModalOpen(true)}
             >
               <Image
-                src={event.imageUrl}
+                src={event.coverImageUrl}
                 alt={event.title}
                 fill
                 className="object-cover"
@@ -213,7 +213,7 @@ export default function EventPage() {
           </div>
 
           {/* Expand Icon - Overlay on bottom left */}
-          {event.imageUrl && (
+          {event.coverImageUrl && (
             <div
               className="absolute bottom-2 left-2 cursor-pointer rounded-full bg-black/50 p-2 transition-colors hover:bg-black/70"
               onClick={() => setIsImageModalOpen(true)}
@@ -356,7 +356,7 @@ export default function EventPage() {
                       className="flex items-center gap-3 rounded-lg border bg-card p-3"
                     >
                       <UserAvatar
-                        src={attendee.user.imageUrl}
+                        src={attendee.user.avatarImageUrl}
                         name={attendee.user.firstName}
                         className="h-10 w-10"
                       />

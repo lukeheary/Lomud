@@ -79,7 +79,8 @@ export default function EditPlacePage() {
       slug: formData.slug,
       name: formData.name,
       description: formData.description || undefined,
-      imageUrl: formData.imageUrl || undefined,
+      logoImageUrl: formData.logoImageUrl, // Pass as-is, schema accepts "" or valid URL
+      coverImageUrl: formData.coverImageUrl, // Pass as-is, schema accepts "" or valid URL
       address: formData.address || undefined,
       city: formData.city || undefined,
       state: formData.state || undefined,
@@ -138,7 +139,8 @@ export default function EditPlacePage() {
     slug: place.slug || "",
     name: place.name || "",
     description: place.description || "",
-    imageUrl: place.imageUrl || "",
+    logoImageUrl: place.logoImageUrl || "",
+    coverImageUrl: (place as any).coverImageUrl || "",
     address: place.address || "",
     city: place.city || "",
     state: place.state || "",
@@ -162,14 +164,12 @@ export default function EditPlacePage() {
 
       <div className="space-y-2">
         <h1 className="text-2xl font-bold tracking-tight">Edit {typeLabel}</h1>
-        <p className="text-muted-foreground">
-          Update {typeLabel.toLowerCase()} information
-        </p>
       </div>
 
       <PlaceEditForm
         initialData={initialData}
         placeType={place.type as "venue" | "organizer"}
+        placeId={place.id}
         mode="edit"
         onSubmit={handleSubmit}
         onCancel={() => router.push(`/places/${slug}`)}

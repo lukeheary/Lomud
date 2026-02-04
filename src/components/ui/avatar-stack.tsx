@@ -2,7 +2,7 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface User {
   id: string;
-  imageUrl: string | null;
+  avatarImageUrl: string | null;
   firstName: string | null;
   lastName: string | null;
 }
@@ -48,7 +48,7 @@ export function AvatarStack({
         {displayedUsers.map((user) => (
           <UserAvatar
             key={user.id}
-            src={user.imageUrl}
+            src={user.avatarImageUrl}
             name={user.firstName}
             size={avatarSize}
             className={`${sizeClass} border border-background`}

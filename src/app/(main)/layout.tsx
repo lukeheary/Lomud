@@ -167,7 +167,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
                   <UserAvatar
-                    src={user?.imageUrl}
+                    src={user?.avatarImageUrl}
                     name={user?.firstName}
                     className="h-8 w-8"
                   />
@@ -298,7 +298,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                         size="lg"
                       >
                         <UserAvatar
-                          src={user?.imageUrl}
+                          src={user?.avatarImageUrl}
                           name={user?.firstName}
                           className="mr-3 h-5 w-5"
                         />

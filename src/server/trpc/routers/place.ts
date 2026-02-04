@@ -45,7 +45,7 @@ export const placeRouter = router({
         type: placeTypeSchema,
         name: z.string().min(1).max(255),
         description: z.string().optional(),
-        imageUrl: z.string().url().optional().or(z.literal("")),
+        logoImageUrl: z.string().url().optional().or(z.literal("")),
         address: z.string().optional(),
         city: z.string().max(100).optional(),
         state: z.string().length(2).optional(),
@@ -481,7 +481,8 @@ export const placeRouter = router({
           .optional(),
         name: z.string().min(1).max(255).optional(),
         description: z.string().optional(),
-        imageUrl: z.string().url().optional().or(z.literal("")),
+        logoImageUrl: z.string().url().optional().or(z.literal("")),
+        coverImageUrl: z.string().url().optional().or(z.literal("")),
         address: z.string().optional(),
         city: z.string().max(100).optional(),
         state: z.string().length(2).optional(),
@@ -533,10 +534,15 @@ export const placeRouter = router({
 
       const { placeId, categories, ...updates } = input;
 
+      // Filter out undefined values, but keep empty strings (for clearing fields)
+      const filteredUpdates = Object.fromEntries(
+        Object.entries(updates).filter(([_, value]) => value !== undefined)
+      );
+
       const [updated] = await ctx.db
         .update(places)
         .set({
-          ...updates,
+          ...filteredUpdates,
           categories: categories !== undefined ? filterValidCategories(categories) : undefined,
           updatedAt: new Date(),
         })

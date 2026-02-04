@@ -77,7 +77,7 @@ export const users = pgTable(
     username: varchar("username", { length: 50 }).notNull().unique(),
     firstName: varchar("first_name", { length: 100 }),
     lastName: varchar("last_name", { length: 100 }),
-    imageUrl: text("image_url"),
+    avatarImageUrl: text("image_url"),
     city: varchar("city", { length: 100 }),
     state: varchar("state", { length: 2 }),
     gender: genderEnum("gender"),
@@ -136,7 +136,8 @@ export const places = pgTable(
     slug: varchar("slug", { length: 100 }).notNull().unique(),
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
-    imageUrl: text("image_url"),
+    logoImageUrl: text("image_url"),
+    coverImageUrl: text("banner_url"), // Optional banner image for place profile
     address: text("address"), // primarily for venues
     city: varchar("city", { length: 100 }),
     state: varchar("state", { length: 2 }),
@@ -277,7 +278,7 @@ export const events = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     title: varchar("title", { length: 255 }).notNull(),
     description: text("description"),
-    imageUrl: text("image_url"),
+    coverImageUrl: text("image_url"),
     startAt: timestamp("start_at").notNull(),
     endAt: timestamp("end_at"),
     venueName: varchar("venue_name", { length: 255 }),

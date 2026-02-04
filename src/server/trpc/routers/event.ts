@@ -24,7 +24,7 @@ export const eventRouter = router({
         organizerId: z.string().uuid().optional(),
         title: z.string().min(1).max(255),
         description: z.string().optional(),
-        imageUrl: z.string().url().optional(),
+        coverImageUrl: z.string().url().optional(),
         startAt: z.date(),
         endAt: z.date().optional(),
         venueName: z.string().max(255).optional(),
@@ -103,7 +103,7 @@ export const eventRouter = router({
           endAt: input.endAt ?? null,
           venueId: input.venueId ?? null,
           organizerId: input.organizerId ?? null,
-          imageUrl: input.imageUrl ?? null,
+          coverImageUrl: input.coverImageUrl ?? null,
         } as any)
         .returning();
 
@@ -548,7 +548,7 @@ export const eventRouter = router({
         eventId: z.string().uuid(),
         title: z.string().min(1).max(255).optional(),
         description: z.string().optional(),
-        imageUrl: z.string().url().optional(),
+        coverImageUrl: z.string().url().optional(),
         startAt: z.date().optional(),
         endAt: z.date().optional(),
         venueName: z.string().max(255).optional(),
@@ -611,8 +611,8 @@ export const eventRouter = router({
       if (updates.title !== undefined) updateData.title = updates.title;
       if (updates.description !== undefined)
         updateData.description = updates.description;
-      if (updates.imageUrl !== undefined)
-        updateData.imageUrl = updates.imageUrl;
+      if (updates.coverImageUrl !== undefined)
+        updateData.coverImageUrl = updates.coverImageUrl;
       if (updates.startAt !== undefined) updateData.startAt = updates.startAt;
       if (updates.endAt !== undefined) updateData.endAt = updates.endAt;
       if (updates.venueName !== undefined)

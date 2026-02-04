@@ -32,7 +32,7 @@ export function EventForm({
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    imageUrl: "",
+    coverImageUrl: "",
     categories: [] as string[],
     startAt: "",
     endAt: "",
@@ -155,7 +155,7 @@ export function EventForm({
       organizerId,
       title: formData.title,
       description: formData.description || undefined,
-      imageUrl: formData.imageUrl || undefined,
+      coverImageUrl: formData.coverImageUrl || undefined,
       categories: formData.categories,
       startAt: startDate,
       endAt: endDate || undefined,
@@ -215,11 +215,14 @@ export function EventForm({
               <Label htmlFor="image">Event Image</Label>
               <S3Uploader
                 folder="events"
-                currentImageUrl={formData.imageUrl}
+                fileName="coverImage.png"
+                currentImageUrl={formData.coverImageUrl}
                 onUploadComplete={(url: string) =>
-                  setFormData({ ...formData, imageUrl: url })
+                  setFormData({ ...formData, coverImageUrl: url })
                 }
-                onRemoveImage={() => setFormData({ ...formData, imageUrl: "" })}
+                onRemoveImage={() =>
+                  setFormData({ ...formData, coverImageUrl: "" })
+                }
               />
             </div>
 

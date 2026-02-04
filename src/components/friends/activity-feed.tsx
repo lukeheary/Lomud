@@ -196,7 +196,7 @@ function ActivityItem({ activity }: ActivityItemProps) {
     <div className="flex gap-4 pb-2 last:pb-0">
       <div className="relative flex flex-col items-center pt-1.5">
         <UserAvatar
-          src={actor.imageUrl}
+          src={actor.avatarImageUrl}
           name={actor.firstName}
           className="h-10 w-10 border-2 border-background ring-2 ring-muted/20"
         />

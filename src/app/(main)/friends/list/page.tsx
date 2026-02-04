@@ -52,7 +52,7 @@ function FriendsListContent() {
             firstName: friend.friend?.firstName || null,
             lastName: friend.friend?.lastName || null,
             username: friend.friend?.username || null,
-            imageUrl: friend.friend?.imageUrl || null,
+            avatarImageUrl: friend.friend?.avatarImageUrl || null,
           })}
           renderAction={() => <Badge variant="outline">Friends</Badge>}
         />

@@ -806,10 +806,10 @@ function HomePageContent() {
                             >
                               <div className="space-y-3">
                                 {/* Event Image */}
-                                {event.imageUrl && (
+                                {event.coverImageUrl && (
                                   <div className="relative h-32 w-full overflow-hidden rounded-md">
                                     <Image
-                                      src={event.imageUrl}
+                                      src={event.coverImageUrl}
                                       alt={event.title}
                                       fill
                                       className="object-cover"

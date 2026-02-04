@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useRef, useState, useEffect } from "react";
+import Image from "next/image";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,8 @@ import {
   Building,
   Building2,
   Edit,
+  Expand,
+  X,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@clerk/nextjs";
@@ -74,6 +77,10 @@ export default function PlacePage() {
   const { userId } = useAuth();
   const { toast } = useToast();
   const utils = trpc.useUtils();
+  const [expandedImage, setExpandedImage] = useState<{
+    url: string;
+    alt: string;
+  } | null>(null);
 
   // Fetch place data
   const { data: place, isLoading } = trpc.place.getPlaceBySlug.useQuery({
@@ -173,12 +180,66 @@ export default function PlacePage() {
     place.members?.some((member: any) => member.userId === currentUser.id);
   const canEdit = isAdmin || isMember;
 
+  // Banner image fallback logic:
+  // 1. Use coverImageUrl if set
+  // 2. Use next upcoming event's cover image if available
+  // 3. Use place profile image if available
+  // 4. Fall back to gradient placeholder
+  const nextEventImageUrl = place.events?.[0]?.coverImageUrl;
+  const bannerImageUrl =
+    (place as any).coverImageUrl || nextEventImageUrl || place.logoImageUrl;
+
   return (
     <div className="min-h-screen bg-background pb-8">
+      {expandedImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xl"
+          onClick={() => setExpandedImage(null)}
+        >
+          <Button
+            size="icon"
+            variant="ghost"
+            className="absolute right-4 top-4 h-10 w-10 text-white hover:bg-white/20"
+            onClick={() => setExpandedImage(null)}
+          >
+            <X className="h-6 w-6" />
+          </Button>
+          <div
+            className="relative max-h-[90vh] max-w-[90vw]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={expandedImage.url}
+              alt={expandedImage.alt}
+              width={1200}
+              height={800}
+              className="h-auto max-h-[90vh] w-auto max-w-[90vw] object-contain"
+            />
+          </div>
+        </div>
+      )}
+
       {/* Banner Area */}
       <div className="relative mx-auto h-32 w-full max-w-4xl overflow-hidden bg-secondary md:h-64 lg:mt-4 lg:rounded-2xl">
-        {/* Banner placeholder - could be replaced with an actual image */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5" />
+        {bannerImageUrl ? (
+          <div
+            className="absolute inset-0 cursor-pointer"
+            onClick={() =>
+              setExpandedImage({
+                url: bannerImageUrl,
+                alt: `${place.name} banner`,
+              })
+            }
+          >
+            <img
+              src={bannerImageUrl}
+              alt={`${place.name} banner`}
+              className="h-full w-full object-cover"
+            />
+          </div>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5" />
+        )}
 
         {/* Edit Button - top right of banner */}
         <div className="absolute right-4 top-4 flex gap-2">
@@ -190,24 +251,66 @@ export default function PlacePage() {
             </Link>
           )}
         </div>
+
+        {bannerImageUrl && (
+          <div
+            className="absolute bottom-2 left-2 cursor-pointer rounded-full bg-black/50 p-2 transition-colors hover:bg-black/70"
+            onClick={() =>
+              setExpandedImage({
+                url: bannerImageUrl,
+                alt: `${place.name} banner`,
+              })
+            }
+          >
+            {/*<Expand className="h-4 w-4 text-white" />*/}
+          </div>
+        )}
       </div>
 
       <div className="mx-auto max-w-4xl px-4">
         <div className="relative">
           {/* Profile Avatar - overlapping the banner */}
           <div className="-mt-16 flex items-end justify-between md:-mt-24">
-            <Avatar className="h-32 w-32 border-4 border-background shadow-md md:h-48 md:w-48">
-              {place.imageUrl ? (
-                <AvatarImage
-                  src={place.imageUrl}
-                  alt={place.name}
-                  className="object-cover"
-                />
-              ) : null}
-              <AvatarFallback className="bg-secondary text-2xl font-bold">
-                {place.name.substring(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar
+                className={cn(
+                  "h-32 w-32 border-4 border-background shadow-md md:h-48 md:w-48",
+                  place.logoImageUrl && "cursor-pointer"
+                )}
+                onClick={() =>
+                  place.logoImageUrl &&
+                  setExpandedImage({
+                    url: place.logoImageUrl,
+                    alt: `${place.name} profile`,
+                  })
+                }
+              >
+                {place.logoImageUrl ? (
+                  <AvatarImage
+                    src={place.logoImageUrl}
+                    alt={place.name}
+                    className="object-cover"
+                  />
+                ) : null}
+                <AvatarFallback className="bg-secondary text-2xl font-bold">
+                  {place.name.substring(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              {place.logoImageUrl && (
+                <div
+                  className="absolute bottom-1 right-1 cursor-pointer rounded-full bg-black/50 p-1.5 transition-colors hover:bg-black/70"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setExpandedImage({
+                      url: place.logoImageUrl!,
+                      alt: `${place.name} profile`,
+                    });
+                  }}
+                >
+                  {/*<Expand className="h-3.5 w-3.5 text-white" />*/}
+                </div>
+              )}
+            </div>
 
             {/* Action Buttons (Follow) - aligned with bottom of avatar */}
             <div className="mb-2">

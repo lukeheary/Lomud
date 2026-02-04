@@ -8,7 +8,7 @@ export interface UserListUser {
   firstName: string | null;
   lastName: string | null;
   username: string | null;
-  imageUrl: string | null;
+  avatarImageUrl: string | null;
 }
 
 interface UserListProps<T> {
@@ -49,7 +49,7 @@ export function UserList<T>({
           >
             <div className="flex items-center gap-3">
               <UserAvatar 
-                src={user.imageUrl} 
+                src={user.avatarImageUrl} 
                 name={user.firstName} 
               />
               <div>

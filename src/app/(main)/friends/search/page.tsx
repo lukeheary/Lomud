@@ -115,7 +115,7 @@ function SearchPageContent() {
                 >
                   <div className="flex items-center gap-3">
                     <UserAvatar 
-                      src={user.imageUrl} 
+                      src={user.avatarImageUrl} 
                       name={user.firstName} 
                     />
                     <div>
@@ -167,7 +167,7 @@ function SearchPageContent() {
                   >
                     <div className="flex items-center gap-3">
                       <UserAvatar 
-                        src={user.imageUrl} 
+                        src={user.avatarImageUrl} 
                         name={user.firstName} 
                       />
                       <div>

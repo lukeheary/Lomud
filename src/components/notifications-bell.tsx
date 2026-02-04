@@ -82,7 +82,7 @@ export function NotificationsBell() {
               className="flex items-start gap-4 rounded-xl border border-border/60 bg-muted/40 p-4 shadow-sm transition-colors hover:bg-muted/60"
             >
               <UserAvatar
-                src={request.user.imageUrl}
+                src={request.user.avatarImageUrl}
                 name={request.user.firstName}
                 className="h-10 w-10"
               />

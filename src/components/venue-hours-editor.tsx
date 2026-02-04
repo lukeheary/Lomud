@@ -92,7 +92,6 @@ export function VenueHoursEditor({ hours, onChange }: VenueHoursEditorProps) {
               <div className={"flex flex-row gap-2"}>
                 <Input
                   type="time"
-                  step="900"
                   value={dayHours.open}
                   onChange={(e) => updateDay(day, { open: e.target.value })}
                   disabled={dayHours.closed}
@@ -103,7 +102,6 @@ export function VenueHoursEditor({ hours, onChange }: VenueHoursEditorProps) {
 
                 <Input
                   type="time"
-                  step="900"
                   value={dayHours.close}
                   onChange={(e) => updateDay(day, { close: e.target.value })}
                   disabled={dayHours.closed}

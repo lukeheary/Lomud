@@ -62,7 +62,7 @@ export const userRouter = router({
         city: z.string().optional(),
         state: z.string().optional(),
         gender: z.enum(["male", "female", "other"]).optional(),
-        imageUrl: z.string().optional(),
+        avatarImageUrl: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -99,8 +99,8 @@ export const userRouter = router({
       if (input.gender) {
         updateData.gender = input.gender;
       }
-      if (input.imageUrl) {
-        updateData.imageUrl = input.imageUrl;
+      if (input.avatarImageUrl) {
+        updateData.avatarImageUrl = input.avatarImageUrl;
       }
 
       // Update the user's username and location
@@ -151,7 +151,7 @@ export const userRouter = router({
       z.object({
         firstName: z.string().min(1).max(100).optional(),
         lastName: z.string().min(1).max(100).optional(),
-        imageUrl: z.string().url().optional(),
+        avatarImageUrl: z.string().url().optional(),
         city: z.string().optional(),
         state: z.string().optional(),
         gender: z.enum(["male", "female", "other"]).optional(),
@@ -174,8 +174,8 @@ export const userRouter = router({
       if (input.lastName !== undefined) {
         updateData.lastName = input.lastName;
       }
-      if (input.imageUrl !== undefined) {
-        updateData.imageUrl = input.imageUrl;
+      if (input.avatarImageUrl !== undefined) {
+        updateData.avatarImageUrl = input.avatarImageUrl;
       }
       if (input.city !== undefined) {
         updateData.city = input.city;
@@ -205,14 +205,14 @@ export const userRouter = router({
 
       console.log("Database updated successfully:", {
         id: updatedUser.id,
-        imageUrl: updatedUser.imageUrl,
+        avatarImageUrl: updatedUser.avatarImageUrl,
         firstName: updatedUser.firstName,
         lastName: updatedUser.lastName,
         city: updatedUser.city,
         state: updatedUser.state,
       });
 
-      // Sync with Clerk (firstName and lastName only, not imageUrl as we use S3)
+      // Sync with Clerk (firstName and lastName only, not avatarImageUrl as we use S3)
       try {
         const client = await clerkClient();
         const clerkUpdateData: Record<string, any> = {};
@@ -224,7 +224,7 @@ export const userRouter = router({
           clerkUpdateData.lastName = input.lastName;
         }
 
-        // Update Clerk user metadata (excluding imageUrl)
+        // Update Clerk user metadata (excluding avatarImageUrl)
         if (Object.keys(clerkUpdateData).length > 0) {
           await client.users.updateUser(userId, clerkUpdateData);
         }

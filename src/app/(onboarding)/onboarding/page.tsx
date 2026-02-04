@@ -36,7 +36,7 @@ export default function OnboardingPage() {
     city: "",
     state: "",
     gender: "" as "male" | "female" | "other" | "",
-    imageUrl: "",
+    avatarImageUrl: "",
   });
   const [searchCity, setSearchCity] = useState("");
   const [isRedirecting, setIsRedirecting] = useState(false);
@@ -71,7 +71,8 @@ export default function OnboardingPage() {
 
   // Check if form is valid for enabling submit button
   const isValidUsername = /^[a-zA-Z0-9_]{3,20}$/.test(formData.username);
-  const isFormValid = isValidUsername && formData.city && formData.state && formData.gender;
+  const isFormValid =
+    isValidUsername && formData.city && formData.state && formData.gender;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,7 +124,7 @@ export default function OnboardingPage() {
       city: formData.city,
       state: formData.state,
       gender: formData.gender as "male" | "female" | "other",
-      imageUrl: formData.imageUrl || undefined,
+      avatarImageUrl: formData.avatarImageUrl || undefined,
     });
   };
 
@@ -163,28 +164,33 @@ export default function OnboardingPage() {
           {/*  <UserCircle className="h-6 w-6 text-primary" />*/}
           {/*</div>*/}
           <CardTitle className="text-2xl">Complete Your Profile</CardTitle>
-          <CardDescription>
-            Set up your profile to get started
-          </CardDescription>
+          <CardDescription>Set up your profile to get started</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="mb-6 flex flex-col items-center">
             <div className="relative mb-4 h-24 w-24">
-              <UserAvatar 
-                src={formData.imageUrl} 
-                name={clerkUser?.firstName || formData.username} 
+              <UserAvatar
+                src={formData.avatarImageUrl}
+                name={clerkUser?.firstName || formData.username}
                 className="h-24 w-24 border-2 border-primary/10"
               />
             </div>
             <S3Uploader
               variant="button"
-              buttonText={formData.imageUrl ? "Change Picture" : "Upload Picture"}
-              onUploadComplete={(url) => setFormData({ ...formData, imageUrl: url })}
-              onRemoveImage={() => setFormData({ ...formData, imageUrl: "" })}
-              folder="profile-pictures"
+              buttonText={
+                formData.avatarImageUrl ? "Change Picture" : "Upload Picture"
+              }
+              onUploadComplete={(url) =>
+                setFormData({ ...formData, avatarImageUrl: url })
+              }
+              onRemoveImage={() =>
+                setFormData({ ...formData, avatarImageUrl: "" })
+              }
+              folder={`users/${user?.id}`}
+              fileName="avatarImage.png"
               className="w-full max-w-[200px]"
             />
-            {!formData.imageUrl && (
+            {!formData.avatarImageUrl && (
               <p className="mt-2 text-xs text-muted-foreground">
                 Optional: You can use your generated avatar
               </p>

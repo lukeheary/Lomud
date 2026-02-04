@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,7 +23,8 @@ export interface PlaceFormData {
   slug: string;
   name: string;
   description: string;
-  imageUrl: string;
+  logoImageUrl: string;
+  coverImageUrl: string;
   address: string;
   city: string;
   state: string;
@@ -38,6 +39,7 @@ export interface PlaceFormData {
 interface PlaceEditFormProps {
   initialData?: Partial<PlaceFormData>;
   placeType: PlaceType;
+  placeId?: string; // Required for edit mode to upload to correct S3 path
   mode: "create" | "edit";
   onSubmit: (data: PlaceFormData) => void;
   onCancel: () => void;
@@ -50,7 +52,8 @@ const emptyFormData: PlaceFormData = {
   slug: "",
   name: "",
   description: "",
-  imageUrl: "",
+  logoImageUrl: "",
+  coverImageUrl: "",
   address: "",
   city: "",
   state: "",
@@ -65,12 +68,35 @@ const emptyFormData: PlaceFormData = {
 export function PlaceEditForm({
   initialData,
   placeType,
+  placeId,
   mode,
   onSubmit,
   onCancel,
   isSubmitting,
   showCard = true,
 }: PlaceEditFormProps) {
+  const initialDataVersion = useMemo(
+    () =>
+      JSON.stringify({
+        type: placeType,
+        slug: initialData?.slug ?? "",
+        name: initialData?.name ?? "",
+        description: initialData?.description ?? "",
+        logoImageUrl: initialData?.logoImageUrl ?? "",
+        coverImageUrl: initialData?.coverImageUrl ?? "",
+        address: initialData?.address ?? "",
+        city: initialData?.city ?? "",
+        state: initialData?.state ?? "",
+        website: initialData?.website ?? "",
+        instagram: initialData?.instagram ?? "",
+        latitude: initialData?.latitude ?? null,
+        longitude: initialData?.longitude ?? null,
+        hours: initialData?.hours ?? null,
+        categories: initialData?.categories ?? [],
+      }),
+    [initialData, placeType]
+  );
+
   const [formData, setFormData] = useState<PlaceFormData>({
     ...emptyFormData,
     type: placeType,
@@ -95,7 +121,7 @@ export function PlaceEditForm({
         (initialData.slug || "") === (initialData.instagram || "")
       );
     }
-  }, [initialData, placeType]);
+  }, [initialDataVersion, placeType]);
 
   const handlePlaceSelect = useCallback(
     (place: {
@@ -213,15 +239,42 @@ export function PlaceEditForm({
         />
       </div>
 
-      {/* Image */}
+      {/* Profile Image */}
       <div>
-        <Label>{typeLabel} Image</Label>
+        <Label>{typeLabel} Profile Image</Label>
         <S3Uploader
-          folder={isVenue ? "venues" : "organizers"}
-          currentImageUrl={formData.imageUrl}
-          onUploadComplete={(url) => setFormData({ ...formData, imageUrl: url })}
-          onRemoveImage={() => setFormData({ ...formData, imageUrl: "" })}
+          folder={placeId ? `places/${placeId}` : "places"}
+          fileName="logoImage.png"
+          currentImageUrl={formData.logoImageUrl}
+          onUploadComplete={(url) =>
+            setFormData((prev) => ({ ...prev, logoImageUrl: url }))
+          }
+          onRemoveImage={() =>
+            setFormData((prev) => ({ ...prev, logoImageUrl: "" }))
+          }
+          aspectRatio="square"
+          className={"w-48"}
         />
+      </div>
+
+      {/* Banner Image */}
+      <div>
+        <Label>Banner Image (Optional)</Label>
+        <S3Uploader
+          folder={placeId ? `places/${placeId}` : "places"}
+          fileName="coverImage.png"
+          currentImageUrl={formData.coverImageUrl}
+          onUploadComplete={(url) =>
+            setFormData((prev) => ({ ...prev, coverImageUrl: url }))
+          }
+          onRemoveImage={() =>
+            setFormData((prev) => ({ ...prev, coverImageUrl: "" }))
+          }
+        />
+        <p className="mt-1 text-xs text-muted-foreground">
+          If no banner is set, the next upcoming event cover or profile image
+          will be used
+        </p>
       </div>
 
       {/* Description */}

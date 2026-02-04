@@ -4,12 +4,7 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import {
   Building,
@@ -23,11 +18,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { EventForm } from "@/components/events/event-form";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   PlaceEditForm,
   type PlaceFormData,
@@ -53,7 +44,9 @@ export default function AdminPlacesPage() {
   const [userSearch, setUserSearch] = useState("");
 
   // Fetch data
-  const { data: places } = trpc.admin.listAllPlaces.useQuery({ type: activeTab });
+  const { data: places } = trpc.admin.listAllPlaces.useQuery({
+    type: activeTab,
+  });
 
   const { data: placeMembers } = trpc.place.getPlaceMembers.useQuery(
     { placeId: selectedPlace },
@@ -182,7 +175,8 @@ export default function AdminPlacesPage() {
   const filteredPlaces = places?.filter(
     (place) =>
       place.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (place.city && place.city.toLowerCase().includes(searchQuery.toLowerCase()))
+      (place.city &&
+        place.city.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const isVenue = activeTab === "venue";
@@ -195,12 +189,7 @@ export default function AdminPlacesPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              Place Management
-            </h1>
-            <p className="text-muted-foreground">
-              Create and manage venues and organizers
-            </p>
+            <h1 className="text-3xl font-bold tracking-tight">Places</h1>
           </div>
           <Button onClick={handleCreate}>
             <Plus className="mr-2 h-4 w-4" />
@@ -237,12 +226,12 @@ export default function AdminPlacesPage() {
         <div className="space-y-3">
           {filteredPlaces?.map((place) => (
             <Card key={place.id}>
-              <CardContent className="flex items-center justify-between p-4">
+              <CardContent className="flex flex-col justify-between gap-4 p-4 md:flex-row md:items-center">
                 <div className="flex items-center gap-4">
-                  {place.imageUrl ? (
+                  {place.logoImageUrl ? (
                     <div className="relative h-12 w-12 overflow-hidden rounded-md border">
                       <img
-                        src={place.imageUrl}
+                        src={place.logoImageUrl}
                         alt={place.name}
                         className="h-full w-full object-cover"
                       />
@@ -259,6 +248,7 @@ export default function AdminPlacesPage() {
                     </div>
                   </div>
                 </div>
+
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
@@ -306,7 +296,8 @@ export default function AdminPlacesPage() {
             slug: editingPlace.slug || "",
             name: editingPlace.name || "",
             description: editingPlace.description || "",
-            imageUrl: editingPlace.imageUrl || "",
+            logoImageUrl: editingPlace.logoImageUrl || "",
+            coverImageUrl: editingPlace.coverImageUrl || "",
             address: editingPlace.address || "",
             city: editingPlace.city || "",
             state: editingPlace.state || "",
@@ -327,7 +318,9 @@ export default function AdminPlacesPage() {
           </Button>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
-              {viewMode === "edit" ? `Edit ${typeLabel}` : `Create ${typeLabel}`}
+              {viewMode === "edit"
+                ? `Edit ${typeLabel}`
+                : `Create ${typeLabel}`}
             </h1>
             <p className="text-muted-foreground">
               {viewMode === "edit"
@@ -340,6 +333,7 @@ export default function AdminPlacesPage() {
         <PlaceEditForm
           initialData={initialData}
           placeType={viewMode === "edit" ? editingPlace?.type : activeTab}
+          placeId={viewMode === "edit" ? editingPlace?.id : undefined}
           mode={viewMode === "edit" ? "edit" : "create"}
           onSubmit={viewMode === "edit" ? handleEditSubmit : handleCreateSubmit}
           onCancel={handleBack}

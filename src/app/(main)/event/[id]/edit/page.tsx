@@ -36,7 +36,7 @@ export default function EditEventPage() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    imageUrl: "",
+    coverImageUrl: "",
     categories: [] as string[],
     startAt: "",
     endAt: "",
@@ -74,7 +74,7 @@ export default function EditEventPage() {
       setFormData({
         title: event.title || "",
         description: event.description || "",
-        imageUrl: event.imageUrl || "",
+        coverImageUrl: event.coverImageUrl || "",
         categories: (event.categories as string[]) || [],
         startAt: format(new Date(event.startAt), "yyyy-MM-dd'T'HH:mm"),
         endAt: event.endAt
@@ -167,7 +167,7 @@ export default function EditEventPage() {
         eventId,
         title: formData.title,
         description: formData.description || undefined,
-        imageUrl: formData.imageUrl || undefined,
+        coverImageUrl: formData.coverImageUrl || undefined,
         categories: formData.categories,
         startAt: startDate,
         endAt: endDate || undefined,
@@ -235,12 +235,14 @@ export default function EditEventPage() {
               <Label htmlFor="image">Event Image</Label>
               <S3Uploader
                 folder={`events/${eventId}`}
-                fileName="cover.png"
-                currentImageUrl={formData.imageUrl}
+                fileName="coverImage.png"
+                currentImageUrl={formData.coverImageUrl}
                 onUploadComplete={(url) =>
-                  setFormData({ ...formData, imageUrl: url })
+                  setFormData({ ...formData, coverImageUrl: url })
                 }
-                onRemoveImage={() => setFormData({ ...formData, imageUrl: "" })}
+                onRemoveImage={() =>
+                  setFormData({ ...formData, coverImageUrl: "" })
+                }
               />
             </div>
 

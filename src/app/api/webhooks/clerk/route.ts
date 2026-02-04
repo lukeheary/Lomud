@@ -71,7 +71,7 @@ export async function POST(req: Request) {
         username: finalUsername,
         firstName: first_name,
         lastName: last_name,
-        imageUrl: finalImageUrl,
+        avatarImageUrl: finalImageUrl,
       })
       .onConflictDoUpdate({
         target: users.id,
@@ -81,10 +81,10 @@ export async function POST(req: Request) {
           ...(username ? { username } : {}),
           firstName: first_name,
           lastName: last_name,
-          // Only overwrite imageUrl if the new one is a real image and the current one is either 
+          // Only overwrite avatarImageUrl if the new one is a real image and the current one is either 
           // missing or a Clerk default (S3/User-uploaded images should be preserved)
-          ...(finalImageUrl && (!existingUser?.imageUrl || existingUser.imageUrl.includes("clerk.com/default-user-image")) 
-            ? { imageUrl: finalImageUrl } 
+          ...(finalImageUrl && (!existingUser?.avatarImageUrl || existingUser.avatarImageUrl.includes("clerk.com/default-user-image")) 
+            ? { avatarImageUrl: finalImageUrl } 
             : {}),
           updatedAt: new Date(),
         },

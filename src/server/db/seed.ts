@@ -58,7 +58,7 @@ async function main() {
         username: "alice_demo",
         firstName: "Alice",
         lastName: "Johnson",
-        imageUrl: null,
+        avatarImageUrl: null,
         city: "Boston",
         state: "MA",
       },
@@ -68,7 +68,7 @@ async function main() {
         username: "bob_demo",
         firstName: "Bob",
         lastName: "Smith",
-        imageUrl: null,
+        avatarImageUrl: null,
         city: "New York",
         state: "NY",
       },
@@ -78,7 +78,7 @@ async function main() {
         username: "charlie_demo",
         firstName: "Charlie",
         lastName: "Davis",
-        imageUrl: null,
+        avatarImageUrl: null,
         city: "Boston",
         state: "MA",
       },
@@ -88,7 +88,7 @@ async function main() {
         username: "dana_demo",
         firstName: "Dana",
         lastName: "Lee",
-        imageUrl: null,
+        avatarImageUrl: null,
         city: "New York",
         state: "NY",
       },
@@ -132,7 +132,7 @@ async function main() {
       name: "Royale Boston",
       description:
         "Downtown nightclub with touring DJs, themed parties, and big-room energy.",
-      imageUrl: null,
+      avatarImageUrl: null,
       address: "279 Tremont St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
@@ -155,7 +155,7 @@ async function main() {
       name: "Bijou Boston",
       description:
         "Basement club lounge known for house nights, bottle service, and late sets.",
-      imageUrl: null,
+      avatarImageUrl: null,
       address: "51 Stuart St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
@@ -178,7 +178,7 @@ async function main() {
       name: "The Middlesex Lounge",
       description:
         "Cambridge spot with dance nights, DJ lineups, and a cozy late-night floor.",
-      imageUrl: null,
+      avatarImageUrl: null,
       address: "14 Massachusetts Ave, Cambridge, MA 02139",
       city: "Cambridge",
       state: "MA",
@@ -203,7 +203,7 @@ async function main() {
       name: "Elsewhere",
       description:
         "Multi-room Brooklyn club with electronic nights, rooftop parties, and community vibes.",
-      imageUrl: null,
+      avatarImageUrl: null,
       address: "599 Johnson Ave, Brooklyn, NY 11237",
       city: "Brooklyn",
       state: "NY",
@@ -226,7 +226,7 @@ async function main() {
       name: "Good Room",
       description:
         "Beloved Brooklyn club with deep house, disco, and all-night dance floor energy.",
-      imageUrl: null,
+      avatarImageUrl: null,
       address: "98 Meserole Ave, Brooklyn, NY 11222",
       city: "Brooklyn",
       state: "NY",
@@ -251,7 +251,7 @@ async function main() {
       name: "Midnight Moves",
       description:
         "Dance-forward parties featuring house, disco, and tasteful late-night energy.",
-      imageUrl: null,
+      avatarImageUrl: null,
       city: null,
       state: null,
       website: "https://midnightmoves.example.com",
@@ -263,7 +263,7 @@ async function main() {
       name: "Neon Nights Collective",
       description:
         "Electronic parties, DJ showcases, and themed club nights across Boston and NYC.",
-      imageUrl: null,
+      avatarImageUrl: null,
       city: null,
       state: null,
       website: "https://neonnights.example.com",
@@ -275,7 +275,7 @@ async function main() {
       name: "AfterHours Society",
       description:
         "Late-night DJ-driven events focused on underground house and techno.",
-      imageUrl: null,
+      avatarImageUrl: null,
       city: null,
       state: null,
       website: "https://afterhours.example.com",
@@ -287,7 +287,7 @@ async function main() {
       name: "Rooftop Rituals",
       description:
         "Seasonal rooftop parties with groove-forward lineups and sunset sets.",
-      imageUrl: null,
+      avatarImageUrl: null,
       city: null,
       state: null,
       website: "https://rooftoprituals.example.com",
@@ -397,7 +397,7 @@ async function main() {
       title: "Neon Nights: Royale Takeover",
       description:
         "House + disco all night in the main room. Bright fits encouraged; phone-light moments discouraged.",
-      imageUrl: null,
+      avatarImageUrl: null,
       startAt: daysFromTodayAt(0, 22, 0),
       endAt: hoursAfter(daysFromTodayAt(1, 22, 0), 4.5),
       venueName: "Royale Boston",
@@ -414,7 +414,7 @@ async function main() {
       title: "AfterHours: Basement House Session",
       description:
         "Low ceilings, deep grooves. Underground house selectors from open to close.",
-      imageUrl: null,
+      avatarImageUrl: null,
       startAt: daysFromTodayAt(2, 23, 0),
       endAt: hoursAfter(daysFromTodayAt(2, 23, 0), 5),
       venueName: "Bijou Boston",
@@ -431,7 +431,7 @@ async function main() {
       title: "Middlesex: Disco Warmup + Late House",
       description:
         "Disco warmup into late house heaters. Smaller room, louder singalongs.",
-      imageUrl: null,
+      avatarImageUrl: null,
       startAt: daysFromTodayAt(6, 21, 0),
       endAt: hoursAfter(daysFromTodayAt(6, 21, 0), 4),
       venueName: "The Middlesex Lounge",
@@ -450,7 +450,7 @@ async function main() {
       title: "Royale Side Room: Tech House Hour",
       description:
         "Early side-room warmup: rolling tech house and quick transitions before the main takeover.",
-      imageUrl: null,
+      avatarImageUrl: null,
       startAt: daysFromTodayAt(1, 20, 30),
       endAt: hoursAfter(daysFromTodayAt(1, 20, 30), 2),
       venueName: "Royale Boston (Side Room)",
@@ -467,7 +467,7 @@ async function main() {
       title: "Guest List Thursdays: Local Selectors",
       description:
         "Local DJ rotation with drink specials. Casual, packed, and unapologetically fun.",
-      imageUrl: null,
+      avatarImageUrl: null,
       startAt: daysFromTodayAt(3, 22, 0),
       endAt: hoursAfter(daysFromTodayAt(3, 22, 0), 3.5),
       venueName: "Bijou Boston",
@@ -486,7 +486,7 @@ async function main() {
       title: "Midnight Moves: Opening Night",
       description:
         "Season kickoff with extended sets and special guests. Funky house meets soulful disco.",
-      imageUrl: null,
+      avatarImageUrl: null,
       startAt: daysFromTodayAt(0, 21, 0),
       endAt: hoursAfter(daysFromTodayAt(0, 21, 0), 5),
       venueName: "Royale Boston",
@@ -503,7 +503,7 @@ async function main() {
       title: "Sunday Sessions: Chill Vibes & Vinyl",
       description:
         "Sunday afternoon hangout with vinyl selections, craft cocktails, and good conversation.",
-      imageUrl: null,
+      avatarImageUrl: null,
       startAt: daysFromTodayAt(1, 16, 0),
       endAt: hoursAfter(daysFromTodayAt(1, 16, 0), 4),
       venueName: "The Middlesex Lounge",
@@ -520,7 +520,7 @@ async function main() {
       title: "Rooftop Rituals: Boston Underground",
       description:
         "Deep techno and minimal grooves in the basement. Intimate crowd, heavy sound system.",
-      imageUrl: null,
+      avatarImageUrl: null,
       startAt: daysFromTodayAt(2, 22, 30),
       endAt: hoursAfter(daysFromTodayAt(2, 22, 30), 4),
       venueName: "Bijou Boston",
@@ -537,7 +537,7 @@ async function main() {
       title: "Neon Nights: Throwback Thursday",
       description:
         "2000s dance classics meet modern house remixes. Nostalgia with a twist.",
-      imageUrl: null,
+      avatarImageUrl: null,
       startAt: daysFromTodayAt(3, 21, 30),
       endAt: hoursAfter(daysFromTodayAt(3, 21, 30), 4),
       venueName: "Royale Boston",
@@ -554,7 +554,7 @@ async function main() {
       title: "AfterHours: Cambridge Edition",
       description:
         "Underground house and techno takeover. Dark room, loud speakers, no phone policy.",
-      imageUrl: null,
+      avatarImageUrl: null,
       startAt: daysFromTodayAt(4, 23, 0),
       endAt: hoursAfter(daysFromTodayAt(4, 23, 0), 4),
       venueName: "The Middlesex Lounge",
@@ -571,7 +571,7 @@ async function main() {
       title: "Midnight Moves: Friday Groove Session",
       description:
         "Classic disco meets modern house. Dance floor therapy with your favorite people.",
-      imageUrl: null,
+      avatarImageUrl: null,
       startAt: daysFromTodayAt(5, 22, 0),
       endAt: hoursAfter(daysFromTodayAt(5, 22, 0), 5),
       venueName: "Bijou Boston",
@@ -588,7 +588,7 @@ async function main() {
       title: "Saturday Night Live: Open Format",
       description:
         "Hip-hop, R&B, top 40, and dance hits. Bottle service available, dress code enforced.",
-      imageUrl: null,
+      avatarImageUrl: null,
       startAt: daysFromTodayAt(6, 23, 0),
       endAt: hoursAfter(daysFromTodayAt(6, 23, 0), 4),
       venueName: "Royale Boston",
@@ -605,7 +605,7 @@ async function main() {
       title: "Rooftop Rituals: Sunday Wind Down",
       description:
         "Mellow house and downtempo to close out the weekend. Good vibes only.",
-      imageUrl: null,
+      avatarImageUrl: null,
       startAt: daysFromTodayAt(7, 19, 0),
       endAt: hoursAfter(daysFromTodayAt(7, 19, 0), 4),
       venueName: "The Middlesex Lounge",
@@ -624,7 +624,7 @@ async function main() {
       title: "Bijou Happy Hour: House Warmup",
       description:
         "Pre-game with groovy house and drink specials. Perfect start before the bigger parties.",
-      imageUrl: null,
+      avatarImageUrl: null,
       startAt: daysFromTodayAt(0, 18, 0),
       endAt: hoursAfter(daysFromTodayAt(0, 18, 0), 3),
       venueName: "Bijou Boston",
@@ -641,7 +641,7 @@ async function main() {
       title: "Midnight Moves: Cambridge Kickoff",
       description:
         "Disco and funk to start your night right. Early vibes, late energy.",
-      imageUrl: null,
+      avatarImageUrl: null,
       startAt: daysFromTodayAt(0, 19, 30),
       endAt: hoursAfter(daysFromTodayAt(0, 19, 30), 4),
       venueName: "The Middlesex Lounge",
@@ -658,7 +658,7 @@ async function main() {
       title: "Midnight Moves: Brooklyn Opening Party",
       description:
         "Multi-room house and disco party. Rooftop, zone one, and dance floor all going off.",
-      imageUrl: null,
+      avatarImageUrl: null,
       startAt: daysFromTodayAt(0, 20, 0),
       endAt: hoursAfter(daysFromTodayAt(0, 20, 0), 6),
       venueName: "Elsewhere",
@@ -675,7 +675,7 @@ async function main() {
       title: "Neon Nights: Brooklyn Deep House Session",
       description:
         "Classic Good Room vibes: deep house, warm crowd, and all-night energy.",
-      imageUrl: null,
+      avatarImageUrl: null,
       startAt: daysFromTodayAt(0, 23, 0),
       endAt: hoursAfter(daysFromTodayAt(0, 23, 0), 5),
       venueName: "Good Room",
@@ -696,7 +696,7 @@ async function main() {
       title: "Rooftop Rituals: Sunset Grooves",
       description:
         "Rooftop sets from golden hour into nightfall. Melodic house, disco edits, and good energy.",
-      imageUrl: null,
+      avatarImageUrl: null,
       startAt: daysFromTodayAt(2, 17, 30),
       endAt: hoursAfter(daysFromTodayAt(1, 17, 30), 4),
       venueName: "Elsewhere (Rooftop)",
@@ -713,7 +713,7 @@ async function main() {
       title: "Good Room: All-Night House Marathon",
       description:
         "One room, no breaks. Deep-to-peak house progression with late-night surprises.",
-      imageUrl: null,
+      avatarImageUrl: null,
       startAt: daysFromTodayAt(2, 23, 30),
       endAt: hoursAfter(daysFromTodayAt(2, 23, 30), 6),
       venueName: "Good Room",
@@ -732,7 +732,7 @@ async function main() {
       title: "Elsewhere Warmup: Vinyl-Only Hour",
       description:
         "Early rooftop warmup before the main party. Vinyl-only, groovy, and laid back.",
-      imageUrl: null,
+      avatarImageUrl: null,
       startAt: daysFromTodayAt(0, 16, 0),
       endAt: hoursAfter(daysFromTodayAt(1, 16, 0), 1.5),
       venueName: "Elsewhere (Rooftop)",
@@ -749,7 +749,7 @@ async function main() {
       title: "Good Room (Front Bar): Disco Happy Hour",
       description:
         "Disco and funk to start the night before the marathon kicks off. Come early, leave sweaty.",
-      imageUrl: null,
+      avatarImageUrl: null,
       startAt: daysFromTodayAt(2, 20, 0),
       endAt: hoursAfter(daysFromTodayAt(2, 20, 0), 3),
       venueName: "Good Room (Front Bar)",
