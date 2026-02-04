@@ -501,7 +501,7 @@ function HomePageContent() {
 
   return (
     <div className="relative min-h-screen">
-      <div className="container relative mx-auto py-4 md:py-4">
+      <div className="container relative mx-auto pt-4">
         {/* Sentinel for sticky detection */}
         <div ref={stickySentinelRef} className="h-px w-full" />
 
@@ -511,190 +511,190 @@ function HomePageContent() {
             "z-[45] -mx-4 -mt-4 bg-background px-4 pb-3 pt-4 transition-shadow md:top-16 md:z-30 md:-mx-8 md:bg-background/95 md:px-8 md:pt-4 md:backdrop-blur md:supports-[backdrop-filter]:bg-background"
           }
         >
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          {/* Search Input */}
-          <div className="flex w-full flex-row">
-            <Suspense fallback={null}>
-              <SearchInput
-                ref={searchInputRef}
-                placeholder="Search events..."
-                value={searchQuery}
-                onChange={setSearchQuery}
-                onFocus={() => setIsSearchMode(true)}
-                showBack={isSearchMode}
-                onBack={handleExitSearch}
-                className="w-full"
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            {/* Search Input */}
+            <div className="flex w-full flex-row">
+              <Suspense fallback={null}>
+                <SearchInput
+                  ref={searchInputRef}
+                  placeholder="Search events..."
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  onFocus={() => setIsSearchMode(true)}
+                  showBack={isSearchMode}
+                  onBack={handleExitSearch}
+                  className="w-full"
+                />
+              </Suspense>
+              <div
+                className={cn(
+                  "shrink-0 overflow-hidden transition-all duration-200 ease-out md:hidden",
+                  isSearchMode ? "ml-0 w-0 opacity-0" : "ml-2 opacity-100"
+                )}
+              >
+                <div className="flex h-12 items-center overflow-hidden rounded-full border border-input bg-background shadow-sm">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-full w-10 rounded-none border-r bg-muted px-0"
+                    onClick={handlePrevious}
+                    disabled={isCurrentWeek}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-full w-10 rounded-none bg-muted px-0 focus:bg-muted/80"
+                    onClick={handleNext}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex w-full gap-2 sm:w-fit">
+              {/* City Filter */}
+              <ResponsiveSelect
+                value={effectiveCity ?? "all"}
+                onValueChange={setSelectedCity}
+                options={[
+                  { value: "all", label: "All Cities" },
+                  ...(cities?.map((city) => ({
+                    value: city.city,
+                    label: `${city.city}, ${city.state}`,
+                  })) || []),
+                ]}
+                placeholder="Select city"
+                title="Select City"
+                className="flex-1 shrink-0 sm:w-[200px]"
               />
-            </Suspense>
-            <div
-              className={cn(
-                "shrink-0 overflow-hidden transition-all duration-200 ease-out md:hidden",
-                isSearchMode ? "ml-0 w-0 opacity-0" : "ml-2 opacity-100"
-              )}
-            >
-              <div className="flex h-12 items-center overflow-hidden rounded-full border border-input bg-background shadow-sm">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-full w-10 rounded-none border-r bg-muted px-0"
-                  onClick={handlePrevious}
-                  disabled={isCurrentWeek}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-full w-10 rounded-none bg-muted px-0 focus:bg-muted/80"
-                  onClick={handleNext}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
 
-          <div className="flex w-full gap-2 sm:w-fit">
-            {/* City Filter */}
-            <ResponsiveSelect
-              value={effectiveCity ?? "all"}
-              onValueChange={setSelectedCity}
-              options={[
-                { value: "all", label: "All Cities" },
-                ...(cities?.map((city) => ({
-                  value: city.city,
-                  label: `${city.city}, ${city.state}`,
-                })) || []),
-              ]}
-              placeholder="Select city"
-              title="Select City"
-              className="flex-1 shrink-0 sm:w-[200px]"
-            />
+              <EventFilterSelect
+                value={activeFilter}
+                onValueChange={setActiveFilter}
+                className="w-[160px] shrink-0"
+              />
 
-            <EventFilterSelect
-              value={activeFilter}
-              onValueChange={setActiveFilter}
-              className="w-[160px] shrink-0"
-            />
-
-            {/* Navigation Controls - fixed width wrapper for smooth transition */}
-            <div
-              className={cn(
-                "hidden shrink-0 overflow-hidden transition-all duration-200 ease-out md:block",
-                isSearchMode ? "w-0 opacity-0" : "w-[82px] opacity-100"
-              )}
-            >
-              <div className="flex h-12 items-center overflow-hidden rounded-full border border-input bg-background shadow-sm">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-full w-10 shrink-0 rounded-none border-r bg-muted px-0 hover:bg-muted/60"
-                  onClick={handlePrevious}
-                  disabled={isCurrentWeek}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-full w-10 shrink-0 rounded-none bg-muted px-0 hover:bg-muted/80"
-                  onClick={handleNext}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+              {/* Navigation Controls - fixed width wrapper for smooth transition */}
+              <div
+                className={cn(
+                  "hidden shrink-0 overflow-hidden transition-all duration-200 ease-out md:block",
+                  isSearchMode ? "w-0 opacity-0" : "w-[82px] opacity-100"
+                )}
+              >
+                <div className="flex h-12 items-center overflow-hidden rounded-full border border-input bg-background shadow-sm">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-full w-10 shrink-0 rounded-none border-r bg-muted px-0 hover:bg-muted/60"
+                    onClick={handlePrevious}
+                    disabled={isCurrentWeek}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-full w-10 shrink-0 rounded-none bg-muted px-0 hover:bg-muted/80"
+                    onClick={handleNext}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Friend Activity Feed - only show if there's activity and not in search mode */}
-      {!isSearchMode && hasRecentActivity && isCurrentWeek && (
-        <div className="mb-4">
-          <div className="flex items-center gap-1 pb-2 md:pb-3">
-            <Link
-              href="/friends"
-              className="flex items-center gap-1 transition-colors hover:text-primary"
-            >
-              <h1 className="text-xl font-bold tracking-tight">
-                Recent Activity
-              </h1>
-              <ChevronRight className="h-4 w-4" />
-            </Link>
+        {/* Friend Activity Feed - only show if there's activity and not in search mode */}
+        {!isSearchMode && hasRecentActivity && isCurrentWeek && (
+          <div className="mb-4">
+            <div className="flex items-center gap-1 pb-2 md:pb-3">
+              <Link
+                href="/friends"
+                className="flex items-center gap-1 transition-colors hover:text-primary"
+              >
+                <h1 className="text-xl font-bold tracking-tight">
+                  Recent Activity
+                </h1>
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            <ActivityFeed limit={3} hideWhenEmpty />
           </div>
+        )}
 
-          <ActivityFeed limit={3} hideWhenEmpty />
-        </div>
-      )}
+        {/*  <Tabs*/}
+        {/*    value={viewMode}*/}
+        {/*    onValueChange={(value) => setViewMode(value as ViewMode)}*/}
+        {/*  >*/}
+        {/*    <TabsList>*/}
+        {/*      <TabsTrigger value="week">Week</TabsTrigger>*/}
+        {/*      <TabsTrigger value="month">Month</TabsTrigger>*/}
+        {/*    </TabsList>*/}
+        {/*  </Tabs>*/}
+        {/*</div>*/}
 
-      {/*  <Tabs*/}
-      {/*    value={viewMode}*/}
-      {/*    onValueChange={(value) => setViewMode(value as ViewMode)}*/}
-      {/*  >*/}
-      {/*    <TabsList>*/}
-      {/*      <TabsTrigger value="week">Week</TabsTrigger>*/}
-      {/*      <TabsTrigger value="month">Month</TabsTrigger>*/}
-      {/*    </TabsList>*/}
-      {/*  </Tabs>*/}
-      {/*</div>*/}
+        {/* Loading Indicator */}
+        {/*{isFetching && (*/}
+        {/*  <div className="absolute right-0 top-0 flex items-center gap-2 p-4 md:relative md:p-0 md:pt-4">*/}
+        {/*    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />*/}
+        {/*    <span className="text-sm text-muted-foreground">Updating events...</span>*/}
+        {/*  </div>*/}
+        {/*)}*/}
 
-      {/* Loading Indicator */}
-      {/*{isFetching && (*/}
-      {/*  <div className="absolute right-0 top-0 flex items-center gap-2 p-4 md:relative md:p-0 md:pt-4">*/}
-      {/*    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />*/}
-      {/*    <span className="text-sm text-muted-foreground">Updating events...</span>*/}
-      {/*  </div>*/}
-      {/*)}*/}
+        {/* Initial Loading State */}
+        {(isLoading || !isReady) && !events && (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        )}
 
-      {/* Initial Loading State */}
-      {(isLoading || !isReady) && !events && (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      )}
+        {/* Recently Added Events (when search focused but no query) */}
+        {isSearchMode && !isSearching && (
+          <div className="space-y-4">
+            {/*<h2 className="text-lg font-semibold">Recently Added</h2>*/}
+            {recentLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : !recentEvents || recentEvents.length === 0 ? (
+              <div className="py-12 text-center text-muted-foreground">
+                No recent events to show
+              </div>
+            ) : (
+              <EventCardGrid
+                events={sortedRecentEvents}
+                columns={{ mobile: 1, tablet: 3, desktop: 4 }}
+                gap="md"
+              />
+            )}
+          </div>
+        )}
 
-      {/* Recently Added Events (when search focused but no query) */}
-      {isSearchMode && !isSearching && (
-        <div className="space-y-4">
-          {/*<h2 className="text-lg font-semibold">Recently Added</h2>*/}
-          {recentLoading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : !recentEvents || recentEvents.length === 0 ? (
-            <div className="py-12 text-center text-muted-foreground">
-              No recent events to show
-            </div>
-          ) : (
-            <EventCardGrid
-              events={sortedRecentEvents}
-              columns={{ mobile: 1, tablet: 3, desktop: 4 }}
-              gap="md"
-            />
-          )}
-        </div>
-      )}
-
-      {/* Search Results - flat list, no date headers */}
-      {isSearching && events && (
-        <div className="space-y-4">
-          {events.length === 0 ? (
-            <div className="py-12 text-center">
-              <CalendarIcon className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-              <h3 className="mb-2 text-lg font-semibold">No events found</h3>
-              <p className="text-muted-foreground">
-                Try adjusting your search or filters
-              </p>
-            </div>
-          ) : (
-            <EventCardGrid
-              events={sortedEvents}
-              columns={{ mobile: 1, tablet: 3, desktop: 4 }}
-              gap="md"
-            />
-          )}
-        </div>
-      )}
+        {/* Search Results - flat list, no date headers */}
+        {isSearching && events && (
+          <div className="space-y-4">
+            {events.length === 0 ? (
+              <div className="py-12 text-center">
+                <CalendarIcon className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                <h3 className="mb-2 text-lg font-semibold">No events found</h3>
+                <p className="text-muted-foreground">
+                  Try adjusting your search or filters
+                </p>
+              </div>
+            ) : (
+              <EventCardGrid
+                events={sortedEvents}
+                columns={{ mobile: 1, tablet: 3, desktop: 4 }}
+                gap="md"
+              />
+            )}
+          </div>
+        )}
       </div>
 
       {/* Week View - outside container for full-width sticky headers */}
@@ -739,176 +739,181 @@ function HomePageContent() {
       )}
 
       <div className="container mx-auto px-4">
-      {/* Month View - only show when not in search mode */}
-      {!isSearchMode && viewMode === "month" && events && (
-        <Card>
-          <CardContent className="p-4">
-            {/* Day of week headers */}
-            <div className="mb-2 grid grid-cols-7 gap-2">
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                <div
-                  key={day}
-                  className="py-2 text-center text-sm font-medium text-muted-foreground"
-                >
-                  {day}
-                </div>
-              ))}
-            </div>
-
-            {/* Calendar grid */}
-            <div className="grid grid-cols-7 gap-2">
-              {daysToDisplay.map((date) => {
-                const dateKey = format(date, "yyyy-MM-dd");
-                const dayEvents = eventsByDay[dateKey] || [];
-                const isToday = isSameDay(date, new Date());
-                const isCurrentMonth = isSameMonth(date, currentDate);
-
-                return (
-                  <div
-                    key={dateKey}
-                    className={cn(
-                      "min-h-[120px] rounded-lg border p-2",
-                      !isCurrentMonth && "bg-muted/50 text-muted-foreground",
-                      isToday && "border-primary bg-primary/5"
-                    )}
-                  >
+        {/* Month View - only show when not in search mode */}
+        {!isSearchMode && viewMode === "month" && events && (
+          <Card>
+            <CardContent className="p-4">
+              {/* Day of week headers */}
+              <div className="mb-2 grid grid-cols-7 gap-2">
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+                  (day) => (
                     <div
+                      key={day}
+                      className="py-2 text-center text-sm font-medium text-muted-foreground"
+                    >
+                      {day}
+                    </div>
+                  )
+                )}
+              </div>
+
+              {/* Calendar grid */}
+              <div className="grid grid-cols-7 gap-2">
+                {daysToDisplay.map((date) => {
+                  const dateKey = format(date, "yyyy-MM-dd");
+                  const dayEvents = eventsByDay[dateKey] || [];
+                  const isToday = isSameDay(date, new Date());
+                  const isCurrentMonth = isSameMonth(date, currentDate);
+
+                  return (
+                    <div
+                      key={dateKey}
                       className={cn(
-                        "mb-1 text-sm font-medium",
-                        isToday && "text-primary"
+                        "min-h-[120px] rounded-lg border p-2",
+                        !isCurrentMonth && "bg-muted/50 text-muted-foreground",
+                        isToday && "border-primary bg-primary/5"
                       )}
                     >
-                      {format(date, "d")}
-                    </div>
-                    <div className="space-y-1">
-                      {dayEvents.slice(0, 3).map((event) => (
-                        <HoverCard
-                          key={event.id}
-                          openDelay={200}
-                          closeDelay={100}
-                        >
-                          <HoverCardTrigger asChild>
-                            <div
-                              className="cursor-pointer truncate rounded bg-primary/10 p-1 text-xs text-primary hover:bg-primary/20"
-                              onClick={() =>
-                                (window.location.href = `/event/${event.id}`)
-                              }
-                            >
-                              {event.title}
-                            </div>
-                          </HoverCardTrigger>
-                          <HoverCardContent
-                            className="w-80"
-                            side="right"
-                            align="start"
+                      <div
+                        className={cn(
+                          "mb-1 text-sm font-medium",
+                          isToday && "text-primary"
+                        )}
+                      >
+                        {format(date, "d")}
+                      </div>
+                      <div className="space-y-1">
+                        {dayEvents.slice(0, 3).map((event) => (
+                          <HoverCard
+                            key={event.id}
+                            openDelay={200}
+                            closeDelay={100}
                           >
-                            <div className="space-y-3">
-                              {/* Event Image */}
-                              {event.imageUrl && (
-                                <div className="relative h-32 w-full overflow-hidden rounded-md">
-                                  <Image
-                                    src={event.imageUrl}
-                                    alt={event.title}
-                                    fill
-                                    className="object-cover"
-                                  />
-                                </div>
-                              )}
-
-                              {/* Title */}
-                              <div>
-                                <h4 className="mb-1 text-base font-semibold leading-tight">
-                                  {event.title}
-                                </h4>
-                                <div className="flex flex-wrap gap-1">
-                                  {event.categories?.slice(0, 2).map((cat) => (
-                                    <span
-                                      key={cat}
-                                      className="rounded-full bg-primary/10 px-2 py-0.5 text-xs capitalize text-primary"
-                                    >
-                                      {CATEGORY_LABELS[cat as Category] || cat}
-                                    </span>
-                                  ))}
-                                </div>
+                            <HoverCardTrigger asChild>
+                              <div
+                                className="cursor-pointer truncate rounded bg-primary/10 p-1 text-xs text-primary hover:bg-primary/20"
+                                onClick={() =>
+                                  (window.location.href = `/event/${event.id}`)
+                                }
+                              >
+                                {event.title}
                               </div>
+                            </HoverCardTrigger>
+                            <HoverCardContent
+                              className="w-80"
+                              side="right"
+                              align="start"
+                            >
+                              <div className="space-y-3">
+                                {/* Event Image */}
+                                {event.imageUrl && (
+                                  <div className="relative h-32 w-full overflow-hidden rounded-md">
+                                    <Image
+                                      src={event.imageUrl}
+                                      alt={event.title}
+                                      fill
+                                      className="object-cover"
+                                    />
+                                  </div>
+                                )}
 
-                              {/* Date & Time */}
-                              <div className="flex items-start gap-2 text-sm">
-                                <Clock className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                                {/* Title */}
                                 <div>
-                                  <div className="font-medium">
-                                    {format(
-                                      new Date(event.startAt),
-                                      "EEEE, MMMM d"
-                                    )}
-                                  </div>
-                                  <div className="text-muted-foreground">
-                                    {formatTime(event.startAt)}
-                                    {event.endAt &&
-                                      ` - ${formatTime(event.endAt)}`}
+                                  <h4 className="mb-1 text-base font-semibold leading-tight">
+                                    {event.title}
+                                  </h4>
+                                  <div className="flex flex-wrap gap-1">
+                                    {event.categories
+                                      ?.slice(0, 2)
+                                      .map((cat) => (
+                                        <span
+                                          key={cat}
+                                          className="rounded-full bg-primary/10 px-2 py-0.5 text-xs capitalize text-primary"
+                                        >
+                                          {CATEGORY_LABELS[cat as Category] ||
+                                            cat}
+                                        </span>
+                                      ))}
                                   </div>
                                 </div>
-                              </div>
 
-                              {/* Location */}
-                              {(event.venueName || event.city) && (
+                                {/* Date & Time */}
                                 <div className="flex items-start gap-2 text-sm">
-                                  <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                                  <Clock className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
                                   <div>
-                                    {event.venueName && (
-                                      <div className="font-medium">
-                                        {event.venueName}
-                                      </div>
-                                    )}
+                                    <div className="font-medium">
+                                      {format(
+                                        new Date(event.startAt),
+                                        "EEEE, MMMM d"
+                                      )}
+                                    </div>
                                     <div className="text-muted-foreground">
-                                      {event.city}, {event.state}
+                                      {formatTime(event.startAt)}
+                                      {event.endAt &&
+                                        ` - ${formatTime(event.endAt)}`}
                                     </div>
                                   </div>
                                 </div>
-                              )}
 
-                              {event.venue && (
-                                <div className="border-t pt-2 text-xs text-muted-foreground">
-                                  Hosted by {event.venue.name}
+                                {/* Location */}
+                                {(event.venueName || event.city) && (
+                                  <div className="flex items-start gap-2 text-sm">
+                                    <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                                    <div>
+                                      {event.venueName && (
+                                        <div className="font-medium">
+                                          {event.venueName}
+                                        </div>
+                                      )}
+                                      <div className="text-muted-foreground">
+                                        {event.city}, {event.state}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {event.venue && (
+                                  <div className="border-t pt-2 text-xs text-muted-foreground">
+                                    Hosted by {event.venue.name}
+                                  </div>
+                                )}
+
+                                {/* Click to view */}
+                                <div className="pt-1 text-center text-xs text-muted-foreground">
+                                  Click to view full details
                                 </div>
-                              )}
-
-                              {/* Click to view */}
-                              <div className="pt-1 text-center text-xs text-muted-foreground">
-                                Click to view full details
                               </div>
-                            </div>
-                          </HoverCardContent>
-                        </HoverCard>
-                      ))}
-                      {dayEvents.length > 3 && (
-                        <div className="text-xs text-muted-foreground">
-                          +{dayEvents.length - 3} more
-                        </div>
-                      )}
+                            </HoverCardContent>
+                          </HoverCard>
+                        ))}
+                        {dayEvents.length > 3 && (
+                          <div className="text-xs text-muted-foreground">
+                            +{dayEvents.length - 3} more
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-      {/* Empty State - only show when not searching (search has its own empty state) */}
-      {!isSearching && !isLoading && events && events.length === 0 && (
-        <div className="py-12 text-center">
-          <CalendarIcon className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-          <h3 className="mb-2 text-lg font-semibold">No events found</h3>
-          <p className="mb-4 text-muted-foreground">
-            {activeFilter === "followed" &&
-              "Start following businesses to see their events here"}
-            {activeFilter === "friends" &&
-              "Add friends and see what events they're attending"}
-            {activeFilter === "all" && "Check back later for upcoming events"}
-          </p>
-        </div>
-      )}
+        {/* Empty State - only show when not searching (search has its own empty state) */}
+        {!isSearching && !isLoading && events && events.length === 0 && (
+          <div className="py-12 text-center">
+            <CalendarIcon className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <h3 className="mb-2 text-lg font-semibold">No events found</h3>
+            <p className="mb-4 text-muted-foreground">
+              {activeFilter === "followed" &&
+                "Start following businesses to see their events here"}
+              {activeFilter === "friends" &&
+                "Add friends and see what events they're attending"}
+              {activeFilter === "all" && "Check back later for upcoming events"}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

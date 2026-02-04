@@ -58,7 +58,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
   const { showNavbarSearch, scrollToSearchAndFocus } = useNavbarSearch();
 
   const isHome = pathname === "/home";
-  const isPlaces = pathname === "/places";
+  const isPlaces = pathname === "/places" || pathname?.startsWith("/places/");
   const isFriends = pathname === "/friends";
   const isProfile = pathname === "/profile";
   const isMyPlaces = pathname === "/my-places";

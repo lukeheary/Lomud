@@ -280,7 +280,7 @@ function PlacesPageContent() {
       {!isLoading && isReady && combinedItems.length > 0 && (
         <div className="grid gap-4 py-4 md:grid-cols-2 lg:grid-cols-3">
           {combinedItems.map((item) => (
-            <Link key={`${item.type}-${item.id}`} href={`/place/${item.slug}`}>
+            <Link key={`${item.type}-${item.id}`} href={`/places/${item.slug}`}>
               <Card className="h-full cursor-pointer transition-colors hover:bg-accent/50">
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">

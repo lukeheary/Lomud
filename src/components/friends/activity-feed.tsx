@@ -75,7 +75,7 @@ function ActivityItem({ activity }: ActivityItemProps) {
                 at{" "}
                 {activity.event.venue?.slug ? (
                   <Link
-                    href={`/place/${activity.event.venue.slug}`}
+                    href={`/places/${activity.event.venue.slug}`}
                     className="font-medium text-primary hover:underline"
                   >
                     {activity.event.venueName}
@@ -105,7 +105,7 @@ function ActivityItem({ activity }: ActivityItemProps) {
                 at{" "}
                 {activity.event.venue?.slug ? (
                   <Link
-                    href={`/place/${activity.event.venue.slug}`}
+                    href={`/places/${activity.event.venue.slug}`}
                     className="font-medium text-primary hover:underline"
                   >
                     {activity.event.venueName}
@@ -125,7 +125,7 @@ function ActivityItem({ activity }: ActivityItemProps) {
             {actorName} started following{" "}
             {activity.venue?.slug ? (
               <Link
-                href={`/place/${activity.venue.slug}`}
+                href={`/places/${activity.venue.slug}`}
                 className="font-medium text-primary hover:underline"
               >
                 {entityName}
@@ -141,7 +141,7 @@ function ActivityItem({ activity }: ActivityItemProps) {
             {actorName} started following{" "}
             {activity.organizer?.slug ? (
               <Link
-                href={`/place/${activity.organizer.slug}`}
+                href={`/places/${activity.organizer.slug}`}
                 className="font-medium text-primary hover:underline"
               >
                 {entityName}
@@ -167,7 +167,7 @@ function ActivityItem({ activity }: ActivityItemProps) {
                 at{" "}
                 {activity.event.venue?.slug ? (
                   <Link
-                    href={`/place/${activity.event.venue.slug}`}
+                    href={`/places/${activity.event.venue.slug}`}
                     className="font-medium text-primary hover:underline"
                   >
                     {activity.event.venueName}
@@ -195,9 +195,9 @@ function ActivityItem({ activity }: ActivityItemProps) {
   return (
     <div className="flex gap-4 pb-2 last:pb-0">
       <div className="relative flex flex-col items-center pt-1.5">
-        <UserAvatar 
-          src={actor.imageUrl} 
-          name={actor.firstName} 
+        <UserAvatar
+          src={actor.imageUrl}
+          name={actor.firstName}
           className="h-10 w-10 border-2 border-background ring-2 ring-muted/20"
         />
         <div className="absolute -right-[6px] -top-[1px] rounded-full bg-background p-0.5">
@@ -226,7 +226,10 @@ interface ActivityFeedProps {
   hideWhenEmpty?: boolean;
 }
 
-export function ActivityFeed({ limit = 50, hideWhenEmpty = false }: ActivityFeedProps) {
+export function ActivityFeed({
+  limit = 50,
+  hideWhenEmpty = false,
+}: ActivityFeedProps) {
   const { data: activities, isLoading } = trpc.friends.getFriendFeed.useQuery({
     limit,
   });
@@ -271,5 +274,8 @@ export function useHasRecentActivity(limit: number = 50) {
   const { data: activities, isLoading } = trpc.friends.getFriendFeed.useQuery({
     limit,
   });
-  return { hasActivity: !isLoading && activities && activities.length > 0, isLoading };
+  return {
+    hasActivity: !isLoading && activities && activities.length > 0,
+    isLoading,
+  };
 }

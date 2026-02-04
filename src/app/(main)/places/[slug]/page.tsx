@@ -117,35 +117,37 @@ export default function PlacePage() {
   return (
     <div className="min-h-screen bg-background pb-8">
       {/* Banner Area */}
+      <div className="relative mx-auto h-32 w-full max-w-4xl overflow-hidden bg-secondary md:h-64 lg:mt-4 lg:rounded-2xl">
+        {/* Banner placeholder - could be replaced with an actual image */}
+        <div className="absolute inset-0 bg-gradient-to-b from-muted/50 to-secondary" />
+      </div>
 
       <div className="mx-auto max-w-4xl px-4">
         <div className="relative">
-          <div className="flex items-start justify-between">
-            {/* Logo/Avatar */}
-            <div className="mt-4">
-              <Avatar className="h-32 w-32 border-4 border-background shadow-md md:h-48 md:w-48">
-                {place.imageUrl ? (
-                  <AvatarImage
-                    src={place.imageUrl}
-                    alt={place.name}
-                    className="object-cover"
-                  />
-                ) : null}
-                <AvatarFallback className="bg-secondary text-2xl font-bold">
-                  {place.name.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </div>
+          {/* Profile Avatar - overlapping the banner */}
+          <div className="-mt-16 flex items-end justify-between md:-mt-24">
+            <Avatar className="h-32 w-32 border-4 border-background shadow-md md:h-48 md:w-48">
+              {place.imageUrl ? (
+                <AvatarImage
+                  src={place.imageUrl}
+                  alt={place.name}
+                  className="object-cover"
+                />
+              ) : null}
+              <AvatarFallback className="bg-secondary text-2xl font-bold">
+                {place.name.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
 
-            {/* Action Buttons (Follow) */}
-            <div className="mt-4">
+            {/* Action Buttons (Follow) - aligned with bottom of avatar */}
+            <div className="mb-2">
               <Button
                 variant={isFollowing ? "outline" : "default"}
                 onClick={handleFollowToggle}
                 disabled={
                   followMutation.isPending || unfollowMutation.isPending
                 }
-                className="rounded-full font-bold"
+                className="rounded-full"
               >
                 {isFollowing ? (
                   <>
@@ -166,7 +168,7 @@ export default function PlacePage() {
           <div className="mt-4 space-y-4">
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-3xl font-bold tracking-tight">
+                <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
                   {place.name}
                 </h1>
               </div>
@@ -181,13 +183,13 @@ export default function PlacePage() {
               )}
             </div>
 
-            <div className="flex flex-col gap-x-4 gap-y-2 text-sm text-muted-foreground">
+            <div className="flex flex-col gap-x-4 gap-y-2 text-muted-foreground">
               {/*<div className="flex items-center gap-1">*/}
               {/*  <TypeIcon className="h-4 w-4" />*/}
               {/*  <span>{isVenue ? "Venue" : "Organizer"}</span>*/}
               {/*</div>*/}
               {isVenue ? (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
                   <TypeIcon className="h-4 w-4" />
                   {/*<MapPin className="h-4 w-4" />*/}
                   <span>{place.address}</span>
@@ -206,7 +208,7 @@ export default function PlacePage() {
                   href={place.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-primary hover:underline"
+                  className="flex items-center gap-2 text-primary hover:underline"
                 >
                   <Globe className="h-4 w-4" />
                   <span>Website</span>
@@ -217,7 +219,7 @@ export default function PlacePage() {
                   href={`https://instagram.com/${place.instagram}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-primary hover:underline"
+                  className="flex items-center gap-2 text-primary hover:underline"
                 >
                   <Instagram className="h-4 w-4" />
                   <span>@{place.instagram}</span>
