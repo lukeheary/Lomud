@@ -9,6 +9,7 @@ import {
   PlaceEditForm,
   type PlaceFormData,
 } from "@/components/places/place-edit-form";
+import Link from "next/link";
 
 export default function EditPlacePage() {
   const params = useParams();
