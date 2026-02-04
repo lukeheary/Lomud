@@ -268,172 +268,166 @@ export default function PlacePage() {
       </div>
 
       <div className="mx-auto max-w-4xl px-4">
-        <div className="pointer-events-none relative">
-          {/* Profile Avatar - overlapping the banner */}
-          <div className="pointer-events-none -mt-16 flex items-end justify-between md:-mt-24">
-            <div className="pointer-events-auto relative">
-              <Avatar
-                className={cn(
-                  "h-32 w-32 border-4 border-background shadow-md md:h-48 md:w-48",
-                  place.logoImageUrl && "cursor-pointer"
-                )}
-                onClick={() =>
-                  place.logoImageUrl &&
-                  setExpandedImage({
-                    url: place.logoImageUrl,
-                    alt: `${place.name} profile`,
-                  })
-                }
-              >
-                {place.logoImageUrl ? (
-                  <AvatarImage
-                    src={place.logoImageUrl}
-                    alt={place.name}
-                    className="bg-background object-cover"
-                  />
-                ) : null}
-                <AvatarFallback className="bg-secondary text-2xl font-bold">
-                  {place.name.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              {/*{place.logoImageUrl && (*/}
-              {/*  <div*/}
-              {/*    className="absolute bottom-1 right-1 cursor-pointer rounded-full bg-black/50 p-1.5 transition-colors hover:bg-black/70"*/}
-              {/*    onClick={(e) => {*/}
-              {/*      e.stopPropagation();*/}
-              {/*      setExpandedImage({*/}
-              {/*        url: place.logoImageUrl!,*/}
-              {/*        alt: `${place.name} profile`,*/}
-              {/*      });*/}
-              {/*    }}*/}
-              {/*  >*/}
-              {/*    <Expand className="h-3.5 w-3.5 text-white" />*/}
-              {/*  </div>*/}
-              {/*)}*/}
-            </div>
-
-            {/* Action Buttons (Follow) - aligned with bottom of avatar */}
-            <div className="pointer-events-auto mb-2">
-              <Button
-                variant={isFollowing ? "outline" : "default"}
-                onClick={handleFollowToggle}
-                disabled={
-                  followMutation.isPending || unfollowMutation.isPending
-                }
-                className="rounded-full"
-              >
-                {isFollowing ? (
-                  <>
-                    <Heart className="mr-2 h-4 w-4 fill-current" />
-                    Following
-                  </>
-                ) : (
-                  <>
-                    <Heart className="mr-2 h-4 w-4" />
-                    Follow
-                  </>
-                )}
-              </Button>
-            </div>
+        {/* Profile Avatar - overlapping the banner */}
+        <div className="pointer-events-none -mt-16 flex items-end justify-between md:-mt-24">
+          <div className="pointer-events-auto relative">
+            <Avatar
+              className={cn(
+                "h-32 w-32 border-4 border-background shadow-md md:h-48 md:w-48",
+                place.logoImageUrl && "cursor-pointer"
+              )}
+              onClick={() =>
+                place.logoImageUrl &&
+                setExpandedImage({
+                  url: place.logoImageUrl,
+                  alt: `${place.name} profile`,
+                })
+              }
+            >
+              {place.logoImageUrl ? (
+                <AvatarImage
+                  src={place.logoImageUrl}
+                  alt={place.name}
+                  className="bg-background object-cover"
+                />
+              ) : null}
+              <AvatarFallback className="bg-secondary text-2xl font-bold">
+                {place.name.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            {/*{place.logoImageUrl && (*/}
+            {/*  <div*/}
+            {/*    className="absolute bottom-1 right-1 cursor-pointer rounded-full bg-black/50 p-1.5 transition-colors hover:bg-black/70"*/}
+            {/*    onClick={(e) => {*/}
+            {/*      e.stopPropagation();*/}
+            {/*      setExpandedImage({*/}
+            {/*        url: place.logoImageUrl!,*/}
+            {/*        alt: `${place.name} profile`,*/}
+            {/*      });*/}
+            {/*    }}*/}
+            {/*  >*/}
+            {/*    <Expand className="h-3.5 w-3.5 text-white" />*/}
+            {/*  </div>*/}
+            {/*)}*/}
           </div>
 
-          {/* Place Info */}
-          <div className="mt-4 space-y-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
-                  {place.name}
-                </h1>
-              </div>
-              <p className="text-muted-foreground md:text-base">
-                @{place.slug}
+          {/* Action Buttons (Follow) - aligned with bottom of avatar */}
+          <div className="pointer-events-auto mb-2">
+            <Button
+              variant={isFollowing ? "outline" : "default"}
+              onClick={handleFollowToggle}
+              disabled={followMutation.isPending || unfollowMutation.isPending}
+              className="rounded-full"
+            >
+              {isFollowing ? (
+                <>
+                  <Heart className="mr-2 h-4 w-4 fill-current" />
+                  Following
+                </>
+              ) : (
+                <>
+                  <Heart className="mr-2 h-4 w-4" />
+                  Follow
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {/* Place Info */}
+        <div className="mt-4 space-y-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+                {place.name}
+              </h1>
+            </div>
+            <p className="text-muted-foreground md:text-base">@{place.slug}</p>
+
+            {place.description && (
+              <p className="mt-3 whitespace-pre-wrap leading-normal">
+                {place.description}
               </p>
+            )}
+          </div>
 
-              {place.description && (
-                <p className="mt-3 whitespace-pre-wrap leading-normal">
-                  {place.description}
-                </p>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-x-4 gap-y-2 text-muted-foreground">
-              {/*<div className="flex items-center gap-1">*/}
-              {/*  <TypeIcon className="h-4 w-4" />*/}
-              {/*  <span>{isVenue ? "Venue" : "Organizer"}</span>*/}
-              {/*</div>*/}
-              {isVenue ? (
-                <div className="flex items-center gap-2">
-                  <TypeIcon className="h-4 w-4" />
-                  {/*<MapPin className="h-4 w-4" />*/}
-                  <span>{place.address}</span>
-                </div>
-              ) : place.city && place.state ? (
-                <div className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  <span>
-                    {place.city}, {place.state}
-                  </span>
-                </div>
-              ) : null}
-
-              {isVenue && (place as any).hours && (
-                <VenueHoursDisplay hours={(place as any).hours as VenueHours} />
-              )}
-
-              {place.instagram && (
-                <a
-                  href={`https://instagram.com/${place.instagram}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-muted-foreground hover:underline"
-                >
-                  <Instagram className="h-4 w-4" />
-                  <span>@{place.instagram}</span>
-                </a>
-              )}
-
-              {place.website && (
-                <a
-                  href={place.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-muted-foreground hover:underline"
-                >
-                  <Globe className="h-4 w-4" />
-                  <span>Website</span>
-                </a>
-              )}
-            </div>
-
-            {place.categories && place.categories.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {place.categories.map((cat) => (
-                  <Badge key={cat} variant="secondary" className="capitalize">
-                    {cat}
-                  </Badge>
-                ))}
+          <div className="flex flex-col gap-x-4 gap-y-2 text-muted-foreground">
+            {/*<div className="flex items-center gap-1">*/}
+            {/*  <TypeIcon className="h-4 w-4" />*/}
+            {/*  <span>{isVenue ? "Venue" : "Organizer"}</span>*/}
+            {/*</div>*/}
+            {isVenue ? (
+              <div className="flex items-center gap-2">
+                <TypeIcon className="h-4 w-4" />
+                {/*<MapPin className="h-4 w-4" />*/}
+                <span>{place.address}</span>
               </div>
+            ) : place.city && place.state ? (
+              <div className="flex items-center gap-1">
+                <MapPin className="h-4 w-4" />
+                <span>
+                  {place.city}, {place.state}
+                </span>
+              </div>
+            ) : null}
+
+            {isVenue && (place as any).hours && (
+              <VenueHoursDisplay hours={(place as any).hours as VenueHours} />
             )}
 
-            {/*<div className="flex items-center gap-4 text-sm">*/}
-            {/*  <div className="flex items-center gap-1">*/}
-            {/*    <span className="font-bold">*/}
-            {/*      {(place as any).follows?.length || 0}*/}
-            {/*    </span>*/}
-            {/*    <span className="text-muted-foreground">*/}
-            {/*      {pluralize("follower", (place as any).follows?.length || 0)}*/}
-            {/*    </span>*/}
-            {/*  </div>*/}
-            {/*  <div className="flex items-center gap-1">*/}
-            {/*    <span className="font-bold">*/}
-            {/*      {(place as any).events?.length || 0}*/}
-            {/*    </span>*/}
-            {/*    <span className="text-muted-foreground">*/}
-            {/*      {pluralize("event", (place as any).events?.length || 0)}*/}
-            {/*    </span>*/}
-            {/*  </div>*/}
-            {/*</div>*/}
+            {place.instagram && (
+              <a
+                href={`https://instagram.com/${place.instagram}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex w-fit items-center gap-2 text-muted-foreground hover:underline"
+              >
+                <Instagram className="h-4 w-4" />
+                <span>@{place.instagram}</span>
+              </a>
+            )}
+
+            {place.website && (
+              <a
+                href={place.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex w-fit items-center gap-2 text-muted-foreground hover:underline"
+              >
+                <Globe className="h-4 w-4" />
+                <span>Website</span>
+              </a>
+            )}
           </div>
+
+          {place.categories && place.categories.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {place.categories.map((cat) => (
+                <Badge key={cat} variant="secondary" className="capitalize">
+                  {cat}
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          {/*<div className="flex items-center gap-4 text-sm">*/}
+          {/*  <div className="flex items-center gap-1">*/}
+          {/*    <span className="font-bold">*/}
+          {/*      {(place as any).follows?.length || 0}*/}
+          {/*    </span>*/}
+          {/*    <span className="text-muted-foreground">*/}
+          {/*      {pluralize("follower", (place as any).follows?.length || 0)}*/}
+          {/*    </span>*/}
+          {/*  </div>*/}
+          {/*  <div className="flex items-center gap-1">*/}
+          {/*    <span className="font-bold">*/}
+          {/*      {(place as any).events?.length || 0}*/}
+          {/*    </span>*/}
+          {/*    <span className="text-muted-foreground">*/}
+          {/*      {pluralize("event", (place as any).events?.length || 0)}*/}
+          {/*    </span>*/}
+          {/*  </div>*/}
+          {/*</div>*/}
         </div>
       </div>
 

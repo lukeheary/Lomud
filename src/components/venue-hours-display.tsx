@@ -70,7 +70,7 @@ export function VenueHoursDisplay({
       </button>
 
       {isOpen && (
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 pl-6">
           {DAYS.map(({ key, label }) => {
             const dayHours = hours[key as keyof VenueHours];
             if (!dayHours) return null;
