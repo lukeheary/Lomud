@@ -74,6 +74,62 @@ import { getDistanceMiles, type Coordinates } from "@/lib/geo";
 
 type ViewMode = "week" | "month";
 
+function StickyDateHeader({
+  dateHeader,
+  isToday,
+}: {
+  dateHeader: string;
+  isToday: boolean;
+}) {
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const [isHeaderSticky, setIsHeaderSticky] = useState(false);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // When the sentinel goes above the nav (64px), the header is sticking
+        setIsHeaderSticky(!entry.isIntersecting);
+      },
+      {
+        rootMargin: "-65px 0px 0px 0px",
+        threshold: 0,
+      }
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.unobserve(sentinel);
+    };
+  }, []);
+
+  return (
+    <>
+      {/* Sentinel to detect when header starts sticking */}
+      <div ref={sentinelRef} className="h-0 w-full" />
+      {/* Full-width sticky header */}
+      <div
+        className={cn(
+          "sticky top-16 z-30 w-full bg-background pb-2",
+          isHeaderSticky && "border-b"
+        )}
+      >
+        {/* Inner container to align text with page content */}
+        <div className="container mx-auto px-4">
+          <div
+            className={cn("text-xl font-semibold", isToday && "text-primary")}
+          >
+            {dateHeader}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 function HomePageContent() {
   const { toast } = useToast();
   const [activeFilter, setActiveFilter] = useState<EventFilterTab>("all");
@@ -139,14 +195,16 @@ function HomePageContent() {
   const referenceCity =
     selectedCity && selectedCity !== "all"
       ? selectedCity
-      : currentUser?.city ?? null;
+      : (currentUser?.city ?? null);
 
   const referenceCityRecord = useMemo(() => {
     if (!referenceCity || !cities) return null;
     const matches = cities.filter((city) => city.city === referenceCity);
     if (matches.length === 0) return null;
     if (currentUser?.state) {
-      const preferred = matches.find((city) => city.state === currentUser.state);
+      const preferred = matches.find(
+        (city) => city.state === currentUser.state
+      );
       if (preferred) return preferred;
     }
     return matches[0];
@@ -442,16 +500,17 @@ function HomePageContent() {
   }, []);
 
   return (
-    <div className="container relative mx-auto min-h-screen py-4 md:py-4">
-      {/* Sentinel for sticky detection */}
-      <div ref={stickySentinelRef} className="h-px w-full" />
+    <div className="relative min-h-screen">
+      <div className="container relative mx-auto py-4 md:py-4">
+        {/* Sentinel for sticky detection */}
+        <div ref={stickySentinelRef} className="h-px w-full" />
 
-      {/* Search and Filters */}
-      <div
-        className={
-          "z-[45] -mx-4 -mt-4 bg-background px-4 pb-4 pt-4 transition-shadow md:top-16 md:z-30 md:-mx-8 md:bg-background/95 md:px-8 md:pt-4 md:backdrop-blur md:supports-[backdrop-filter]:bg-background"
-        }
-      >
+        {/* Search and Filters */}
+        <div
+          className={
+            "z-[45] -mx-4 -mt-4 bg-background px-4 pb-3 pt-4 transition-shadow md:top-16 md:z-30 md:-mx-8 md:bg-background/95 md:px-8 md:pt-4 md:backdrop-blur md:supports-[backdrop-filter]:bg-background"
+          }
+        >
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           {/* Search Input */}
           <div className="flex w-full flex-row">
@@ -636,8 +695,9 @@ function HomePageContent() {
           )}
         </div>
       )}
+      </div>
 
-      {/* Week View - only show when not in search mode */}
+      {/* Week View - outside container for full-width sticky headers */}
       {!isSearchMode && viewMode === "week" && events && (
         <div className="space-y-6">
           {daysToDisplay.map((date, index) => {
@@ -656,33 +716,21 @@ function HomePageContent() {
 
             return (
               <div key={dateKey}>
-                <div className="flex flex-col items-start">
-                  <div className="sticky top-16 z-20 -mx-4 mb-2 flex w-[calc(100%+2rem)] min-w-[100px] flex-row items-center justify-between bg-background px-4 py-2 md:-mx-8 md:w-[calc(100%+4rem)] md:px-8">
-                    <div
-                      className={cn(
-                        "text-xl font-semibold",
-                        isToday && "text-primary"
-                      )}
-                    >
-                      {dateHeader}
+                <StickyDateHeader dateHeader={dateHeader} isToday={isToday} />
+                <div className="container mx-auto px-4">
+                  {dayEvents.length === 0 ? (
+                    <div className="flex min-h-[112px] items-center justify-center rounded-lg border border-dashed md:min-h-[300px]">
+                      <p className="text-sm text-muted-foreground">
+                        No events scheduled
+                      </p>
                     </div>
-                  </div>
-
-                  <div className="w-full flex-1">
-                    {dayEvents.length === 0 ? (
-                      <div className="flex min-h-[112px] items-center justify-center rounded-lg border border-dashed md:min-h-[300px]">
-                        <p className="text-sm text-muted-foreground">
-                          No events scheduled
-                        </p>
-                      </div>
-                    ) : (
-                      <EventCardGrid
-                        events={dayEvents}
-                        columns={{ mobile: 1, tablet: 3, desktop: 4 }}
-                        gap="md"
-                      />
-                    )}
-                  </div>
+                  ) : (
+                    <EventCardGrid
+                      events={dayEvents}
+                      columns={{ mobile: 1, tablet: 3, desktop: 4 }}
+                      gap="md"
+                    />
+                  )}
                 </div>
               </div>
             );
@@ -690,6 +738,7 @@ function HomePageContent() {
         </div>
       )}
 
+      <div className="container mx-auto px-4">
       {/* Month View - only show when not in search mode */}
       {!isSearchMode && viewMode === "month" && events && (
         <Card>
@@ -860,6 +909,7 @@ function HomePageContent() {
           </p>
         </div>
       )}
+      </div>
     </div>
   );
 }

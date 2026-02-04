@@ -76,7 +76,12 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
       {/* Navigation Bar */}
-      <header className="sticky top-0 z-40 border-b bg-background">
+      <header
+        className={cn(
+          "sticky top-0 z-40 bg-background transition-[border-color] duration-150",
+          isHome && showNavbarSearch ? "border-b border-transparent" : "border-b"
+        )}
+      >
         <div className="container mx-auto flex h-16 items-center px-4">
           {/* Left Side - Logo */}
           <div className="flex items-center">
