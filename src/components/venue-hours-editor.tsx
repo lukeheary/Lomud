@@ -56,45 +56,59 @@ export function VenueHoursEditor({ hours, onChange }: VenueHoursEditorProps) {
   };
 
   return (
-    <div className="space-y-3 max-w-lg">
+    <div className="w-full space-y-3">
       <Label className="text-base">Opening Hours</Label>
-      <div className="space-y-2">
+      <div className="w-full space-y-2">
         {DAYS.map((day) => {
           const dayHours = getHoursForDay(day);
           return (
             <div
               key={day}
-              className="grid grid-cols-[100px_1fr_1fr_80px] items-center gap-3"
+              className="flex flex-col items-center gap-3 md:flex-row"
             >
-              <Label className="text-sm capitalize">{day}</Label>
-              <Input
-                type="time"
-                value={dayHours.open}
-                onChange={(e) => updateDay(day, { open: e.target.value })}
-                disabled={dayHours.closed}
-                className="text-sm"
-              />
-              <Input
-                type="time"
-                value={dayHours.close}
-                onChange={(e) => updateDay(day, { close: e.target.value })}
-                disabled={dayHours.closed}
-                className="text-sm"
-              />
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id={`${day}-closed`}
-                  checked={dayHours.closed}
-                  onCheckedChange={(checked) =>
-                    updateDay(day, { closed: checked === true })
-                  }
+              <div
+                className={
+                  "flex w-full flex-row justify-between md:w-64 md:justify-start md:gap-4"
+                }
+              >
+                <Label className="text-sm capitalize md:w-24">{day}</Label>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id={`${day}-closed`}
+                    checked={dayHours.closed}
+                    onCheckedChange={(checked) =>
+                      updateDay(day, { closed: checked === true })
+                    }
+                  />
+                  <Label
+                    htmlFor={`${day}-closed`}
+                    className="text-sm font-normal"
+                  >
+                    Closed
+                  </Label>
+                </div>
+              </div>
+
+              <div className={"flex flex-row gap-2"}>
+                <Input
+                  type="time"
+                  step="900"
+                  value={dayHours.open}
+                  onChange={(e) => updateDay(day, { open: e.target.value })}
+                  disabled={dayHours.closed}
+                  className="w-36 text-sm"
                 />
-                <Label
-                  htmlFor={`${day}-closed`}
-                  className="text-sm font-normal"
-                >
-                  Closed
-                </Label>
+
+                <span className="self-center text-sm">to</span>
+
+                <Input
+                  type="time"
+                  step="900"
+                  value={dayHours.close}
+                  onChange={(e) => updateDay(day, { close: e.target.value })}
+                  disabled={dayHours.closed}
+                  className="w-36 text-sm"
+                />
               </div>
             </div>
           );
