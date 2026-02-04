@@ -59,6 +59,8 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
 
   const isHome = pathname === "/home";
   const isPlaces = pathname === "/places" || pathname?.startsWith("/places/");
+  const isPlaceDetail =
+    pathname?.startsWith("/places/") && !pathname?.includes("/edit");
   const isFriends = pathname === "/friends";
   const isProfile = pathname === "/profile";
   const isMyPlaces = pathname === "/my-places";
@@ -79,7 +81,9 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
       <header
         className={cn(
           "sticky top-0 z-40 bg-background transition-[border-color] duration-150",
-          isHome && showNavbarSearch ? "border-b border-transparent" : "border-b"
+          (isHome || isPlaceDetail) && showNavbarSearch
+            ? "border-b border-transparent"
+            : "border-b"
         )}
       >
         <div className="container mx-auto flex h-16 items-center px-4">
