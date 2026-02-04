@@ -268,10 +268,10 @@ export default function PlacePage() {
       </div>
 
       <div className="mx-auto max-w-4xl px-4">
-        <div className="relative">
+        <div className="pointer-events-none relative">
           {/* Profile Avatar - overlapping the banner */}
-          <div className="-mt-16 flex items-end justify-between md:-mt-24">
-            <div className="relative">
+          <div className="pointer-events-none -mt-16 flex items-end justify-between md:-mt-24">
+            <div className="pointer-events-auto relative">
               <Avatar
                 className={cn(
                   "h-32 w-32 border-4 border-background shadow-md md:h-48 md:w-48",
@@ -289,31 +289,31 @@ export default function PlacePage() {
                   <AvatarImage
                     src={place.logoImageUrl}
                     alt={place.name}
-                    className="object-cover"
+                    className="bg-background object-cover"
                   />
                 ) : null}
                 <AvatarFallback className="bg-secondary text-2xl font-bold">
                   {place.name.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              {place.logoImageUrl && (
-                <div
-                  className="absolute bottom-1 right-1 cursor-pointer rounded-full bg-black/50 p-1.5 transition-colors hover:bg-black/70"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setExpandedImage({
-                      url: place.logoImageUrl!,
-                      alt: `${place.name} profile`,
-                    });
-                  }}
-                >
-                  {/*<Expand className="h-3.5 w-3.5 text-white" />*/}
-                </div>
-              )}
+              {/*{place.logoImageUrl && (*/}
+              {/*  <div*/}
+              {/*    className="absolute bottom-1 right-1 cursor-pointer rounded-full bg-black/50 p-1.5 transition-colors hover:bg-black/70"*/}
+              {/*    onClick={(e) => {*/}
+              {/*      e.stopPropagation();*/}
+              {/*      setExpandedImage({*/}
+              {/*        url: place.logoImageUrl!,*/}
+              {/*        alt: `${place.name} profile`,*/}
+              {/*      });*/}
+              {/*    }}*/}
+              {/*  >*/}
+              {/*    <Expand className="h-3.5 w-3.5 text-white" />*/}
+              {/*  </div>*/}
+              {/*)}*/}
             </div>
 
             {/* Action Buttons (Follow) - aligned with bottom of avatar */}
-            <div className="mb-2">
+            <div className="pointer-events-auto mb-2">
               <Button
                 variant={isFollowing ? "outline" : "default"}
                 onClick={handleFollowToggle}
@@ -376,31 +376,32 @@ export default function PlacePage() {
                 </div>
               ) : null}
 
-              {place.website && (
-                <a
-                  href={place.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-primary hover:underline"
-                >
-                  <Globe className="h-4 w-4" />
-                  <span>Website</span>
-                </a>
+              {isVenue && (place as any).hours && (
+                <VenueHoursDisplay hours={(place as any).hours as VenueHours} />
               )}
+
               {place.instagram && (
                 <a
                   href={`https://instagram.com/${place.instagram}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-primary hover:underline"
+                  className="flex items-center gap-2 text-muted-foreground hover:underline"
                 >
                   <Instagram className="h-4 w-4" />
                   <span>@{place.instagram}</span>
                 </a>
               )}
 
-              {isVenue && (place as any).hours && (
-                <VenueHoursDisplay hours={(place as any).hours as VenueHours} />
+              {place.website && (
+                <a
+                  href={place.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-muted-foreground hover:underline"
+                >
+                  <Globe className="h-4 w-4" />
+                  <span>Website</span>
+                </a>
               )}
             </div>
 

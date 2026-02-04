@@ -35,16 +35,9 @@ export const friendStatusEnum = pgEnum("friend_status", [
   "accepted",
 ]);
 
-export const userRoleEnum = pgEnum("user_role", [
-  "user",
-  "admin",
-]);
+export const userRoleEnum = pgEnum("user_role", ["user", "admin"]);
 
-export const genderEnum = pgEnum("gender", [
-  "male",
-  "female",
-  "other",
-]);
+export const genderEnum = pgEnum("gender", ["male", "female", "other"]);
 
 export const activityTypeEnum = pgEnum("activity_type", [
   "rsvp_going",
@@ -60,10 +53,7 @@ export const activityEntityTypeEnum = pgEnum("activity_entity_type", [
   "user",
 ]);
 
-export const placeTypeEnum = pgEnum("place_type", [
-  "venue",
-  "organizer",
-]);
+export const placeTypeEnum = pgEnum("place_type", ["venue", "organizer"]);
 
 // ============================================================================
 // USERS TABLE
@@ -77,7 +67,7 @@ export const users = pgTable(
     username: varchar("username", { length: 50 }).notNull().unique(),
     firstName: varchar("first_name", { length: 100 }),
     lastName: varchar("last_name", { length: 100 }),
-    avatarImageUrl: text("image_url"),
+    avatarImageUrl: text("avatar_image_url"),
     city: varchar("city", { length: 100 }),
     state: varchar("state", { length: 2 }),
     gender: genderEnum("gender"),
@@ -136,8 +126,8 @@ export const places = pgTable(
     slug: varchar("slug", { length: 100 }).notNull().unique(),
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
-    logoImageUrl: text("image_url"),
-    coverImageUrl: text("banner_url"), // Optional banner image for place profile
+    logoImageUrl: text("logo_image_url"),
+    coverImageUrl: text("banner_image_url"), // Optional banner image for place profile
     address: text("address"), // primarily for venues
     city: varchar("city", { length: 100 }),
     state: varchar("state", { length: 2 }),
@@ -278,7 +268,7 @@ export const events = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     title: varchar("title", { length: 255 }).notNull(),
     description: text("description"),
-    coverImageUrl: text("image_url"),
+    coverImageUrl: text("cover_image_url"),
     startAt: timestamp("start_at").notNull(),
     endAt: timestamp("end_at"),
     venueName: varchar("venue_name", { length: 255 }),
