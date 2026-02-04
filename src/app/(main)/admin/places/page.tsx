@@ -1,30 +1,19 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
   Building,
   Building2,
-  Loader2,
   X,
   Plus,
   ArrowLeft,
@@ -33,25 +22,19 @@ import {
   Calendar,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { S3Uploader } from "@/components/ui/s3-uploader";
-import {
-  VenueHoursEditor,
-  type VenueHours,
-} from "@/components/venue-hours-editor";
-import { GooglePlacesAutocomplete } from "@/components/google-places-autocomplete";
-import Link from "next/link";
 import { EventForm } from "@/components/events/event-form";
-import { CategoryMultiSelect } from "@/components/category-multi-select";
-import { SlugInstagramInput } from "@/components/slug-instagram-input";
 import {
   Tabs,
-  TabsContent,
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import {
+  PlaceEditForm,
+  type PlaceFormData,
+  type PlaceType,
+} from "@/components/places/place-edit-form";
 
 type ViewMode = "list" | "create" | "edit" | "members" | "create-event";
-type PlaceType = "venue" | "organizer";
 
 export default function AdminPlacesPage() {
   const { toast } = useToast();
@@ -62,34 +45,12 @@ export default function AdminPlacesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<PlaceType>("venue");
 
-  // Place form state
-  const [placeForm, setPlaceForm] = useState({
-    type: "venue" as PlaceType,
-    slug: "",
-    name: "",
-    description: "",
-    imageUrl: "",
-    address: "",
-    city: "",
-    state: "",
-    website: "",
-    instagram: "",
-    latitude: null as number | null,
-    longitude: null as number | null,
-    hours: null as VenueHours | null,
-    categories: [] as string[],
-  });
-
-  // Google Places search state
-  const [placeSearch, setPlaceSearch] = useState("");
-
   // Edit mode state
-  const [editingPlaceId, setEditingPlaceId] = useState<string | null>(null);
+  const [editingPlace, setEditingPlace] = useState<any>(null);
 
   // Member management state
   const [selectedPlace, setSelectedPlace] = useState<string>("");
   const [userSearch, setUserSearch] = useState("");
-  const [isSlugSynced, setIsSlugSynced] = useState(true);
 
   // Fetch data
   const { data: places } = trpc.admin.listAllPlaces.useQuery({ type: activeTab });
@@ -105,88 +66,12 @@ export default function AdminPlacesPage() {
   );
 
   // Mutations
-  const clearForm = () => {
-    setPlaceForm({
-      type: activeTab,
-      slug: "",
-      name: "",
-      description: "",
-      imageUrl: "",
-      address: "",
-      city: "",
-      state: "",
-      website: "",
-      instagram: "",
-      latitude: null,
-      longitude: null,
-      hours: null,
-      categories: [],
-    });
-    setEditingPlaceId(null);
-    setPlaceSearch("");
-    setIsSlugSynced(true);
-  };
-
-  const handlePlaceSelect = useCallback(
-    (place: {
-      name: string;
-      address: string;
-      city: string;
-      state: string;
-      formattedAddress: string;
-      latitude?: number;
-      longitude?: number;
-    }) => {
-      // Generate slug from place name
-      const slug = place.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "");
-
-      setPlaceForm((prev) => ({
-        ...prev,
-        slug: slug.length >= 3 ? slug : `${prev.type}-${slug}`,
-        name: place.name,
-        address: place.address,
-        city: place.city,
-        state: place.state,
-        latitude: place.latitude || null,
-        longitude: place.longitude || null,
-        instagram: isSlugSynced
-          ? (slug.length >= 3 ? slug : `${prev.type}-${slug}`).replace(/-/g, "")
-          : prev.instagram,
-      }));
-      setPlaceSearch(place.name);
-    },
-    [isSlugSynced]
-  );
-
-  const handleCitySelect = useCallback(
-    (place: {
-      name: string;
-      address: string;
-      city: string;
-      state: string;
-      formattedAddress: string;
-      latitude?: number;
-      longitude?: number;
-    }) => {
-      setPlaceForm((prev) => ({
-        ...prev,
-        city: place.city,
-        state: place.state,
-        latitude: place.latitude ?? null,
-        longitude: place.longitude ?? null,
-      }));
-      setPlaceSearch(place.city);
-    },
-    []
-  );
-
   const createPlaceMutation = trpc.admin.createPlace.useMutation({
     onSuccess: () => {
-      toast({ title: "Success", description: `${placeForm.type === "venue" ? "Venue" : "Organizer"} created successfully` });
-      clearForm();
+      toast({
+        title: "Success",
+        description: `${activeTab === "venue" ? "Venue" : "Organizer"} created successfully`,
+      });
       setViewMode("list");
       utils.admin.listAllPlaces.invalidate();
     },
@@ -201,8 +86,11 @@ export default function AdminPlacesPage() {
 
   const updatePlaceMutation = trpc.place.updatePlace.useMutation({
     onSuccess: () => {
-      toast({ title: "Success", description: `${placeForm.type === "venue" ? "Venue" : "Organizer"} updated successfully` });
-      clearForm();
+      toast({
+        title: "Success",
+        description: `${activeTab === "venue" ? "Venue" : "Organizer"} updated successfully`,
+      });
+      setEditingPlace(null);
       setViewMode("list");
       utils.admin.listAllPlaces.invalidate();
     },
@@ -214,50 +102,6 @@ export default function AdminPlacesPage() {
       });
     },
   });
-
-  const handleEdit = (place: any) => {
-    setEditingPlaceId(place.id);
-    setPlaceForm({
-      type: place.type,
-      slug: place.slug,
-      name: place.name,
-      description: place.description || "",
-      imageUrl: place.imageUrl || "",
-      address: place.address || "",
-      city: place.city || "",
-      state: place.state || "",
-      website: place.website || "",
-      instagram: place.instagram || "",
-      latitude: place.latitude || null,
-      longitude: place.longitude || null,
-      hours: place.hours || null,
-      categories: (place.categories as string[]) || [],
-    });
-    setIsSlugSynced((place.slug || "") === (place.instagram || ""));
-    setPlaceSearch(place.name);
-    setViewMode("edit");
-  };
-
-  const handleBack = () => {
-    clearForm();
-    setViewMode("list");
-    setSelectedPlace("");
-  };
-
-  const handleManageMembers = (placeId: string) => {
-    setSelectedPlace(placeId);
-    setViewMode("members");
-  };
-
-  const handleCreateEvent = (placeId: string) => {
-    setSelectedPlace(placeId);
-    setViewMode("create-event");
-  };
-
-  const handleCreate = () => {
-    setPlaceForm((prev) => ({ ...prev, type: activeTab }));
-    setViewMode("create");
-  };
 
   const addPlaceMemberMutation = trpc.admin.addPlaceMember.useMutation({
     onSuccess: () => {
@@ -290,6 +134,50 @@ export default function AdminPlacesPage() {
     },
   });
 
+  const handleEdit = (place: any) => {
+    setEditingPlace(place);
+    setViewMode("edit");
+  };
+
+  const handleBack = () => {
+    setEditingPlace(null);
+    setViewMode("list");
+    setSelectedPlace("");
+  };
+
+  const handleManageMembers = (placeId: string) => {
+    setSelectedPlace(placeId);
+    setViewMode("members");
+  };
+
+  const handleCreateEvent = (placeId: string) => {
+    setSelectedPlace(placeId);
+    setViewMode("create-event");
+  };
+
+  const handleCreate = () => {
+    setViewMode("create");
+  };
+
+  const handleCreateSubmit = (formData: PlaceFormData) => {
+    createPlaceMutation.mutate({
+      ...formData,
+      latitude: formData.latitude ?? undefined,
+      longitude: formData.longitude ?? undefined,
+    });
+  };
+
+  const handleEditSubmit = (formData: PlaceFormData) => {
+    if (!editingPlace) return;
+
+    updatePlaceMutation.mutate({
+      placeId: editingPlace.id,
+      ...formData,
+      latitude: formData.latitude ?? undefined,
+      longitude: formData.longitude ?? undefined,
+    });
+  };
+
   // Filter places by search query
   const filteredPlaces = places?.filter(
     (place) =>
@@ -297,7 +185,7 @@ export default function AdminPlacesPage() {
       (place.city && place.city.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const isVenue = activeTab === "venue" || placeForm.type === "venue";
+  const isVenue = activeTab === "venue";
   const typeLabel = isVenue ? "Venue" : "Organizer";
   const TypeIcon = isVenue ? Building : Building2;
 
@@ -310,7 +198,9 @@ export default function AdminPlacesPage() {
             <h1 className="text-3xl font-bold tracking-tight">
               Place Management
             </h1>
-            <p className="text-muted-foreground">Create and manage venues and organizers</p>
+            <p className="text-muted-foreground">
+              Create and manage venues and organizers
+            </p>
           </div>
           <Button onClick={handleCreate}>
             <Plus className="mr-2 h-4 w-4" />
@@ -318,7 +208,10 @@ export default function AdminPlacesPage() {
           </Button>
         </div>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as PlaceType)}>
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as PlaceType)}
+        >
           <TabsList>
             <TabsTrigger value="venue">
               <Building className="mr-2 h-4 w-4" />
@@ -406,6 +299,26 @@ export default function AdminPlacesPage() {
 
   // Create/Edit View
   if (viewMode === "create" || viewMode === "edit") {
+    const initialData: Partial<PlaceFormData> | undefined =
+      viewMode === "edit" && editingPlace
+        ? {
+            type: editingPlace.type,
+            slug: editingPlace.slug || "",
+            name: editingPlace.name || "",
+            description: editingPlace.description || "",
+            imageUrl: editingPlace.imageUrl || "",
+            address: editingPlace.address || "",
+            city: editingPlace.city || "",
+            state: editingPlace.state || "",
+            website: editingPlace.website || "",
+            instagram: editingPlace.instagram || "",
+            latitude: editingPlace.latitude || null,
+            longitude: editingPlace.longitude || null,
+            hours: editingPlace.hours || null,
+            categories: (editingPlace.categories as string[]) || [],
+          }
+        : { type: activeTab };
+
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
@@ -424,218 +337,18 @@ export default function AdminPlacesPage() {
           </div>
         </div>
 
-        <Card>
-          <CardContent className="space-y-4 pt-6">
-            {isVenue && (
-              <div>
-                <Label htmlFor="place-search">Search {typeLabel} *</Label>
-                <GooglePlacesAutocomplete
-                  value={placeSearch}
-                  onChange={setPlaceSearch}
-                  onPlaceSelect={handlePlaceSelect}
-                  placeholder={`Search for a ${typeLabel.toLowerCase()} (e.g. Big Night Live Boston)...`}
-                  searchType="establishment"
-                />
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Start typing the {typeLabel.toLowerCase()} name to auto-fill details
-                </p>
-              </div>
-            )}
-
-            <SlugInstagramInput
-              slug={placeForm.slug}
-              instagram={placeForm.instagram}
-              onSlugChange={(slug) => setPlaceForm({ ...placeForm, slug })}
-              onInstagramChange={(instagram) =>
-                setPlaceForm({ ...placeForm, instagram })
-              }
-              onBothChange={(slug, instagram) =>
-                setPlaceForm({ ...placeForm, slug, instagram })
-              }
-              isSynced={isSlugSynced}
-              onSyncedChange={setIsSlugSynced}
-              slugPlaceholder={isVenue ? "big-night-live" : "after-brunch"}
-              idPrefix="place"
-            />
-            <div>
-              <Label htmlFor="place-name">Name *</Label>
-              <Input
-                id="place-name"
-                placeholder={isVenue ? "Big Night Live" : "After Brunch"}
-                value={placeForm.name}
-                onChange={(e) =>
-                  setPlaceForm({ ...placeForm, name: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label>{typeLabel} Image</Label>
-              <S3Uploader
-                folder={isVenue ? "venues" : "organizers"}
-                currentImageUrl={placeForm.imageUrl}
-                onUploadComplete={(url) =>
-                  setPlaceForm({ ...placeForm, imageUrl: url })
-                }
-                onRemoveImage={() =>
-                  setPlaceForm({ ...placeForm, imageUrl: "" })
-                }
-              />
-            </div>
-            <div>
-              <Label htmlFor="place-description">Description</Label>
-              <Textarea
-                id="place-description"
-                placeholder={isVenue ? "Boston's premier concert venue..." : "Boston's premier social events..."}
-                value={placeForm.description}
-                onChange={(e) =>
-                  setPlaceForm({
-                    ...placeForm,
-                    description: e.target.value,
-                  })
-                }
-              />
-            </div>
-
-            {isVenue ? (
-              <>
-                <div>
-                  <Label htmlFor="place-address">Address</Label>
-                  <Input
-                    id="place-address"
-                    placeholder="110 Causeway St"
-                    value={placeForm.address}
-                    onChange={(e) =>
-                      setPlaceForm({ ...placeForm, address: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="place-city">City *</Label>
-                    <Input
-                      id="place-city"
-                      placeholder="Boston"
-                      value={placeForm.city}
-                      onChange={(e) =>
-                        setPlaceForm({ ...placeForm, city: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="place-state">State *</Label>
-                    <Input
-                      id="place-state"
-                      placeholder="MA"
-                      maxLength={2}
-                      value={placeForm.state}
-                      onChange={(e) =>
-                        setPlaceForm({
-                          ...placeForm,
-                          state: e.target.value.toUpperCase(),
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="space-y-2">
-                <Label htmlFor="place-city">City</Label>
-                <GooglePlacesAutocomplete
-                  value={placeSearch}
-                  onChange={setPlaceSearch}
-                  onPlaceSelect={handleCitySelect}
-                  placeholder="Search for organizer city..."
-                  searchType="cities"
-                />
-                {placeForm.city && placeForm.state && (
-                  <p className="text-xs text-muted-foreground">
-                    Selected: {placeForm.city}, {placeForm.state}
-                  </p>
-                )}
-              </div>
-            )}
-
-            <div>
-              <Label htmlFor="place-website">Website</Label>
-              <Input
-                id="place-website"
-                placeholder={isVenue ? "https://bignightlive.com" : "https://example.com"}
-                value={placeForm.website}
-                onChange={(e) =>
-                  setPlaceForm({ ...placeForm, website: e.target.value })
-                }
-              />
-            </div>
-
-            {isVenue && (
-              <>
-                <VenueHoursEditor
-                  hours={placeForm.hours}
-                  onChange={(hours) => setPlaceForm({ ...placeForm, hours })}
-                />
-                <div>
-                  <Label>Categories</Label>
-                  <CategoryMultiSelect
-                    value={placeForm.categories}
-                    onChange={(categories) =>
-                      setPlaceForm({ ...placeForm, categories })
-                    }
-                    placeholder="Select categories..."
-                  />
-                </div>
-              </>
-            )}
-
-            <div className="flex gap-2">
-              {viewMode === "edit" ? (
-                <Button
-                  onClick={() =>
-                    updatePlaceMutation.mutate({
-                      placeId: editingPlaceId!,
-                      ...placeForm,
-                      latitude: placeForm.latitude ?? undefined,
-                      longitude: placeForm.longitude ?? undefined,
-                    })
-                  }
-                  disabled={
-                    updatePlaceMutation.isPending ||
-                    !placeForm.slug ||
-                    !placeForm.name ||
-                    (isVenue && (!placeForm.city || !placeForm.state))
-                  }
-                >
-                  {updatePlaceMutation.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Update {typeLabel}
-                </Button>
-              ) : (
-                <Button
-                  onClick={() => createPlaceMutation.mutate({
-                    ...placeForm,
-                    latitude: placeForm.latitude ?? undefined,
-                    longitude: placeForm.longitude ?? undefined,
-                  })}
-                  disabled={
-                    createPlaceMutation.isPending ||
-                    !placeForm.slug ||
-                    !placeForm.name ||
-                    (isVenue && (!placeForm.city || !placeForm.state))
-                  }
-                >
-                  {createPlaceMutation.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Create {typeLabel}
-                </Button>
-              )}
-              <Button variant="outline" onClick={handleBack}>
-                Cancel
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <PlaceEditForm
+          initialData={initialData}
+          placeType={viewMode === "edit" ? editingPlace?.type : activeTab}
+          mode={viewMode === "edit" ? "edit" : "create"}
+          onSubmit={viewMode === "edit" ? handleEditSubmit : handleCreateSubmit}
+          onCancel={handleBack}
+          isSubmitting={
+            viewMode === "edit"
+              ? updatePlaceMutation.isPending
+              : createPlaceMutation.isPending
+          }
+        />
       </div>
     );
   }
@@ -749,7 +462,9 @@ export default function AdminPlacesPage() {
 
         <EventForm
           venueId={currentPlace?.type === "venue" ? selectedPlace : undefined}
-          organizerId={currentPlace?.type === "organizer" ? selectedPlace : undefined}
+          organizerId={
+            currentPlace?.type === "organizer" ? selectedPlace : undefined
+          }
           onSuccess={(eventId: string) => {
             utils.admin.listAllPlaces.invalidate();
             handleBack();

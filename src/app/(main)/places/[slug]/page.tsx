@@ -14,6 +14,7 @@ import {
   Loader2,
   Building,
   Building2,
+  Edit,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@clerk/nextjs";
@@ -39,6 +40,13 @@ export default function PlacePage() {
     { placeId: place?.id || "" },
     { enabled: !!place?.id }
   );
+
+  // Check if user is admin
+  const { data: adminCheck } = trpc.user.isAdmin.useQuery();
+  const isAdmin = adminCheck?.isAdmin ?? false;
+
+  // Get current user
+  const { data: currentUser } = trpc.user.getCurrentUser.useQuery();
 
   // Follow mutation
   const followMutation = trpc.place.followPlace.useMutation({
@@ -114,12 +122,29 @@ export default function PlacePage() {
   const isVenue = place.type === "venue";
   const TypeIcon = isVenue ? Building : Building2;
 
+  // Check if user can edit this place (admin or member)
+  const isMember =
+    currentUser &&
+    place.members?.some((member: any) => member.userId === currentUser.id);
+  const canEdit = isAdmin || isMember;
+
   return (
     <div className="min-h-screen bg-background pb-8">
       {/* Banner Area */}
       <div className="relative mx-auto h-32 w-full max-w-4xl overflow-hidden bg-secondary md:h-64 lg:mt-4 lg:rounded-2xl">
         {/* Banner placeholder - could be replaced with an actual image */}
-        <div className="absolute inset-0 bg-gradient-to-b from-muted/50 to-secondary" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5" />
+
+        {/* Edit Button - top right of banner */}
+        <div className="absolute right-4 top-4 flex gap-2">
+          {canEdit && (
+            <Link href={`/places/${slug}/edit`}>
+              <Button size="icon" variant="secondary" className="h-10 w-10">
+                <Edit className="h-4 w-4" />
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       <div className="mx-auto max-w-4xl px-4">
