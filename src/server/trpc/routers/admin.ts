@@ -223,13 +223,25 @@ export const adminRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
+      const terms = input.query
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+      const nameSearchConditions = terms.map((term) =>
+        or(
+          ilike(users.username, `%${term}%`),
+          ilike(users.email, `%${term}%`),
+          ilike(users.firstName, `%${term}%`),
+          ilike(users.lastName, `%${term}%`)
+        )
+      );
+
       const results = await ctx.db.query.users.findMany({
-        where: or(
-          ilike(users.username, `%${input.query}%`),
-          ilike(users.email, `%${input.query}%`),
-          ilike(users.firstName, `%${input.query}%`),
-          ilike(users.lastName, `%${input.query}%`)
-        ),
+        where:
+          nameSearchConditions.length > 0
+            ? and(...nameSearchConditions)
+            : undefined,
         limit: input.limit,
         orderBy: [desc(users.createdAt)],
       });

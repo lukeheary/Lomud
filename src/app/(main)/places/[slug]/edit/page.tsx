@@ -5,7 +5,6 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Building, Loader2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import Link from "next/link";
 import {
   PlaceEditForm,
   type PlaceFormData,
@@ -154,13 +153,14 @@ export default function EditPlacePage() {
 
   return (
     <div className="container mx-auto max-w-2xl space-y-4 py-8">
-      <Link
-        href={`/places/${slug}`}
+      <button
+        type="button"
+        onClick={() => router.back()}
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to {typeLabel}
-      </Link>
+        Back
+      </button>
 
       <div className="space-y-2">
         <h1 className="text-2xl font-bold tracking-tight">Edit {typeLabel}</h1>

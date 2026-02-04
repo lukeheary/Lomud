@@ -16,9 +16,9 @@ import {
   Search,
   Calendar,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { EventForm } from "@/components/events/event-form";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import {
   PlaceEditForm,
   type PlaceFormData,
@@ -370,14 +370,31 @@ export default function AdminPlacesPage() {
             <CardTitle>Current Members</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex flex-wrap gap-2">
+            <div className="space-y-2">
               {placeMembers?.map((member) => (
-                <Badge
+                <div
                   key={member.id}
-                  variant="secondary"
-                  className="flex items-center gap-2"
+                  className="flex items-center justify-between rounded-md border p-3"
                 >
-                  {member.user.username || member.user.email}
+                  <div className="flex items-center gap-3">
+                    <UserAvatar
+                      src={member.user.avatarImageUrl}
+                      name={`${member.user.firstName || ""} ${member.user.lastName || ""}`.trim() || member.user.username}
+                      className="h-10 w-10"
+                    />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">
+                        {`${member.user.firstName || ""} ${member.user.lastName || ""}`.trim() ||
+                          member.user.username ||
+                          member.user.email}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {member.user.username
+                          ? `@${member.user.username}`
+                          : member.user.email}
+                      </p>
+                    </div>
+                  </div>
                   <button
                     onClick={() =>
                       removePlaceMemberMutation.mutate({
@@ -385,11 +402,11 @@ export default function AdminPlacesPage() {
                         userId: member.userId,
                       })
                     }
-                    className="hover:text-destructive"
+                    className="ml-3 hover:text-destructive"
                   >
                     <X className="h-3 w-3" />
                   </button>
-                </Badge>
+                </div>
               ))}
               {!placeMembers?.length && (
                 <p className="text-sm text-muted-foreground">No members yet</p>
@@ -415,9 +432,23 @@ export default function AdminPlacesPage() {
                     key={user.id}
                     className="flex items-center justify-between p-3"
                   >
-                    <span className="text-sm">
-                      {user.username || user.email}
-                    </span>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <UserAvatar
+                        src={user.avatarImageUrl}
+                        name={`${user.firstName || ""} ${user.lastName || ""}`.trim() || user.username}
+                        className="h-10 w-10"
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">
+                          {`${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+                            user.username ||
+                            user.email}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {user.username ? `@${user.username}` : user.email}
+                        </p>
+                      </div>
+                    </div>
                     <Button
                       size="sm"
                       onClick={() => {
