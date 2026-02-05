@@ -108,9 +108,8 @@ export default async function LandingPage() {
                     </span>
                   </h1>
                   <p className="max-w-xl text-lg text-muted-foreground md:text-xl">
-                    WIG is the social layer for events. Find what&apos;s
-                    happening, see which friends are in, and make going out an
-                    easy yes.
+                    Find what’s happening, see who’s in, and make plans in
+                    seconds.
                   </p>
                 </div>
 
@@ -186,7 +185,7 @@ export default async function LandingPage() {
             </div>
           </section>
 
-          <section className="container mx-auto px-4 pb-20 pt-10">
+          <section className="container mx-auto px-4 py-10 md:pb-20">
             <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-3">
               <div className="rounded-2xl border bg-background/70 p-6 backdrop-blur">
                 <div className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -262,19 +261,19 @@ export default async function LandingPage() {
           {/*  </div>*/}
           {/*</section>*/}
 
-          <section className="container mx-auto px-4 pb-12 md:pb-24">
+          <section className="container mx-auto px-4 pb-10 md:pb-24">
             <div className="mx-auto max-w-6xl">
               <LandingEventsPreview />
             </div>
           </section>
 
-          <section className="border-t bg-muted/30 pb-16 pt-8 md:pt-12">
+          <section className="pb-16 pt-4 md:pt-12">
             <div className="container mx-auto flex flex-col items-center gap-2 px-4 text-center">
               <h2 className="text-3xl font-semibold md:text-4xl">
-                Let's see who is going.
+                Find out who is going.
               </h2>
               <p className="max-w-lg text-muted-foreground">
-                Join WIG and never miss a night out with your people again.
+                Never miss a night out with your people again.
               </p>
 
               <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
