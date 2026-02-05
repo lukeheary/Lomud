@@ -41,6 +41,15 @@ export default async function LandingPage() {
   const fakeEvents = [
     {
       id: "ev-1",
+      title: "Rooftop Reverie",
+      time: "6:00 PM",
+      venue: "Solstice Terrace",
+      friendsCount: 5,
+      image: "/landing/rooftop-reverie.png",
+      avatars: fakeAvatarsByEvent.rooftop,
+    },
+    {
+      id: "ev-2",
       title: "Midnight Frequencies",
       time: "10:00 PM",
       venue: "Skyline Hall",
@@ -49,22 +58,13 @@ export default async function LandingPage() {
       avatars: fakeAvatarsByEvent.midnight,
     },
     {
-      id: "ev-2",
+      id: "ev-3",
       title: "Neon Afterhours",
-      time: "8:30 PM",
+      time: "2:00 AM",
       venue: "District 9",
       friendsCount: 8,
       image: "/landing/neon-afterhours.png",
       avatars: fakeAvatarsByEvent.neon,
-    },
-    {
-      id: "ev-3",
-      title: "Rooftop Reverie",
-      time: "6:00 PM",
-      venue: "Solstice Terrace",
-      friendsCount: 5,
-      image: "/landing/rooftop-reverie.png",
-      avatars: fakeAvatarsByEvent.rooftop,
     },
   ];
 
@@ -92,8 +92,8 @@ export default async function LandingPage() {
 
         {/* Hero Section */}
         <main className="flex-1">
-          <section className="container mx-auto px-4 pb-20 pt-28 md:pt-36">
-            <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.2fr,0.8fr] lg:items-center">
+          <section className="container mx-auto px-4 pt-28 md:pb-20 md:pt-36">
+            <div className="mx-auto grid max-w-6xl gap-20 md:gap-10 lg:grid-cols-[1.2fr,0.8fr] lg:items-center">
               <div className="space-y-6">
                 {/*<div className="inline-flex items-center gap-2 rounded-full border bg-background/70 px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">*/}
                 {/*  Built for real plans*/}
