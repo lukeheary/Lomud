@@ -43,7 +43,7 @@ export function AvatarStack({
   }
 
   return (
-    <div className={`flex items-center gap-1 ${className}`}>
+    <div className={`flex items-center -space-x-2 ${className}`}>
       <div className="flex -space-x-2">
         {displayedUsers.map((user) => (
           <UserAvatar
@@ -57,7 +57,7 @@ export function AvatarStack({
       </div>
       {remainingCount > 0 && (
         <div
-          className={`ml-1 flex ${sizeClass} items-center justify-center rounded-full border-2 border-background bg-muted text-xs font-semibold`}
+          className={`ml-1 flex ${sizeClass} z-10 items-center justify-center rounded-full border border-background bg-muted text-xs text-white`}
         >
           +{remainingCount}
         </div>
