@@ -646,6 +646,53 @@ export const eventRouter = router({
       return updatedEvent;
     }),
 
+  listPublicEventsPreview: publicProcedure
+    .input(
+      z.object({
+        search: z.string().optional(),
+        city: z.string().optional(),
+        limit: z.number().min(1).max(8).default(8),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const now = new Date();
+
+      const conditions = [
+        eq(events.visibility, "public"),
+        gte(events.startAt, now),
+      ];
+
+      if (input.city) {
+        conditions.push(eq(events.city, input.city));
+      }
+
+      if (input.search) {
+        conditions.push(
+          or(
+            ilike(events.title, `%${input.search}%`),
+            ilike(events.venueName, `%${input.search}%`)
+          )!
+        );
+      }
+
+      const eventList = await ctx.db.query.events.findMany({
+        where: and(...conditions),
+        orderBy: [events.startAt],
+        limit: input.limit,
+        with: {
+          venue: true,
+          organizer: true,
+          createdBy: true,
+        },
+      });
+
+      return eventList.map((event) => ({
+        ...event,
+        userRsvp: null,
+        friendsGoing: [] as never[],
+      }));
+    }),
+
   getAvailableCities: publicProcedure.query(async ({ ctx }) => {
     // Get unique cities that have public events
     const cityRows = await ctx.db

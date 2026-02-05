@@ -224,60 +224,66 @@ export default async function LandingPage() {
             </div>
           </section>
 
-          <section className="container mx-auto px-4 pb-24">
-            <div className="mx-auto grid max-w-6xl gap-10 rounded-3xl border bg-background/70 p-6 backdrop-blur md:grid-cols-[1.1fr,0.9fr]">
-              <div>
-                <div className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  How it works
-                </div>
-                <h2 className="mt-3 text-3xl font-semibold md:text-4xl">
-                  Your night, mapped out with your people
-                </h2>
-                <p className="mt-4 text-muted-foreground">
-                  WIG shows you what&apos;s happening and who&apos;s going.
-                  Follow friends, track venues, and lock in plans without
-                  endless back-and-forth.
-                </p>
-              </div>
-              <div className="space-y-4 text-sm text-muted-foreground">
-                <div className="rounded-2xl border bg-muted/40 p-4">
-                  <div className="text-base font-semibold text-foreground">
-                    1. Follow friends + places
-                  </div>
-                  <p>Build your scene with people you actually want to see.</p>
-                </div>
-                <div className="rounded-2xl border bg-muted/40 p-4">
-                  <div className="text-base font-semibold text-foreground">
-                    2. Browse live events
-                  </div>
-                  <p>Filter by vibe, time, or who&apos;s going.</p>
-                </div>
-                <div className="rounded-2xl border bg-muted/40 p-4">
-                  <div className="text-base font-semibold text-foreground">
-                    3. Share + lock it in
-                  </div>
-                  <p>Send the plan and make it real in minutes.</p>
-                </div>
-              </div>
+          {/*<section className="container mx-auto px-4 pb-24">*/}
+          {/*  <div className="mx-auto grid max-w-6xl gap-10 rounded-3xl border bg-background/70 p-6 backdrop-blur md:grid-cols-[1.1fr,0.9fr]">*/}
+          {/*    <div>*/}
+          {/*      <div className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">*/}
+          {/*        How it works*/}
+          {/*      </div>*/}
+          {/*      <h2 className="mt-3 text-3xl font-semibold md:text-4xl">*/}
+          {/*        Your night, mapped out with your people*/}
+          {/*      </h2>*/}
+          {/*      <p className="mt-4 text-muted-foreground">*/}
+          {/*        WIG shows you what&apos;s happening and who&apos;s going.*/}
+          {/*        Follow friends, track venues, and lock in plans without*/}
+          {/*        endless back-and-forth.*/}
+          {/*      </p>*/}
+          {/*    </div>*/}
+          {/*    <div className="space-y-4 text-sm text-muted-foreground">*/}
+          {/*      <div className="rounded-2xl border bg-muted/40 p-4">*/}
+          {/*        <div className="text-base font-semibold text-foreground">*/}
+          {/*          1. Follow friends + places*/}
+          {/*        </div>*/}
+          {/*        <p>Build your scene with people you actually want to see.</p>*/}
+          {/*      </div>*/}
+          {/*      <div className="rounded-2xl border bg-muted/40 p-4">*/}
+          {/*        <div className="text-base font-semibold text-foreground">*/}
+          {/*          2. Browse live events*/}
+          {/*        </div>*/}
+          {/*        <p>Filter by vibe, time, or who&apos;s going.</p>*/}
+          {/*      </div>*/}
+          {/*      <div className="rounded-2xl border bg-muted/40 p-4">*/}
+          {/*        <div className="text-base font-semibold text-foreground">*/}
+          {/*          3. Share + lock it in*/}
+          {/*        </div>*/}
+          {/*        <p>Send the plan and make it real in minutes.</p>*/}
+          {/*      </div>*/}
+          {/*    </div>*/}
+          {/*  </div>*/}
+          {/*</section>*/}
+
+          <section className="container mx-auto px-4 pb-12 md:pb-24">
+            <div className="mx-auto max-w-6xl">
+              <LandingEventsPreview />
             </div>
           </section>
 
-          <section className="container mx-auto px-4 pb-24">
-            <div className="mx-auto flex max-w-5xl flex-col items-center gap-6 rounded-3xl border bg-background/80 p-10 text-center shadow-[0_20px_60px_-40px_rgba(15,23,42,0.45)] backdrop-blur">
+          <section className="border-t bg-muted/30 pb-16 pt-8 md:pt-12">
+            <div className="container mx-auto flex flex-col items-center gap-2 px-4 text-center">
               <h2 className="text-3xl font-semibold md:text-4xl">
-                Make going out effortless
+                Let's see who is going.
               </h2>
-              <p className="max-w-2xl text-muted-foreground">
-                Join WIG and always know who is going. Plans should feel easy,
-                not like a spreadsheet.
+              <p className="max-w-lg text-muted-foreground">
+                Join WIG and never miss a night out with your people again.
               </p>
-              <div className="flex flex-wrap items-center justify-center gap-3">
+
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
                 <Link href="/sign-up">
-                  <Button size="lg">Create your account</Button>
+                  <Button size="lg">Get Started</Button>
                 </Link>
                 <Link href="/sign-in">
                   <Button size="lg" variant="outline">
-                    I already have one
+                    Sign In
                   </Button>
                 </Link>
               </div>
