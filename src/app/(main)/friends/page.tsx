@@ -352,7 +352,7 @@ function FriendsPageContent() {
                     avatarImageUrl: req.friend?.avatarImageUrl || null,
                   })}
                   renderAction={(request) => (
-                    <div className="flex gap-4">
+                    <div className="flex items-center gap-4">
                       <Button
                         size="icon"
                         variant="ghost"
@@ -367,8 +367,6 @@ function FriendsPageContent() {
                         <X className="h-4 w-4" />
                       </Button>
                       <Button
-                        size="icon"
-                        className="h-8 w-8"
                         onClick={() =>
                           acceptMutation.mutate({
                             friendRequestId: request.id,
@@ -376,7 +374,7 @@ function FriendsPageContent() {
                         }
                         disabled={acceptMutation.isPending}
                       >
-                        <Check className="h-4 w-4" />
+                        Accept
                       </Button>
                     </div>
                   )}

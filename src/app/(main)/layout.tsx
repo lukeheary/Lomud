@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import {
   MapPin,
-  Building2,
+  Building,
   Users,
   Plus,
   User,
@@ -39,6 +39,7 @@ import {
   useNavbarSearch,
 } from "@/contexts/nav-search-context";
 import { cn } from "@/lib/utils";
+import { VisuallyHidden } from "radix-ui";
 
 function MainLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -189,7 +190,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                       href="/my-places"
                       className="flex cursor-pointer items-center gap-4"
                     >
-                      <Building2 className="h-4 w-4" />
+                      <Building className="h-4 w-4" />
                       My Places
                     </Link>
                   </DropdownMenuItem>
@@ -218,7 +219,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* Mobile Right Menu - Bell and Menu */}
-          <div className="flex items-center md:hidden">
+          <div className="flex flex-row items-center gap-2 md:hidden">
             {/* Search button - only visible when scrolled on home/places/friends page */}
             <div
               className={cn(
@@ -242,11 +243,13 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
             {/* Mobile Menu */}
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className={"ml-2"}>
-                  <Menu className="mr-2 h-5" />
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5" />
                 </Button>
               </SheetTrigger>
-              <SheetTitle></SheetTitle>
+              <VisuallyHidden.Root>
+                <SheetTitle></SheetTitle>
+              </VisuallyHidden.Root>
               <SheetContent
                 side="right"
                 className="w-[300px] px-4 sm:w-[400px]"
@@ -312,7 +315,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                           className={`w-full justify-start px-4 text-base ${isMyPlaces ? "text-foreground" : "text-muted-foreground"}`}
                           size="lg"
                         >
-                          <Building2 className="mr-3 h-5 w-5" />
+                          <Building className="mr-3 h-5 w-5" />
                           My Places
                         </Button>
                       </Link>

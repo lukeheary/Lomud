@@ -4,12 +4,11 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import {
   Building,
   Building2,
-  X,
   Plus,
   ArrowLeft,
   Users as UsersIcon,
@@ -18,12 +17,12 @@ import {
 } from "lucide-react";
 import { EventForm } from "@/components/events/event-form";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserAvatar } from "@/components/ui/user-avatar";
 import {
   PlaceEditForm,
   type PlaceFormData,
   type PlaceType,
 } from "@/components/places/place-edit-form";
+import { PlaceMembersManager } from "@/components/places/place-members-manager";
 
 type ViewMode = "list" | "create" | "edit" | "members" | "create-event";
 
@@ -41,22 +40,11 @@ export default function AdminPlacesPage() {
 
   // Member management state
   const [selectedPlace, setSelectedPlace] = useState<string>("");
-  const [userSearch, setUserSearch] = useState("");
 
   // Fetch data
   const { data: places } = trpc.admin.listAllPlaces.useQuery({
     type: activeTab,
   });
-
-  const { data: placeMembers } = trpc.place.getPlaceMembers.useQuery(
-    { placeId: selectedPlace },
-    { enabled: !!selectedPlace }
-  );
-
-  const { data: searchedUsers } = trpc.admin.searchUsers.useQuery(
-    { query: userSearch },
-    { enabled: userSearch.length >= 2 }
-  );
 
   // Mutations
   const createPlaceMutation = trpc.admin.createPlace.useMutation({
@@ -86,37 +74,6 @@ export default function AdminPlacesPage() {
       setEditingPlace(null);
       setViewMode("list");
       utils.admin.listAllPlaces.invalidate();
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const addPlaceMemberMutation = trpc.admin.addPlaceMember.useMutation({
-    onSuccess: () => {
-      toast({ title: "Success", description: "Member added" });
-      utils.place.getPlaceMembers.invalidate();
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const removePlaceMemberMutation = trpc.admin.removePlaceMember.useMutation({
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Member removed",
-      });
-      utils.place.getPlaceMembers.invalidate();
     },
     onError: (error) => {
       toast({
@@ -365,109 +322,13 @@ export default function AdminPlacesPage() {
           </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Current Members</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              {placeMembers?.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex items-center justify-between rounded-md border p-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <UserAvatar
-                      src={member.user.avatarImageUrl}
-                      name={`${member.user.firstName || ""} ${member.user.lastName || ""}`.trim() || member.user.username}
-                      className="h-10 w-10"
-                    />
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">
-                        {`${member.user.firstName || ""} ${member.user.lastName || ""}`.trim() ||
-                          member.user.username ||
-                          member.user.email}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {member.user.username
-                          ? `@${member.user.username}`
-                          : member.user.email}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() =>
-                      removePlaceMemberMutation.mutate({
-                        placeId: selectedPlace,
-                        userId: member.userId,
-                      })
-                    }
-                    className="ml-3 hover:text-destructive"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
-              {!placeMembers?.length && (
-                <p className="text-sm text-muted-foreground">No members yet</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Add Member</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Input
-              placeholder="Search users by username or email..."
-              value={userSearch}
-              onChange={(e) => setUserSearch(e.target.value)}
-            />
-            {searchedUsers && searchedUsers.length > 0 && (
-              <div className="divide-y rounded-md border">
-                {searchedUsers.map((user) => (
-                  <div
-                    key={user.id}
-                    className="flex items-center justify-between p-3"
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <UserAvatar
-                        src={user.avatarImageUrl}
-                        name={`${user.firstName || ""} ${user.lastName || ""}`.trim() || user.username}
-                        className="h-10 w-10"
-                      />
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">
-                          {`${user.firstName || ""} ${user.lastName || ""}`.trim() ||
-                            user.username ||
-                            user.email}
-                        </p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {user.username ? `@${user.username}` : user.email}
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        addPlaceMemberMutation.mutate({
-                          placeId: selectedPlace,
-                          userId: user.id,
-                        });
-                        setUserSearch("");
-                      }}
-                    >
-                      <Plus className="mr-1 h-4 w-4" />
-                      Add
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <PlaceMembersManager
+          placeId={selectedPlace}
+          placeName={currentPlace?.name}
+          placeType={currentPlace?.type as "venue" | "organizer"}
+          showTitle={false}
+          canManage={true}
+        />
       </div>
     );
   }

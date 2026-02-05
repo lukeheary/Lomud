@@ -1,8 +1,6 @@
 "use client";
 
-import Link from "next/link";
 import { trpc } from "@/lib/trpc";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -14,6 +12,8 @@ import {
   Loader2,
 } from "lucide-react";
 import pluralize from "pluralize";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function MyPlacesPage() {
   const { data: myPlaces, isLoading } = trpc.place.getMyPlaces.useQuery();
@@ -48,71 +48,54 @@ export default function MyPlacesPage() {
           {venues.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {venues.map((place) => (
-                <Card
+                <Link
                   key={place.id}
-                  className="transition-colors hover:bg-accent/50"
+                  href={`/my-places/${place.slug}`}
+                  className="block"
                 >
-                  <CardHeader className={"pb-2"}>
-                    <div className="flex items-start justify-between">
+                  <Card className="transition-colors hover:bg-accent/50">
+                    <CardHeader className={"pb-2"}>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <CardTitle className="text-lg">
+                            {place.name}
+                          </CardTitle>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {place.description && (
+                        <p className="line-clamp-2 text-sm text-muted-foreground">
+                          {place.description}
+                        </p>
+                      )}
+
+                      {place.city && place.state && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <MapPin className="h-4 w-4" />
+                          <span>
+                            {place.city}, {place.state}
+                          </span>
+                        </div>
+                      )}
+
                       <div className="flex items-center gap-2">
-                        <CardTitle className="text-lg">{place.name}</CardTitle>
+                        <Badge variant="outline">
+                          <UsersIcon className="mr-1 h-3 w-3" />
+                          {(place as any).members?.length || 0}{" "}
+                          {pluralize(
+                            "member",
+                            (place as any).members?.length || 0
+                          )}
+                        </Badge>
+                        <Badge variant="outline">
+                          <Calendar className="mr-1 h-3 w-3" />
+                          {(place as any).events?.length || 0} upcoming
+                        </Badge>
                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {place.description && (
-                      <p className="line-clamp-2 text-sm text-muted-foreground">
-                        {place.description}
-                      </p>
-                    )}
-
-                    {place.city && place.state && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <MapPin className="h-4 w-4" />
-                        <span>
-                          {place.city}, {place.state}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">
-                        <UsersIcon className="mr-1 h-3 w-3" />
-                        {(place as any).members?.length || 0}{" "}
-                        {pluralize(
-                          "member",
-                          (place as any).members?.length || 0
-                        )}
-                      </Badge>
-                      <Badge variant="outline">
-                        <Calendar className="mr-1 h-3 w-3" />
-                        {(place as any).events?.length || 0} upcoming
-                      </Badge>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Link href={`/places/${place.slug}`} className="flex-1">
-                        <Button variant="outline" className="w-full">
-                          View
-                        </Button>
-                      </Link>
-                      <Link
-                        href={`/places/${place.slug}/edit`}
-                        className="flex-1"
-                      >
-                        <Button variant="outline" className="w-full">
-                          Edit
-                        </Button>
-                      </Link>
-                      <Link
-                        href={`/event/new?venueId=${place.id}`}
-                        className={"flex-1"}
-                      >
-                        <Button className={"w-full"}>Create Event</Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           ) : (
@@ -145,62 +128,45 @@ export default function MyPlacesPage() {
           {organizers.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {organizers.map((place) => (
-                <Card
+                <Link
                   key={place.id}
-                  className="transition-colors hover:bg-accent/50"
+                  href={`/my-places/${place.slug}`}
+                  className="block"
                 >
-                  <CardHeader className={"pb-2"}>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2">
-                        <CardTitle className="text-lg">{place.name}</CardTitle>
+                  <Card className="transition-colors hover:bg-accent/50">
+                    <CardHeader className={"pb-2"}>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <CardTitle className="text-lg">
+                            {place.name}
+                          </CardTitle>
+                        </div>
                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {place.description && (
-                      <p className="line-clamp-2 text-sm text-muted-foreground">
-                        {place.description}
-                      </p>
-                    )}
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {place.description && (
+                        <p className="line-clamp-2 text-sm text-muted-foreground">
+                          {place.description}
+                        </p>
+                      )}
 
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">
-                        <UsersIcon className="mr-1 h-3 w-3" />
-                        {(place as any).members?.length || 0}{" "}
-                        {pluralize(
-                          "member",
-                          (place as any).members?.length || 0
-                        )}
-                      </Badge>
-                      <Badge variant="outline">
-                        <Calendar className="mr-1 h-3 w-3" />
-                        {(place as any).events?.length || 0} upcoming
-                      </Badge>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Link href={`/places/${place.slug}`} className="flex-1">
-                        <Button variant="outline" className={"w-full"}>
-                          View
-                        </Button>
-                      </Link>
-                      <Link
-                        href={`/places/${place.slug}/edit`}
-                        className="flex-1"
-                      >
-                        <Button variant="outline" className="w-full">
-                          Edit
-                        </Button>
-                      </Link>
-                      <Link
-                        href={`/event/new?organizerId=${place.id}`}
-                        className={"flex-1"}
-                      >
-                        <Button className={"w-full"}>Create Event</Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">
+                          <UsersIcon className="mr-1 h-3 w-3" />
+                          {(place as any).members?.length || 0}{" "}
+                          {pluralize(
+                            "member",
+                            (place as any).members?.length || 0
+                          )}
+                        </Badge>
+                        <Badge variant="outline">
+                          <Calendar className="mr-1 h-3 w-3" />
+                          {(place as any).events?.length || 0} upcoming
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           ) : (

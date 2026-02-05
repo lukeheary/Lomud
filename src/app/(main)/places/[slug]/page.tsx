@@ -251,20 +251,6 @@ export default function PlacePage() {
             </Link>
           )}
         </div>
-
-        {bannerImageUrl && (
-          <div
-            className="absolute bottom-2 left-2 cursor-pointer rounded-full bg-black/50 p-2 transition-colors hover:bg-black/70"
-            onClick={() =>
-              setExpandedImage({
-                url: bannerImageUrl,
-                alt: `${place.name} banner`,
-              })
-            }
-          >
-            {/*<Expand className="h-4 w-4 text-white" />*/}
-          </div>
-        )}
       </div>
 
       <div className="mx-auto max-w-4xl px-4">
