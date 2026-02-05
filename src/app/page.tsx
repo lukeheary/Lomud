@@ -16,25 +16,25 @@ export default async function LandingPage() {
 
   const fakeAvatarsByEvent = {
     midnight: [
-      { id: "mid-1", firstName: "Lena", lastName: null },
-      { id: "mid-2", firstName: "Jon", lastName: null },
-      { id: "mid-3", firstName: "Ari", lastName: null },
-      { id: "mid-4", firstName: "Maya", lastName: null },
-      { id: "mid-5", firstName: "Kai", lastName: null },
+      { id: "mid-1", firstName: "Lena", lastName: null, avatarImageUrl: null },
+      { id: "mid-2", firstName: "Jon", lastName: null, avatarImageUrl: null },
+      { id: "mid-3", firstName: "Ari", lastName: null, avatarImageUrl: null },
+      { id: "mid-4", firstName: "Maya", lastName: null, avatarImageUrl: null },
+      { id: "mid-5", firstName: "Kai", lastName: null, avatarImageUrl: null },
     ],
     neon: [
-      { id: "neo-1", firstName: "Brad", lastName: null },
-      { id: "neo-2", firstName: "Ivy", lastName: null },
-      { id: "neo-3", firstName: "Jack", lastName: null },
-      { id: "neo-4", firstName: "Tess", lastName: null },
+      { id: "neo-1", firstName: "Brad", lastName: null, avatarImageUrl: null },
+      { id: "neo-2", firstName: "Ivy", lastName: null, avatarImageUrl: null },
+      { id: "neo-3", firstName: "Jack", lastName: null, avatarImageUrl: null },
+      { id: "neo-4", firstName: "Tess", lastName: null, avatarImageUrl: null },
     ],
     rooftop: [
-      { id: "roo-1", firstName: "Sage", lastName: null },
-      { id: "roo-2", firstName: "Owen", lastName: null },
-      { id: "roo-3", firstName: "Liv", lastName: null },
-      { id: "roo-4", firstName: "Ava", lastName: null },
-      { id: "roo-5", firstName: "Eli", lastName: null },
-      { id: "roo-5", firstName: "Jeff", lastName: null },
+      { id: "roo-1", firstName: "Sage", lastName: null, avatarImageUrl: null },
+      { id: "roo-2", firstName: "Owen", lastName: null, avatarImageUrl: null },
+      { id: "roo-3", firstName: "Liv", lastName: null, avatarImageUrl: null },
+      { id: "roo-4", firstName: "Ava", lastName: null, avatarImageUrl: null },
+      { id: "roo-5", firstName: "Eli", lastName: null, avatarImageUrl: null },
+      { id: "roo-5", firstName: "Jeff", lastName: null, avatarImageUrl: null },
     ],
   };
 
