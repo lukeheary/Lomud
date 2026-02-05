@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { AvatarStack } from "@/components/ui/avatar-stack";
 import { truculenta } from "@/lib/fonts";
 import { LandingPageRedirect } from "@/components/landing-page-redirect";
+import { LandingEventsPreview } from "@/components/landing/landing-events-preview";
 
 export default async function LandingPage() {
   const { userId } = await auth();
@@ -15,26 +16,26 @@ export default async function LandingPage() {
   }
 
   const fakeAvatarsByEvent = {
-    midnight: [
-      { id: "mid-1", firstName: "Lena", lastName: null, avatarImageUrl: null },
-      { id: "mid-2", firstName: "Jon", lastName: null, avatarImageUrl: null },
-      { id: "mid-3", firstName: "Ari", lastName: null, avatarImageUrl: null },
-      { id: "mid-4", firstName: "Maya", lastName: null, avatarImageUrl: null },
-      { id: "mid-5", firstName: "Kai", lastName: null, avatarImageUrl: null },
-    ],
-    neon: [
-      { id: "neo-1", firstName: "Brad", lastName: null, avatarImageUrl: null },
-      { id: "neo-2", firstName: "Ivy", lastName: null, avatarImageUrl: null },
-      { id: "neo-3", firstName: "Jack", lastName: null, avatarImageUrl: null },
-      { id: "neo-4", firstName: "Tess", lastName: null, avatarImageUrl: null },
-    ],
     rooftop: [
       { id: "roo-1", firstName: "Sage", lastName: null, avatarImageUrl: null },
       { id: "roo-2", firstName: "Owen", lastName: null, avatarImageUrl: null },
       { id: "roo-3", firstName: "Liv", lastName: null, avatarImageUrl: null },
       { id: "roo-4", firstName: "Ava", lastName: null, avatarImageUrl: null },
       { id: "roo-5", firstName: "Eli", lastName: null, avatarImageUrl: null },
+    ],
+    midnight: [
+      { id: "mid-1", firstName: "Lena", lastName: null, avatarImageUrl: null },
+      { id: "mid-2", firstName: "Jon", lastName: null, avatarImageUrl: null },
+      { id: "mid-3", firstName: "Ari", lastName: null, avatarImageUrl: null },
+      { id: "mid-4", firstName: "Maya", lastName: null, avatarImageUrl: null },
+      { id: "mid-5", firstName: "Kai", lastName: null, avatarImageUrl: null },
       { id: "roo-5", firstName: "Jeff", lastName: null, avatarImageUrl: null },
+    ],
+    neon: [
+      { id: "neo-1", firstName: "Brad", lastName: null, avatarImageUrl: null },
+      { id: "neo-2", firstName: "Ivy", lastName: null, avatarImageUrl: null },
+      { id: "neo-3", firstName: "Jack", lastName: null, avatarImageUrl: null },
+      { id: "neo-4", firstName: "Tess", lastName: null, avatarImageUrl: null },
     ],
   };
 
@@ -74,7 +75,7 @@ export default async function LandingPage() {
       <LandingPageRedirect />
       <div className="flex min-h-screen flex-col">
         {/* Navigation */}
-        <header className="sticky top-0 z-50 border-b bg-background/70 backdrop-blur">
+        <header className="sticky top-0 z-50 border-b bg-background">
           <div className="container mx-auto flex h-16 items-center justify-between px-4">
             <div className="flex items-center gap-2 text-3xl font-black tracking-wide">
               <span className={truculenta.className}>WIG</span>
@@ -93,23 +94,26 @@ export default async function LandingPage() {
         {/* Hero Section */}
         <main className="flex-1">
           <section className="container mx-auto px-4 pt-28 md:pb-20 md:pt-36">
-            <div className="mx-auto grid max-w-6xl gap-20 md:gap-10 lg:grid-cols-[1.2fr,0.8fr] lg:items-center">
+            <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.2fr,0.8fr] lg:items-center">
               <div className="space-y-6">
                 {/*<div className="inline-flex items-center gap-2 rounded-full border bg-background/70 px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">*/}
                 {/*  Built for real plans*/}
                 {/*</div>*/}
-                <h1 className="text-5xl font-bold leading-[0.95] tracking-tight md:text-7xl">
-                  <span className={truculenta.className}>
-                    See who is going,
-                    <br />
-                    decide where to go.
-                  </span>
-                </h1>
-                <p className="max-w-xl text-lg text-muted-foreground md:text-xl">
-                  WIG is the social layer for events. Find what&apos;s
-                  happening, see which friends are in, and make going out an
-                  easy yes.
-                </p>
+                <div className={"flex flex-col space-y-4"}>
+                  <h1 className="text-5xl font-bold leading-[0.95] tracking-tight md:text-7xl">
+                    <span className={truculenta.className}>
+                      See who is going,
+                      <br />
+                      decide where to go.
+                    </span>
+                  </h1>
+                  <p className="max-w-xl text-lg text-muted-foreground md:text-xl">
+                    WIG is the social layer for events. Find what&apos;s
+                    happening, see which friends are in, and make going out an
+                    easy yes.
+                  </p>
+                </div>
+
                 <div className="flex flex-wrap items-center gap-3">
                   <Link href="/sign-up">
                     <Button size="lg">Get Started</Button>
@@ -221,7 +225,7 @@ export default async function LandingPage() {
           </section>
 
           <section className="container mx-auto px-4 pb-24">
-            <div className="mx-auto grid max-w-6xl gap-10 rounded-3xl border bg-background/70 p-10 backdrop-blur md:grid-cols-[1.1fr,0.9fr]">
+            <div className="mx-auto grid max-w-6xl gap-10 rounded-3xl border bg-background/70 p-6 backdrop-blur md:grid-cols-[1.1fr,0.9fr]">
               <div>
                 <div className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                   How it works
