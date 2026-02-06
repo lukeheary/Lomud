@@ -86,7 +86,7 @@ export default async function LandingPage() {
   return (
     <>
       <LandingPageRedirect />
-      <div className="flex min-h-screen flex-col">
+      <div className="flex min-h-screen flex-col overflow-x-hidden">
         {/* Navigation */}
         <header className="sticky top-0 z-50 border-b bg-background">
           <div className="container mx-auto flex h-16 items-center justify-between px-4">
@@ -120,7 +120,7 @@ export default async function LandingPage() {
                 seconds.
               </p>
 
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
                 <Link href="/sign-up">
                   <Button size="lg" className="bg-[#7cc3ff]">
                     Get Started
@@ -244,8 +244,8 @@ export default async function LandingPage() {
           {/* Final CTA */}
           <section className="pb-16 pt-4 md:pt-12">
             <div className="container mx-auto flex flex-col items-center gap-2 px-4 text-center">
-              <h2 className="text-3xl font-semibold md:text-4xl">
-                Find out who is going.
+              <h2 className="text-4xl font-semibold md:text-4xl">
+                <span className={truculenta.className}>See who is going.</span>
               </h2>
               <p className="max-w-lg text-muted-foreground">
                 Never miss a night out with your people again.
