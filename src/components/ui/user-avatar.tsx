@@ -32,15 +32,31 @@ export function UserAvatar({
           className="block h-full w-full"
           variant="solid"
           colors={[
-            "#264653", // deep blue-green
-            "#2a9d8f", // teal
-            "#e9c46a", // warm sand
-            "#f4a261", // soft orange
-            "#e76f51", // muted coral
-            "#8b5a8d", // muted purple
-            "#457b9d", // steel blue
-            "#d4a373", // tan
-            "#6a994e", // olive green
+            // Blues
+            "#457B9D", // muted blue
+            "#5A7FA6", // soft sky blue
+            "#3A5F7D", // deep steel blue
+
+            // Purples
+            "#6D597A", // dusty purple
+            "#9A6FB0", // soft lavender
+            "#B5838D", // mauve rose
+
+            // Greens
+            "#2A9D8F", // teal green
+            "#6FAF9A", // sage green
+            "#4F8A7A", // deep jade
+
+            // Warm tones
+            "#F4A261", // warm orange
+            "#E9C46A", // warm sand yellow
+            "#DDB892", // tan gold
+            "#F6BD60", // honey yellow
+
+            // Reds / Corals
+            "#E76F51", // coral red
+            "#C8553D", // brick red
+            "#D77A61", // soft terracotta
           ]}
         />
       </AvatarFallback>

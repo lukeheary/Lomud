@@ -85,7 +85,7 @@ export default async function LandingPage() {
                 <Button variant="ghost">Sign In</Button>
               </Link>
               <Link href="/sign-up">
-                <Button className={"bg-[#e9c46a]"}>Sign Up</Button>
+                <Button className={"bg-[#7cc3ff]"}>Sign Up</Button>
               </Link>
             </div>
           </div>
@@ -100,24 +100,22 @@ export default async function LandingPage() {
                 {/*  Built for real plans*/}
                 {/*</div>*/}
                 <div className={"flex flex-col space-y-4"}>
-                  <h1 className="text-center text-5xl font-bold leading-[0.95] tracking-tight md:text-7xl">
+                  <h1 className="text-center text-5xl font-bold leading-[0.95] tracking-tight md:text-left md:text-7xl">
                     <span className={truculenta.className}>
-                      See <span className={"text-[#e9c46a]"}>who</span> is
-                      going,
+                      See <span className={""}>who</span> is going,
                       <br />
-                      decide <span className={"text-[#e9c46a]"}>where</span> to
-                      go.
+                      decide <span className={""}>where</span> to go.
                     </span>
                   </h1>
-                  <p className="max-w-xl text-center text-lg text-muted-foreground md:text-xl">
+                  <p className="max-w-xl text-center text-lg text-muted-foreground md:text-left md:text-xl">
                     Find what’s happening, see who’s in, and make plans in
                     seconds.
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-center gap-3">
+                <div className="flex flex-wrap items-center justify-center gap-3 md:justify-start">
                   <Link href="/sign-up">
-                    <Button size="lg" className={"bg-[#e9c46a]"}>
+                    <Button size="lg" className={"bg-[#7cc3ff]"}>
                       Get Started
                     </Button>
                   </Link>
@@ -282,7 +280,7 @@ export default async function LandingPage() {
 
               <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
                 <Link href="/sign-up">
-                  <Button size="lg" className={"bg-[#e9c46a]"}>
+                  <Button size="lg" className={"bg-[#7cc3ff]"}>
                     Get Started
                   </Button>
                 </Link>
