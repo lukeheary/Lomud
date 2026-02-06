@@ -42,9 +42,50 @@ export default function ProfilePage() {
   const [pendingEmail, setPendingEmail] = useState<any>(null);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
 
-  const createEmailAddress = useReverification(
-    (email: string) => clerkUser?.createEmailAddress({ email }),
+  const createEmailAddress = useReverification((email: string) =>
+    clerkUser?.createEmailAddress({ email })
   );
+
+  // Restore email change flow after Clerk reverification reload
+  useEffect(() => {
+    const savedEmail = sessionStorage.getItem("wig_pending_email");
+    if (savedEmail && isClerkLoaded && clerkUser) {
+      sessionStorage.removeItem("wig_pending_email");
+      setNewEmail(savedEmail);
+      setIsEmailLoading(true);
+
+      (async () => {
+        try {
+          const res = await clerkUser.createEmailAddress({ email: savedEmail });
+          await clerkUser.reload();
+          const emailAddress = clerkUser.emailAddresses.find(
+            (a) => a.id === res?.id
+          );
+          if (!emailAddress)
+            throw new Error("Could not find the new email address");
+          await emailAddress.prepareVerification({ strategy: "email_code" });
+          setPendingEmail(emailAddress);
+          setEmailStep("code");
+          toast({
+            title: "Verification sent",
+            description: "Check your email for the verification code",
+          });
+        } catch (error: any) {
+          toast({
+            title: "Error",
+            description:
+              error?.errors?.[0]?.message ||
+              error?.message ||
+              "Failed to start email update",
+            variant: "destructive",
+          });
+          setNewEmail("");
+        } finally {
+          setIsEmailLoading(false);
+        }
+      })();
+    }
+  }, [isClerkLoaded, clerkUser]);
   // const [isEditing, setIsEditing] = useState(false);
 
   const normalizeDob = (value?: string | Date | null) => {
@@ -214,10 +255,15 @@ export default function ProfilePage() {
     }
 
     setIsEmailLoading(true);
+    // Save to sessionStorage in case Clerk reverification causes a page reload
+    sessionStorage.setItem("wig_pending_email", newEmail);
     try {
       const res = await createEmailAddress(newEmail);
+      sessionStorage.removeItem("wig_pending_email");
       await clerkUser.reload();
-      const emailAddress = clerkUser.emailAddresses.find((a) => a.id === res?.id);
+      const emailAddress = clerkUser.emailAddresses.find(
+        (a) => a.id === res?.id
+      );
       if (!emailAddress) {
         throw new Error("Could not find the new email address");
       }
@@ -229,9 +275,13 @@ export default function ProfilePage() {
         description: "Check your email for the verification code",
       });
     } catch (error: any) {
+      sessionStorage.removeItem("wig_pending_email");
       toast({
         title: "Error",
-        description: error?.errors?.[0]?.message || error?.message || "Failed to start email update",
+        description:
+          error?.errors?.[0]?.message ||
+          error?.message ||
+          "Failed to start email update",
         variant: "destructive",
       });
     } finally {
@@ -270,7 +320,7 @@ export default function ProfilePage() {
         primaryEmailAddressId: verifiedEmail.id,
       });
 
-      updateEmailMutation.mutate({
+      await updateEmailMutation.mutateAsync({
         email: verifiedEmail.emailAddress,
       });
 
@@ -434,7 +484,10 @@ export default function ProfilePage() {
               {emailStep === "idle" && newEmail && (
                 <div className="space-y-3 rounded-lg border p-4">
                   <div className="space-y-2">
-                    <Label htmlFor="new-email" className="text-sm text-muted-foreground">
+                    <Label
+                      htmlFor="new-email"
+                      className="text-sm text-muted-foreground"
+                    >
                       New email address
                     </Label>
                     <Input
@@ -450,9 +503,13 @@ export default function ProfilePage() {
                       type="button"
                       size="sm"
                       onClick={handleStartEmailUpdate}
-                      disabled={isEmailLoading || !newEmail || newEmail === user.email}
+                      disabled={
+                        isEmailLoading || !newEmail || newEmail === user.email
+                      }
                     >
-                      {isEmailLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {isEmailLoading && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
                       Send Verification Code
                     </Button>
                     <Button
@@ -469,10 +526,16 @@ export default function ProfilePage() {
               {emailStep === "code" && (
                 <div className="space-y-3 rounded-lg border p-4">
                   <p className="text-sm text-muted-foreground">
-                    A verification code was sent to <span className="font-medium text-foreground">{newEmail}</span>
+                    A verification code was sent to{" "}
+                    <span className="font-medium text-foreground">
+                      {newEmail}
+                    </span>
                   </p>
                   <div className="space-y-2">
-                    <Label htmlFor="email-code" className="text-sm text-muted-foreground">
+                    <Label
+                      htmlFor="email-code"
+                      className="text-sm text-muted-foreground"
+                    >
                       Verification code
                     </Label>
                     <Input
@@ -489,7 +552,9 @@ export default function ProfilePage() {
                       onClick={handleVerifyEmail}
                       disabled={isEmailLoading || !emailCode}
                     >
-                      {isEmailLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {isEmailLoading && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
                       Verify & Update
                     </Button>
                     <Button
@@ -537,11 +602,18 @@ export default function ProfilePage() {
           <Separator />
 
           {/* Action Buttons */}
-          <div className="flex gap-2">
+          <div className="flex w-full justify-between gap-2">
             {/*{!isEditing ? (*/}
             {/*  <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>*/}
             {/*) : (*/}
             <>
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                disabled={updateProfileMutation.isPending}
+              >
+                Cancel
+              </Button>
               <Button
                 onClick={handleSave}
                 disabled={
@@ -559,13 +631,6 @@ export default function ProfilePage() {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 Save Changes
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleCancel}
-                disabled={updateProfileMutation.isPending}
-              >
-                Cancel
               </Button>
             </>
             {/*)}*/}
