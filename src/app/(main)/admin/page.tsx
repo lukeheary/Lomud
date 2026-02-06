@@ -8,12 +8,13 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Building, Building2, Calendar } from "lucide-react";
+import { Building, Building2, Calendar, MapPin } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminPage() {
   const { data: venues } = trpc.admin.listAllPlaces.useQuery({ type: "venue" });
   const { data: organizers } = trpc.admin.listAllPlaces.useQuery({ type: "organizer" });
+  const { data: metroAreas } = trpc.admin.listMetroAreas.useQuery();
 
   const stats = [
     {
@@ -29,6 +30,13 @@ export default function AdminPage() {
       icon: Building2,
       href: "/admin/places",
       description: "Manage event creators",
+    },
+    {
+      label: "Metro Areas",
+      value: metroAreas?.length ?? 0,
+      icon: MapPin,
+      href: "/admin/metro-areas",
+      description: "Manage city regions",
     },
   ];
 

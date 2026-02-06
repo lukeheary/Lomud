@@ -17,6 +17,7 @@ import { Building, Building2, MapPin, Loader2 } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { ResponsiveSelect } from "@/components/ui/responsive-select";
 import { getDistanceMiles, type Coordinates } from "@/lib/geo";
+import { resolveMetroArea } from "@/lib/metro-areas";
 
 type FilterType = "all" | "venues" | "organizers" | "following";
 
@@ -87,10 +88,19 @@ function PlacesPageContent() {
   // Get available cities
   const { data: cities } = trpc.event.getAvailableCities.useQuery();
 
+  // Determine the effective city: use URL param if set, otherwise resolve user's city to metro
+  const effectiveCity = useMemo(() => {
+    if (selectedCity) return selectedCity;
+    if (!currentUser?.city) return null;
+    if (!cities) return currentUser.city;
+    const metro = resolveMetroArea(currentUser.city, currentUser.state, cities);
+    return metro?.city ?? currentUser.city;
+  }, [selectedCity, currentUser?.city, currentUser?.state, cities]);
+
   const referenceCity =
     selectedCity && selectedCity !== "all"
       ? selectedCity
-      : (currentUser?.city ?? null);
+      : (effectiveCity ?? null);
 
   const referenceCityRecord = useMemo(() => {
     if (!referenceCity || !cities) return null;
@@ -135,9 +145,6 @@ function PlacesPageContent() {
 
     return map;
   }, [cities, referenceCoords]);
-
-  // Determine the effective city: use URL param if set, otherwise user's city
-  const effectiveCity = selectedCity ?? currentUser?.city ?? null;
 
   // Don't run queries until we know the user's city (to avoid flash of "all cities")
   const isReady = !isLoadingUser;

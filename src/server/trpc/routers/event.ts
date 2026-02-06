@@ -8,6 +8,7 @@ import {
   placeMembers,
   places,
   cities,
+  metroAreas,
   rsvps,
   users,
 } from "../../db/schema";
@@ -157,23 +158,35 @@ export const eventRouter = router({
 
       // Add location filters
       if (input.city) {
-        const resolvedState = input.state ?? currentUser?.state ?? undefined;
-        const cityConditions = [eq(cities.name, input.city)];
-        if (resolvedState) {
-          cityConditions.push(eq(cities.state, resolvedState));
-        }
-
-        let originCity = await ctx.db.query.cities.findFirst({
-          where: and(...cityConditions),
+        // Look up metro area first for coordinates and radius
+        const metro = await ctx.db.query.metroAreas.findFirst({
+          where: eq(metroAreas.name, input.city),
         });
-        if (!originCity && resolvedState) {
-          originCity = await ctx.db.query.cities.findFirst({
-            where: eq(cities.name, input.city),
+
+        let originCity: { latitude: number; longitude: number } | undefined;
+        if (metro?.latitude != null && metro?.longitude != null) {
+          originCity = { latitude: metro.latitude, longitude: metro.longitude };
+        } else {
+          const resolvedState = input.state ?? currentUser?.state ?? undefined;
+          const cityConditions = [eq(cities.name, input.city)];
+          if (resolvedState) {
+            cityConditions.push(eq(cities.state, resolvedState));
+          }
+          let cityRecord = await ctx.db.query.cities.findFirst({
+            where: and(...cityConditions),
           });
+          if (!cityRecord && resolvedState) {
+            cityRecord = await ctx.db.query.cities.findFirst({
+              where: eq(cities.name, input.city),
+            });
+          }
+          if (cityRecord?.latitude != null && cityRecord?.longitude != null) {
+            originCity = { latitude: cityRecord.latitude, longitude: cityRecord.longitude };
+          }
         }
 
-        if (originCity?.latitude != null && originCity?.longitude != null) {
-          const radiusMiles = input.radiusMiles ?? 15;
+        if (originCity) {
+          const radiusMiles = input.radiusMiles ?? metro?.radiusMiles ?? 20;
 
           const distanceSql = sql`
             (
@@ -663,7 +676,59 @@ export const eventRouter = router({
       ];
 
       if (input.city) {
-        conditions.push(eq(events.city, input.city));
+        // Look up metro area for coordinates and radius
+        const metro = await ctx.db.query.metroAreas.findFirst({
+          where: eq(metroAreas.name, input.city),
+        });
+
+        // Fall back to cities table if not a metro area
+        const originCity = metro ?? await ctx.db.query.cities.findFirst({
+          where: eq(cities.name, input.city),
+        });
+
+        if (originCity?.latitude != null && originCity?.longitude != null) {
+          const radiusMiles = (metro?.radiusMiles) ?? 20;
+
+          const distanceSql = sql`
+            (
+              3959 * 2 * asin(
+                sqrt(
+                  pow(sin(radians(${originCity.latitude} - ${cities.latitude}) / 2), 2) +
+                  cos(radians(${originCity.latitude})) * cos(radians(${cities.latitude})) *
+                  pow(sin(radians(${originCity.longitude} - ${cities.longitude}) / 2), 2)
+                )
+              )
+            )
+          `;
+
+          const nearbyEventIds = await ctx.db
+            .select({ id: events.id })
+            .from(events)
+            .innerJoin(
+              cities,
+              and(eq(cities.name, events.city), eq(cities.state, events.state))
+            )
+            .where(
+              and(
+                eq(events.visibility, "public"),
+                gte(events.startAt, now),
+                sql`${distanceSql} <= ${radiusMiles}`
+              )
+            );
+
+          if (nearbyEventIds.length === 0) {
+            return [];
+          }
+
+          conditions.push(
+            inArray(
+              events.id,
+              nearbyEventIds.map((row) => row.id)
+            )
+          );
+        } else {
+          conditions.push(eq(events.city, input.city));
+        }
       }
 
       if (input.search) {
@@ -694,49 +759,19 @@ export const eventRouter = router({
     }),
 
   getAvailableCities: publicProcedure.query(async ({ ctx }) => {
-    // Get unique cities that have public events
-    const cityRows = await ctx.db
-      .selectDistinct({ city: events.city, state: events.state })
-      .from(events)
-      .where(eq(events.visibility, "public"))
-      .orderBy(events.city);
+    // Return all metro areas from the database
+    const metros = await ctx.db
+      .select({
+        city: metroAreas.name,
+        state: metroAreas.state,
+        latitude: metroAreas.latitude,
+        longitude: metroAreas.longitude,
+        radiusMiles: metroAreas.radiusMiles,
+      })
+      .from(metroAreas)
+      .orderBy(metroAreas.name);
 
-    if (cityRows.length === 0) {
-      return [];
-    }
-
-    const cityConditions = cityRows.map((row) =>
-      and(eq(cities.name, row.city), eq(cities.state, row.state))
-    );
-
-    const cityCoords = cityConditions.length
-      ? await ctx.db
-          .select({
-            name: cities.name,
-            state: cities.state,
-            latitude: cities.latitude,
-            longitude: cities.longitude,
-          })
-          .from(cities)
-          .where(or(...cityConditions))
-      : [];
-
-    const coordsMap = new Map(
-      cityCoords.map((row) => [
-        `${row.name}|${row.state}`,
-        { latitude: row.latitude, longitude: row.longitude },
-      ])
-    );
-
-    return cityRows.map((row) => {
-      const coords = coordsMap.get(`${row.city}|${row.state}`);
-      return {
-        city: row.city,
-        state: row.state,
-        latitude: coords?.latitude ?? null,
-        longitude: coords?.longitude ?? null,
-      };
-    });
+    return metros;
   }),
 
   getRecentlyAddedEvents: protectedProcedure
@@ -760,22 +795,34 @@ export const eventRouter = router({
       ];
 
       if (input.city) {
-        const cityConditions = [eq(cities.name, input.city)];
-        if (currentUser?.state) {
-          cityConditions.push(eq(cities.state, currentUser.state));
-        }
-
-        let originCity = await ctx.db.query.cities.findFirst({
-          where: and(...cityConditions),
+        // Look up metro area first for coordinates and radius
+        const metro = await ctx.db.query.metroAreas.findFirst({
+          where: eq(metroAreas.name, input.city),
         });
-        if (!originCity && currentUser?.state) {
-          originCity = await ctx.db.query.cities.findFirst({
-            where: eq(cities.name, input.city),
+
+        let originCity: { latitude: number; longitude: number } | undefined;
+        if (metro?.latitude != null && metro?.longitude != null) {
+          originCity = { latitude: metro.latitude, longitude: metro.longitude };
+        } else {
+          const cityConditions = [eq(cities.name, input.city)];
+          if (currentUser?.state) {
+            cityConditions.push(eq(cities.state, currentUser.state));
+          }
+          let cityRecord = await ctx.db.query.cities.findFirst({
+            where: and(...cityConditions),
           });
+          if (!cityRecord && currentUser?.state) {
+            cityRecord = await ctx.db.query.cities.findFirst({
+              where: eq(cities.name, input.city),
+            });
+          }
+          if (cityRecord?.latitude != null && cityRecord?.longitude != null) {
+            originCity = { latitude: cityRecord.latitude, longitude: cityRecord.longitude };
+          }
         }
 
-        if (originCity?.latitude != null && originCity?.longitude != null) {
-          const radiusMiles = input.radiusMiles ?? 15;
+        if (originCity) {
+          const radiusMiles = input.radiusMiles ?? metro?.radiusMiles ?? 20;
 
           const distanceSql = sql`
             (

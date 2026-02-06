@@ -2,6 +2,7 @@ import { z } from "zod";
 import { router, adminProcedure } from "../init";
 import {
   cities,
+  metroAreas,
   places,
   placeMembers,
   users,
@@ -247,5 +248,118 @@ export const adminRouter = router({
       });
 
       return results;
+    }),
+
+  // ============================================================================
+  // METRO AREA MANAGEMENT
+  // ============================================================================
+
+  listMetroAreas: adminProcedure.query(async ({ ctx }) => {
+    const results = await ctx.db
+      .select()
+      .from(metroAreas)
+      .orderBy(metroAreas.name);
+
+    return results;
+  }),
+
+  createMetroArea: adminProcedure
+    .input(
+      z.object({
+        name: z.string().min(1).max(100),
+        state: z.string().length(2, "State must be a 2-letter code"),
+        latitude: z.number().min(-90).max(90),
+        longitude: z.number().min(-180).max(180),
+        radiusMiles: z.number().min(1).max(200).default(20),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.db.query.metroAreas.findFirst({
+        where: and(
+          eq(metroAreas.name, input.name),
+          eq(metroAreas.state, input.state)
+        ),
+      });
+
+      if (existing) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "A metro area with this name and state already exists",
+        });
+      }
+
+      const [metro] = await ctx.db
+        .insert(metroAreas)
+        .values(input)
+        .returning();
+
+      return metro;
+    }),
+
+  updateMetroArea: adminProcedure
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        name: z.string().min(1).max(100),
+        state: z.string().length(2, "State must be a 2-letter code"),
+        latitude: z.number().min(-90).max(90),
+        longitude: z.number().min(-180).max(180),
+        radiusMiles: z.number().min(1).max(200),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id, ...data } = input;
+
+      const existing = await ctx.db.query.metroAreas.findFirst({
+        where: eq(metroAreas.id, id),
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Metro area not found",
+        });
+      }
+
+      // Check for name/state conflict with other metro areas
+      const conflict = await ctx.db.query.metroAreas.findFirst({
+        where: and(
+          eq(metroAreas.name, data.name),
+          eq(metroAreas.state, data.state)
+        ),
+      });
+
+      if (conflict && conflict.id !== id) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "Another metro area with this name and state already exists",
+        });
+      }
+
+      const [updated] = await ctx.db
+        .update(metroAreas)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(metroAreas.id, id))
+        .returning();
+
+      return updated;
+    }),
+
+  deleteMetroArea: adminProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const result = await ctx.db
+        .delete(metroAreas)
+        .where(eq(metroAreas.id, input.id))
+        .returning();
+
+      if (result.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Metro area not found",
+        });
+      }
+
+      return { success: true };
     }),
 });

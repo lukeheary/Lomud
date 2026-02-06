@@ -71,6 +71,7 @@ import {
 import { CATEGORY_LABELS, type Category } from "@/lib/categories";
 import { useNavbarSearch } from "@/contexts/nav-search-context";
 import { getDistanceMiles, type Coordinates } from "@/lib/geo";
+import { resolveMetroArea } from "@/lib/metro-areas";
 
 type ViewMode = "week" | "month";
 
@@ -192,10 +193,20 @@ function HomePageContent() {
   // Navbar search context for navbar search button
   const { setShowNavbarSearch, registerScrollToSearch } = useNavbarSearch();
 
+  // Determine the effective city: use URL param if set, otherwise resolve user's city to metro
+  const effectiveCity = useMemo(() => {
+    if (selectedCity) return selectedCity;
+    if (!currentUser?.city) return null;
+    if (!cities) return currentUser.city;
+    // Resolve user's profile city (e.g. "Cambridge") to its metro area (e.g. "Boston")
+    const metro = resolveMetroArea(currentUser.city, currentUser.state, cities);
+    return metro?.city ?? currentUser.city;
+  }, [selectedCity, currentUser?.city, currentUser?.state, cities]);
+
   const referenceCity =
     selectedCity && selectedCity !== "all"
       ? selectedCity
-      : (currentUser?.city ?? null);
+      : (effectiveCity ?? null);
 
   const referenceCityRecord = useMemo(() => {
     if (!referenceCity || !cities) return null;
@@ -240,9 +251,6 @@ function HomePageContent() {
 
     return map;
   }, [cities, referenceCoords]);
-
-  // Determine the effective city: use URL param if set, otherwise user's city
-  const effectiveCity = selectedCity ?? currentUser?.city ?? null;
 
   // Don't run queries until we know the user's city (to avoid flash of "all cities")
   const isReady = !isLoadingUser;

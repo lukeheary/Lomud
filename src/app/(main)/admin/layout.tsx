@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Building2, Shield, Loader2 } from "lucide-react";
+import { Building2, MapPin, Shield, Loader2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 
 export default function AdminLayout({
@@ -41,6 +41,11 @@ export default function AdminLayout({
             label: "Places",
             href: "/admin/places",
             icon: Building2,
+        },
+        {
+            label: "Metro Areas",
+            href: "/admin/metro-areas",
+            icon: MapPin,
         },
     ];
 

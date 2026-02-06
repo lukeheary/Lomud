@@ -118,6 +118,29 @@ export const cities = pgTable(
 );
 
 // ============================================================================
+// METRO AREAS TABLE
+// ============================================================================
+export const metroAreas = pgTable(
+  "metro_areas",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    name: varchar("name", { length: 100 }).notNull(), // Display name (e.g. "Boston")
+    state: varchar("state", { length: 2 }).notNull(),
+    latitude: doublePrecision("latitude").notNull(),
+    longitude: doublePrecision("longitude").notNull(),
+    radiusMiles: doublePrecision("radius_miles").notNull().default(20),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    nameStateIdx: uniqueIndex("metro_areas_name_state_idx").on(
+      table.name,
+      table.state
+    ),
+  })
+);
+
+// ============================================================================
 // PLACES TABLE (unified venues + organizers)
 // ============================================================================
 export const places = pgTable(
