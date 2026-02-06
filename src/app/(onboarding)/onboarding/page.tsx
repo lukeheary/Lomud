@@ -26,6 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import { GooglePlacesAutocomplete } from "@/components/google-places-autocomplete";
 import { S3Uploader } from "@/components/ui/s3-uploader";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { DateOfBirthInput } from "@/components/ui/date-of-birth-input";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -36,6 +37,9 @@ export default function OnboardingPage() {
     city: "",
     state: "",
     gender: "" as "male" | "female" | "other" | "",
+    dobDay: "",
+    dobMonth: "",
+    dobYear: "",
     avatarImageUrl: "",
   });
   const [searchCity, setSearchCity] = useState("");
@@ -71,8 +75,30 @@ export default function OnboardingPage() {
 
   // Check if form is valid for enabling submit button
   const isValidUsername = /^[a-zA-Z0-9_]{3,20}$/.test(formData.username);
+  const isValidDateOfBirth = () => {
+    const day = Number.parseInt(formData.dobDay, 10);
+    const month = Number.parseInt(formData.dobMonth, 10);
+    const year = Number.parseInt(formData.dobYear, 10);
+
+    if (!day || !month || !year) return false;
+    if (year < 1900 || year > new Date().getFullYear()) return false;
+    if (month < 1 || month > 12) return false;
+    if (day < 1 || day > 31) return false;
+
+    const candidate = new Date(Date.UTC(year, month - 1, day));
+    return (
+      candidate.getUTCFullYear() === year &&
+      candidate.getUTCMonth() === month - 1 &&
+      candidate.getUTCDate() === day
+    );
+  };
+  const isDobValid = isValidDateOfBirth();
   const isFormValid =
-    isValidUsername && formData.city && formData.state && formData.gender;
+    isValidUsername &&
+    formData.city &&
+    formData.state &&
+    formData.gender &&
+    isDobValid;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,12 +144,25 @@ export default function OnboardingPage() {
       return;
     }
 
+    // Validate date of birth
+    if (!isDobValid) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a valid date of birth",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const dateOfBirth = `${formData.dobYear.padStart(4, "0")}-${formData.dobMonth.padStart(2, "0")}-${formData.dobDay.padStart(2, "0")}`;
+
     // Submit username and location
     updateUserMutation.mutate({
       username: formData.username,
       city: formData.city,
       state: formData.state,
       gender: formData.gender as "male" | "female" | "other",
+      dateOfBirth,
       avatarImageUrl: formData.avatarImageUrl || undefined,
     });
   };
@@ -255,6 +294,23 @@ export default function OnboardingPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Date of Birth */}
+            <DateOfBirthInput
+              required
+              day={formData.dobDay}
+              month={formData.dobMonth}
+              year={formData.dobYear}
+              onDayChange={(value) =>
+                setFormData({ ...formData, dobDay: value })
+              }
+              onMonthChange={(value) =>
+                setFormData({ ...formData, dobMonth: value })
+              }
+              onYearChange={(value) =>
+                setFormData({ ...formData, dobYear: value })
+              }
+            />
 
             <Button
               type="submit"

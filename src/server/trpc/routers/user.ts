@@ -62,6 +62,10 @@ export const userRouter = router({
         city: z.string().optional(),
         state: z.string().optional(),
         gender: z.enum(["male", "female", "other"]).optional(),
+        dateOfBirth: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/, "Date of birth must be YYYY-MM-DD")
+          .optional(),
         avatarImageUrl: z.string().optional(),
       })
     )
@@ -98,6 +102,9 @@ export const userRouter = router({
       }
       if (input.gender) {
         updateData.gender = input.gender;
+      }
+      if (input.dateOfBirth) {
+        updateData.dateOfBirth = input.dateOfBirth;
       }
       if (input.avatarImageUrl) {
         updateData.avatarImageUrl = input.avatarImageUrl;
@@ -155,6 +162,10 @@ export const userRouter = router({
         city: z.string().optional(),
         state: z.string().optional(),
         gender: z.enum(["male", "female", "other"]).optional(),
+        dateOfBirth: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/, "Date of birth must be YYYY-MM-DD")
+          .optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -185,6 +196,9 @@ export const userRouter = router({
       }
       if (input.gender !== undefined) {
         updateData.gender = input.gender;
+      }
+      if (input.dateOfBirth !== undefined) {
+        updateData.dateOfBirth = input.dateOfBirth;
       }
 
       console.log("Updating database with:", updateData);
@@ -231,6 +245,34 @@ export const userRouter = router({
       } catch (error) {
         console.error("Error syncing with Clerk:", error);
         // Don't throw - we've already updated our DB
+      }
+
+      return updatedUser;
+    }),
+
+  updateEmail: protectedProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.auth.userId;
+
+      const [updatedUser] = await ctx.db
+        .update(users)
+        .set({
+          email: input.email,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId))
+        .returning();
+
+      if (!updatedUser) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update email",
+        });
       }
 
       return updatedUser;
