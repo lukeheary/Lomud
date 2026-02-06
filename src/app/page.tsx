@@ -85,7 +85,7 @@ export default async function LandingPage() {
                 <Button variant="ghost">Sign In</Button>
               </Link>
               <Link href="/sign-up">
-                <Button>Sign Up</Button>
+                <Button className={"bg-[#e9c46a]"}>Sign Up</Button>
               </Link>
             </div>
           </div>
@@ -93,29 +93,33 @@ export default async function LandingPage() {
 
         {/* Hero Section */}
         <main className="flex-1">
-          <section className="container mx-auto px-4 pt-28 md:pb-20 md:pt-36">
-            <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.2fr,0.8fr] lg:items-center">
+          <section className="container mx-auto px-4 pt-20 md:pb-20 md:pt-36">
+            <div className="mx-auto grid max-w-6xl gap-10 space-y-10 lg:grid-cols-[1.2fr,0.8fr] lg:items-center">
               <div className="space-y-6">
                 {/*<div className="inline-flex items-center gap-2 rounded-full border bg-background/70 px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">*/}
                 {/*  Built for real plans*/}
                 {/*</div>*/}
                 <div className={"flex flex-col space-y-4"}>
-                  <h1 className="text-5xl font-bold leading-[0.95] tracking-tight md:text-7xl">
+                  <h1 className="text-center text-5xl font-bold leading-[0.95] tracking-tight md:text-7xl">
                     <span className={truculenta.className}>
-                      See who is going,
+                      See <span className={"text-[#e9c46a]"}>who</span> is
+                      going,
                       <br />
-                      decide where to go.
+                      decide <span className={"text-[#e9c46a]"}>where</span> to
+                      go.
                     </span>
                   </h1>
-                  <p className="max-w-xl text-lg text-muted-foreground md:text-xl">
+                  <p className="max-w-xl text-center text-lg text-muted-foreground md:text-xl">
                     Find what’s happening, see who’s in, and make plans in
                     seconds.
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center justify-center gap-3">
                   <Link href="/sign-up">
-                    <Button size="lg">Get Started</Button>
+                    <Button size="lg" className={"bg-[#e9c46a]"}>
+                      Get Started
+                    </Button>
                   </Link>
                   <Link href="/sign-in">
                     <Button size="lg" variant="outline">
@@ -278,7 +282,9 @@ export default async function LandingPage() {
 
               <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
                 <Link href="/sign-up">
-                  <Button size="lg">Get Started</Button>
+                  <Button size="lg" className={"bg-[#e9c46a]"}>
+                    Get Started
+                  </Button>
                 </Link>
                 <Link href="/sign-in">
                   <Button size="lg" variant="outline">
