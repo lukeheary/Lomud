@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, Loader2, X, ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -36,7 +36,16 @@ export function S3Uploader({
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    return () => {
+      if (localPreviewUrl) {
+        URL.revokeObjectURL(localPreviewUrl);
+      }
+    };
+  }, [localPreviewUrl]);
 
   const handleFile = async (file: File) => {
     // Validate file type
@@ -60,6 +69,13 @@ export function S3Uploader({
       return;
     }
 
+    const objectUrl = URL.createObjectURL(file);
+    setLocalPreviewUrl((prev) => {
+      if (prev) {
+        URL.revokeObjectURL(prev);
+      }
+      return objectUrl;
+    });
     setIsUploading(true);
 
     try {
@@ -141,6 +157,12 @@ export function S3Uploader({
   const handleRemove = (e: React.MouseEvent) => {
     e.stopPropagation();
     setPreviewUrl(null);
+    setLocalPreviewUrl((prev) => {
+      if (prev) {
+        URL.revokeObjectURL(prev);
+      }
+      return null;
+    });
     if (onRemoveImage) {
       onRemoveImage();
     }
@@ -181,7 +203,7 @@ export function S3Uploader({
   }
 
   // Dropzone variant
-  const displayUrl = previewUrl || currentImageUrl;
+  const displayUrl = previewUrl || localPreviewUrl || currentImageUrl;
   if (displayUrl) {
     return (
       <div className={cn("relative w-full", className)}>
@@ -197,6 +219,13 @@ export function S3Uploader({
             fill
             className="object-cover"
             unoptimized
+            onError={() => {
+              // If the remote URL fails to load (common on some mobile browsers),
+              // fall back to the local object URL preview when available.
+              if (previewUrl) {
+                setPreviewUrl(null);
+              }
+            }}
           />
         </div>
         {onRemoveImage && (
