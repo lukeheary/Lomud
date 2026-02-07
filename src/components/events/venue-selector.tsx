@@ -13,6 +13,7 @@ import {
 import { Search, Loader2, X, Plus, ArrowLeft } from "lucide-react";
 import { GooglePlacesAutocomplete } from "@/components/google-places-autocomplete";
 import { SlugInstagramInput } from "@/components/slug-instagram-input";
+import type { VenueHours } from "@/components/venue-hours-editor";
 
 export interface VenueData {
   id?: string;
@@ -25,6 +26,7 @@ export interface VenueData {
   slug?: string;
   instagram?: string;
   categories?: string[];
+  hours?: VenueHours | null;
 }
 
 interface VenueSelectorProps {
@@ -170,20 +172,21 @@ export function VenueSelector({
                         key={v.id}
                         type="button"
                         className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
-                        onClick={() => {
-                          onVenueSelect({
-                            id: v.id,
-                            name: v.name,
-                            address: v.address || "",
-                            city: v.city || "",
-                            state: v.state || "",
-                            slug: v.slug,
-                            instagram: v.instagram || "",
-                            categories: (v.categories as string[]) || [],
-                          });
-                          setIsVenuePopoverOpen(false);
-                          setVenueSearch("");
-                        }}
+                          onClick={() => {
+                            onVenueSelect({
+                              id: v.id,
+                              name: v.name,
+                              address: v.address || "",
+                              city: v.city || "",
+                              state: v.state || "",
+                              slug: v.slug,
+                              instagram: v.instagram || "",
+                              categories: (v.categories as string[]) || [],
+                              hours: (v.hours as VenueHours) || null,
+                            });
+                            setIsVenuePopoverOpen(false);
+                            setVenueSearch("");
+                          }}
                       >
                         <div className="font-medium">{v.name}</div>
                         <div className="text-xs text-muted-foreground">

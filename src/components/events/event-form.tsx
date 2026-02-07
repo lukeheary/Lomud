@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,9 @@ import { useToast } from "@/hooks/use-toast";
 import { S3Uploader } from "@/components/ui/s3-uploader";
 import { VenueSelector, VenueData } from "@/components/events/venue-selector";
 import { CategoryMultiSelect } from "@/components/category-multi-select";
-import { DateTimePicker } from "@/components/ui/date-time-picker";
+import { DatePicker } from "@/components/ui/date-picker";
+import { addDays } from "date-fns";
+import type { VenueHours } from "@/components/venue-hours-editor";
 
 interface EventFormProps {
   venueId?: string;
@@ -44,6 +46,71 @@ export function EventForm({
 
   const [selectedVenue, setSelectedVenue] = useState<VenueData | null>(null);
   const [isCreatingNewVenue, setIsCreatingNewVenue] = useState(false);
+  const lastAutoAppliedKeyRef = useRef<string | null>(null);
+
+  const getDatePart = (value: string) => (value ? value.split("T")[0] : "");
+  const getTimePart = (value: string) => (value ? value.split("T")[1] : "");
+  const buildDateTime = (date: string, time: string) =>
+    date ? `${date}T${time}` : "";
+
+  const getVenueDayHours = (
+    dateString: string,
+    hours?: VenueHours | null
+  ) => {
+    if (!dateString || !hours) return null;
+    const dayIndex = new Date(`${dateString}T00:00`).getDay();
+    const dayKeys: (keyof VenueHours)[] = [
+      "sunday",
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+    ];
+    const dayKey = dayKeys[dayIndex];
+    const dayHours = hours[dayKey];
+    if (!dayHours || dayHours.closed) return null;
+    return dayHours;
+  };
+
+  const applyVenueHoursToDate = (
+    dateString: string,
+    hours?: VenueHours | null,
+    venueKeyOverride?: string
+  ) => {
+    const dayHours = getVenueDayHours(dateString, hours);
+    if (!dayHours) return;
+
+    const venueKey =
+      venueKeyOverride || selectedVenue?.id || selectedVenue?.name || "unknown";
+    const autoKey = `${venueKey}:${dateString}`;
+    if (lastAutoAppliedKeyRef.current === autoKey) return;
+
+    const startHour = parseInt(dayHours.open.split(":")[0] || "0", 10);
+    const startMinute = parseInt(dayHours.open.split(":")[1] || "0", 10);
+    const endHour = parseInt(dayHours.close.split(":")[0] || "0", 10);
+    const endMinute = parseInt(dayHours.close.split(":")[1] || "0", 10);
+    const isOvernight =
+      endHour < startHour ||
+      (endHour === startHour && endMinute <= startMinute);
+
+    const endDateString = isOvernight
+      ? addDays(new Date(`${dateString}T00:00`), 1)
+          .toISOString()
+          .slice(0, 10)
+      : dateString;
+
+    setFormData((prev) => {
+      return {
+        ...prev,
+        startAt: buildDateTime(dateString, dayHours.open),
+        endAt: buildDateTime(endDateString, dayHours.close),
+      };
+    });
+
+    lastAutoAppliedKeyRef.current = autoKey;
+  };
 
   const { data: venue, isLoading: isLoadingVenue } =
     trpc.place.getPlaceById.useQuery(
@@ -60,6 +127,7 @@ export function EventForm({
         city: venue.city || "",
         state: venue.state || "",
         categories: (venue.categories as string[]) || [],
+        hours: (venue.hours as VenueHours) || null,
       });
       // Inherit venue categories
       if ((venue.categories as string[])?.length > 0) {
@@ -67,6 +135,14 @@ export function EventForm({
           ...prev,
           categories: venue.categories as string[],
         }));
+      }
+      const startDate = getDatePart(formData.startAt);
+      if (startDate) {
+        applyVenueHoursToDate(
+          startDate,
+          venue.hours as VenueHours,
+          venue.id
+        );
       }
     }
   }, [venue]);
@@ -175,6 +251,79 @@ export function EventForm({
         categories: venue.categories || [],
       }));
     }
+    const startDate = getDatePart(formData.startAt);
+    if (startDate) {
+      applyVenueHoursToDate(
+        startDate,
+        venue?.hours || null,
+        venue?.id || venue?.name
+      );
+    }
+  };
+
+  const handleStartDateChange = (date: string) => {
+    if (!date) {
+      setFormData((prev) => ({ ...prev, startAt: "" }));
+      return;
+    }
+
+    const venueHours = selectedVenue?.hours || (venue?.hours as VenueHours);
+    const dayHours = getVenueDayHours(date, venueHours);
+
+    if (dayHours) {
+      applyVenueHoursToDate(date, venueHours);
+      return;
+    }
+
+    setFormData((prev) => {
+      const startTime = getTimePart(prev.startAt) || "19:00";
+      const nextStartAt = buildDateTime(date, startTime);
+      const endDate = getDatePart(prev.endAt);
+      const endTime = getTimePart(prev.endAt);
+      const nextEndAt = endDate
+        ? buildDateTime(date, endTime || "23:00")
+        : prev.endAt;
+      return {
+        ...prev,
+        startAt: nextStartAt,
+        endAt: nextEndAt,
+      };
+    });
+  };
+
+  const handleStartTimeChange = (time: string) => {
+    const date = getDatePart(formData.startAt);
+    if (!date) return;
+    setFormData((prev) => ({
+      ...prev,
+      startAt: buildDateTime(date, time || "00:00"),
+    }));
+  };
+
+  const handleEndDateChange = (date: string) => {
+    if (!date) {
+      setFormData((prev) => ({ ...prev, endAt: "" }));
+      return;
+    }
+    setFormData((prev) => {
+      const time =
+        getTimePart(prev.endAt) ||
+        getTimePart(prev.startAt) ||
+        "23:00";
+      return {
+        ...prev,
+        endAt: buildDateTime(date, time),
+      };
+    });
+  };
+
+  const handleEndTimeChange = (time: string) => {
+    const date = getDatePart(formData.endAt);
+    if (!date) return;
+    setFormData((prev) => ({
+      ...prev,
+      endAt: buildDateTime(date, time || "00:00"),
+    }));
   };
 
   if (venueId && isLoadingVenue) {
@@ -269,28 +418,47 @@ export function EventForm({
             </div>
 
             {/* Date & Time */}
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>
-                  Start Date & Time <span className="text-destructive">*</span>
+                  Start Date <span className="text-destructive">*</span>
                 </Label>
-                <DateTimePicker
-                  value={formData.startAt}
-                  onChange={(value) =>
-                    setFormData({ ...formData, startAt: value })
-                  }
-                  placeholder="Select start date & time"
+                <DatePicker
+                  value={getDatePart(formData.startAt)}
+                  onChange={handleStartDateChange}
+                  placeholder="Select start date"
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label>End Date & Time</Label>
-                <DateTimePicker
-                  value={formData.endAt}
-                  onChange={(value) =>
-                    setFormData({ ...formData, endAt: value })
-                  }
-                  placeholder="Select end date & time"
+                <Label>
+                  Start Time <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  type="time"
+                  value={getTimePart(formData.startAt)}
+                  onChange={(e) => handleStartTimeChange(e.target.value)}
+                  disabled={!getDatePart(formData.startAt)}
+                  required
+                  className="h-12"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>End Date</Label>
+                <DatePicker
+                  value={getDatePart(formData.endAt)}
+                  onChange={handleEndDateChange}
+                  placeholder="Select end date"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>End Time</Label>
+                <Input
+                  type="time"
+                  value={getTimePart(formData.endAt)}
+                  onChange={(e) => handleEndTimeChange(e.target.value)}
+                  disabled={!getDatePart(formData.endAt)}
+                  className="h-12"
                 />
               </div>
             </div>

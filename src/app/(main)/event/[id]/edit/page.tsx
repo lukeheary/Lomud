@@ -15,7 +15,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { VenueSelector, VenueData } from "@/components/events/venue-selector";
 import { CategoryMultiSelect } from "@/components/category-multi-select";
-import { DateTimePicker } from "@/components/ui/date-time-picker";
+import { DatePicker } from "@/components/ui/date-picker";
 
 export default function EditEventPage() {
   const params = useParams();
@@ -50,6 +50,61 @@ export default function EditEventPage() {
   const [isCreatingNewVenue, setIsCreatingNewVenue] = useState(false);
 
   const createVenueMutation = trpc.place.createPlace.useMutation();
+
+  const getDatePart = (value: string) => (value ? value.split("T")[0] : "");
+  const getTimePart = (value: string) => (value ? value.split("T")[1] : "");
+  const buildDateTime = (date: string, time: string) =>
+    date ? `${date}T${time}` : "";
+
+  const handleStartDateChange = (date: string) => {
+    if (!date) {
+      setFormData((prev) => ({ ...prev, startAt: "" }));
+      return;
+    }
+    setFormData((prev) => {
+      const startTime = getTimePart(prev.startAt) || "19:00";
+      const endDate = getDatePart(prev.endAt);
+      const endTime = getTimePart(prev.endAt) || "23:00";
+      return {
+        ...prev,
+        startAt: buildDateTime(date, startTime),
+        endAt: endDate ? buildDateTime(date, endTime) : prev.endAt,
+      };
+    });
+  };
+
+  const handleStartTimeChange = (time: string) => {
+    const date = getDatePart(formData.startAt);
+    if (!date) return;
+    setFormData((prev) => ({
+      ...prev,
+      startAt: buildDateTime(date, time || "00:00"),
+    }));
+  };
+
+  const handleEndDateChange = (date: string) => {
+    if (!date) {
+      setFormData((prev) => ({ ...prev, endAt: "" }));
+      return;
+    }
+    setFormData((prev) => {
+      const time =
+        getTimePart(prev.endAt) || getTimePart(prev.startAt) || "23:00";
+      return {
+        ...prev,
+        endAt: buildDateTime(date, time),
+      };
+    });
+  };
+
+  const handleEndTimeChange = (time: string) => {
+    const date = getDatePart(formData.endAt);
+    if (!date) return;
+    setFormData((prev) => ({
+      ...prev,
+      endAt: buildDateTime(date, time || "00:00"),
+    }));
+  };
 
   const updateMutation = trpc.event.updateEvent.useMutation({
     onSuccess: () => {
@@ -292,25 +347,44 @@ export default function EditEventPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>
-                  Start Date & Time <span className="text-destructive">*</span>
+                  Start Date <span className="text-destructive">*</span>
                 </Label>
-                <DateTimePicker
-                  value={formData.startAt}
-                  onChange={(value) =>
-                    setFormData({ ...formData, startAt: value })
-                  }
-                  placeholder="Select start date & time"
+                <DatePicker
+                  value={getDatePart(formData.startAt)}
+                  onChange={handleStartDateChange}
+                  placeholder="Select start date"
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label>End Date & Time</Label>
-                <DateTimePicker
-                  value={formData.endAt}
-                  onChange={(value) =>
-                    setFormData({ ...formData, endAt: value })
-                  }
-                  placeholder="Select end date & time"
+                <Label>
+                  Start Time <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  type="time"
+                  value={getTimePart(formData.startAt)}
+                  onChange={(e) => handleStartTimeChange(e.target.value)}
+                  disabled={!getDatePart(formData.startAt)}
+                  required
+                  className="h-12"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>End Date</Label>
+                <DatePicker
+                  value={getDatePart(formData.endAt)}
+                  onChange={handleEndDateChange}
+                  placeholder="Select end date"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>End Time</Label>
+                <Input
+                  type="time"
+                  value={getTimePart(formData.endAt)}
+                  onChange={(e) => handleEndTimeChange(e.target.value)}
+                  disabled={!getDatePart(formData.endAt)}
+                  className="h-12"
                 />
               </div>
             </div>
