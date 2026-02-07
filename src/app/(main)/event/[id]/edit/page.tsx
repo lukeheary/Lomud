@@ -7,15 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Loader2, ArrowLeft } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Calendar, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { S3Uploader } from "@/components/ui/s3-uploader";
-import Link from "next/link";
 import { format } from "date-fns";
 import { VenueSelector, VenueData } from "@/components/events/venue-selector";
 import { CategoryMultiSelect } from "@/components/category-multi-select";
 import { DatePicker } from "@/components/ui/date-picker";
+import { BackButtonHeader } from "@/components/shared/back-button-header";
 
 export default function EditEventPage() {
   const params = useParams();
@@ -259,13 +259,7 @@ export default function EditEventPage() {
 
   return (
     <div className="container mx-auto max-w-2xl space-y-4 py-8">
-      <Link
-        href={`/event/${eventId}`}
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to Event
-      </Link>
+      <BackButtonHeader backHref={`/event/${eventId}`} title="Edit Event" />
 
       {/* Venue Details */}
       <VenueSelector
@@ -276,13 +270,6 @@ export default function EditEventPage() {
       />
 
       <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div>
-              <CardTitle className="text-2xl">Edit Event</CardTitle>
-            </div>
-          </div>
-        </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Event Image */}

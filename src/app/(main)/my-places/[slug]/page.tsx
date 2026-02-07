@@ -13,7 +13,6 @@ import {
   Building,
   Building2,
   Plus,
-  ArrowLeft,
   Calendar,
   Users,
   Heart,
@@ -25,6 +24,7 @@ import {
   CalendarPlus,
   Eye,
 } from "lucide-react";
+import { BackButtonHeader } from "@/components/shared/back-button-header";
 
 export default function ManagePlacePage() {
   const params = useParams();
@@ -76,37 +76,24 @@ export default function ManagePlacePage() {
 
   return (
     <div className="container mx-auto max-w-6xl space-y-6 px-4 py-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-1">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="mb-2 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </button>
-          <div className="flex items-center gap-3">
-            <Avatar className="h-12 w-12 border">
-              {place.logoImageUrl ? (
-                <AvatarImage src={place.logoImageUrl} alt={place.name} />
-              ) : null}
-              <AvatarFallback>
-                <TypeIcon className="h-6 w-6 text-muted-foreground" />
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">
-                {place.name}
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                @{place.slug} · {typeLabel}
-              </p>
-            </div>
+      <BackButtonHeader onBack={() => router.back()} className="items-center">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-12 w-12 border">
+            {place.logoImageUrl ? (
+              <AvatarImage src={place.logoImageUrl} alt={place.name} />
+            ) : null}
+            <AvatarFallback>
+              <TypeIcon className="h-6 w-6 text-muted-foreground" />
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">{place.name}</h1>
+            <p className="text-sm text-muted-foreground">
+              @{place.slug} · {typeLabel}
+            </p>
           </div>
         </div>
-      </div>
+      </BackButtonHeader>
 
       {/* Stats Cards - 2x2 grid on mobile, 4 columns on desktop */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">

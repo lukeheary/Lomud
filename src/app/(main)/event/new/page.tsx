@@ -2,10 +2,9 @@
 
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { Loader2 } from "lucide-react";
 import { EventForm } from "@/components/events/event-form";
+import { BackButtonHeader } from "@/components/shared/back-button-header";
 
 function NewEventPageContent() {
   const router = useRouter();
@@ -16,19 +15,7 @@ function NewEventPageContent() {
 
   return (
     <div className="container mx-auto max-w-2xl space-y-6 py-8">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/home">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-            Create Event
-          </h1>
-        </div>
-      </div>
+      <BackButtonHeader backHref="/home" title="Create Event" />
 
       <EventForm
         venueId={venueId}

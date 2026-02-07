@@ -3,32 +3,17 @@
 import { Suspense } from "react";
 import { trpc } from "@/lib/trpc";
 import { Badge } from "@/components/ui/badge";
-import { Users, Loader2, ArrowLeft } from "lucide-react";
+import { Users, Loader2 } from "lucide-react";
 import { UserList } from "@/components/user-list";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { BackButtonHeader } from "@/components/shared/back-button-header";
 
 function FriendsListContent() {
   const { data: friends, isLoading } = trpc.friends.listFriends.useQuery({});
   const acceptedFriends = friends?.filter((f) => f.status === "accepted") || [];
 
   return (
-    <div className="container mx-auto space-y-4 py-4">
-      <div className="flex items-center gap-2">
-        <Link href="/friends">
-          <button
-            type="button"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-            My Friends
-          </h1>
-        </div>
-      </div>
+    <div className="container mx-auto space-y-4 py-8">
+      <BackButtonHeader backHref="/friends" title="My Friends" />
 
       {isLoading ? (
         <div className="flex justify-center py-12">

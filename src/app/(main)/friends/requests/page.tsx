@@ -4,10 +4,10 @@ import { Suspense } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Mail, Loader2, ArrowLeft } from "lucide-react";
+import { Check, X, Mail, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import Link from "next/link";
 import { UserList } from "@/components/user-list";
+import { BackButtonHeader } from "@/components/shared/back-button-header";
 
 function RequestsPageContent() {
   const { toast } = useToast();
@@ -56,21 +56,7 @@ function RequestsPageContent() {
 
   return (
     <div className="container mx-auto space-y-6 py-8">
-      <div className="flex items-center gap-2">
-        <Link href="/friends">
-          <button
-            type="button"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-            Friend Requests
-          </h1>
-        </div>
-      </div>
+      <BackButtonHeader backHref="/friends" title="Friend Requests" />
 
       {isLoading ? (
         <div className="flex justify-center py-12">

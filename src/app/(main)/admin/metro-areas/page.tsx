@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Plus, ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import { MapPin, Plus, Pencil, Trash2 } from "lucide-react";
 import { GooglePlacesAutocomplete } from "@/components/google-places-autocomplete";
+import { BackButtonHeader } from "@/components/shared/back-button-header";
 
 type ViewMode = "list" | "create" | "edit";
 
@@ -252,21 +253,15 @@ export default function AdminMetroAreasPage() {
   // Create/Edit View
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={handleBack}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {viewMode === "edit" ? "Edit Metro Area" : "Add Metro Area"}
-          </h1>
-          <p className="text-muted-foreground">
-            {viewMode === "edit"
-              ? "Update metro area settings"
-              : "Configure a new metro area for city filtering"}
-          </p>
-        </div>
-      </div>
+      <BackButtonHeader
+        onBack={handleBack}
+        title={viewMode === "edit" ? "Edit Metro Area" : "Add Metro Area"}
+        subtitle={
+          viewMode === "edit"
+            ? "Update metro area settings"
+            : "Configure a new metro area for city filtering"
+        }
+      />
 
       <Card>
         <CardContent className="pt-6">

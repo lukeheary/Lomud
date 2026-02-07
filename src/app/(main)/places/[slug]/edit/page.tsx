@@ -3,13 +3,14 @@
 import { useParams, useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
-import { Building, Loader2, ArrowLeft } from "lucide-react";
+import { Building, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   PlaceEditForm,
   type PlaceFormData,
 } from "@/components/places/place-edit-form";
 import Link from "next/link";
+import { BackButtonHeader } from "@/components/shared/back-button-header";
 
 export default function EditPlacePage() {
   const params = useParams();
@@ -154,18 +155,10 @@ export default function EditPlacePage() {
 
   return (
     <div className="container mx-auto max-w-2xl space-y-4 py-8">
-      <button
-        type="button"
-        onClick={() => router.back()}
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back
-      </button>
-
-      <div className="space-y-2">
-        <h1 className="text-2xl font-bold tracking-tight">Edit {typeLabel}</h1>
-      </div>
+      <BackButtonHeader
+        onBack={() => router.back()}
+        title={`Edit ${typeLabel}`}
+      />
 
       <PlaceEditForm
         initialData={initialData}

@@ -10,7 +10,6 @@ import {
   Building,
   Building2,
   Plus,
-  ArrowLeft,
   Users as UsersIcon,
   Search,
   Calendar,
@@ -23,6 +22,7 @@ import {
   type PlaceType,
 } from "@/components/places/place-edit-form";
 import { PlaceMembersManager } from "@/components/places/place-members-manager";
+import { BackButtonHeader } from "@/components/shared/back-button-header";
 
 type ViewMode = "list" | "create" | "edit" | "members" | "create-event";
 
@@ -269,23 +269,17 @@ export default function AdminPlacesPage() {
 
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              {viewMode === "edit"
-                ? `Edit ${typeLabel}`
-                : `Create ${typeLabel}`}
-            </h1>
-            <p className="text-muted-foreground">
-              {viewMode === "edit"
-                ? `Update ${typeLabel.toLowerCase()} information`
-                : `Add a new ${typeLabel.toLowerCase()} to the platform`}
-            </p>
-          </div>
-        </div>
+        <BackButtonHeader
+          onBack={handleBack}
+          title={
+            viewMode === "edit" ? `Edit ${typeLabel}` : `Create ${typeLabel}`
+          }
+          subtitle={
+            viewMode === "edit"
+              ? `Update ${typeLabel.toLowerCase()} information`
+              : `Add a new ${typeLabel.toLowerCase()} to the platform`
+          }
+        />
 
         <PlaceEditForm
           initialData={initialData}
@@ -310,17 +304,11 @@ export default function AdminPlacesPage() {
 
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              Manage Members
-            </h1>
-            <p className="text-muted-foreground">{currentPlace?.name}</p>
-          </div>
-        </div>
+        <BackButtonHeader
+          onBack={handleBack}
+          title="Manage Members"
+          subtitle={currentPlace?.name}
+        />
 
         <PlaceMembersManager
           placeId={selectedPlace}
@@ -339,12 +327,7 @@ export default function AdminPlacesPage() {
 
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-3xl font-bold tracking-tight">Create Event</h1>
-        </div>
+        <BackButtonHeader onBack={handleBack} title="Create Event" />
 
         <EventForm
           venueId={currentPlace?.type === "venue" ? selectedPlace : undefined}
