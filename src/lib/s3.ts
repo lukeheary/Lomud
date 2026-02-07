@@ -7,14 +7,14 @@ import { getStoragePath } from "./env";
 
 // Initialize S3 client
 export const s3Client = new S3Client({
-  region: process.env.NEXT_PUBLIC_AWS_REGION!,
+  region: process.env.AWS_REGION!,
   credentials: {
-    accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID!,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
   },
 });
 
-export const BUCKET_NAME = process.env.NEXT_PUBLIC_AWS_S3_BUCKET!;
+export const BUCKET_NAME = process.env.AWS_S3_BUCKET!;
 
 /**
  * Generate a unique filename with timestamp and random string
@@ -30,7 +30,7 @@ export function generateUniqueFilename(originalName: string): string {
  * Get the public URL for an S3 object
  */
 export function getS3Url(key: string): string {
-  return `https://${BUCKET_NAME}.s3.${process.env.NEXT_PUBLIC_AWS_REGION}.amazonaws.com/${key}`;
+  return `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
 }
 
 /**
