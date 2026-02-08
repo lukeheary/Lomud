@@ -77,22 +77,8 @@ export default function ManagePlacePage() {
   return (
     <div className="container mx-auto max-w-6xl space-y-6 px-4 py-6">
       <BackButtonHeader onBack={() => router.back()} className="items-center">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-12 w-12 border">
-            {place.logoImageUrl ? (
-              <AvatarImage src={place.logoImageUrl} alt={place.name} />
-            ) : null}
-            <AvatarFallback>
-              <TypeIcon className="h-6 w-6 text-muted-foreground" />
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">{place.name}</h1>
-            <p className="text-sm text-muted-foreground">
-              @{place.slug} · {typeLabel}
-            </p>
-          </div>
-        </div>
+        <h1 className="text-2xl font-bold tracking-tight">{place.name}</h1>
+        <p className="text-sm text-muted-foreground"></p>
       </BackButtonHeader>
 
       {/* Stats Cards - 2x2 grid on mobile, 4 columns on desktop */}

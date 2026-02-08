@@ -107,7 +107,8 @@ export default function AdminMetroAreasPage() {
         name: place.city,
         state: place.state,
         latitude: place.latitude != null ? String(place.latitude) : f.latitude,
-        longitude: place.longitude != null ? String(place.longitude) : f.longitude,
+        longitude:
+          place.longitude != null ? String(place.longitude) : f.longitude,
       }));
       setCitySearch(place.city);
     },
@@ -158,7 +159,13 @@ export default function AdminMetroAreasPage() {
       radiusMiles: parseFloat(form.radiusMiles),
     };
 
-    if (!data.name || !data.state || isNaN(data.latitude) || isNaN(data.longitude) || isNaN(data.radiusMiles)) {
+    if (
+      !data.name ||
+      !data.state ||
+      isNaN(data.latitude) ||
+      isNaN(data.longitude) ||
+      isNaN(data.radiusMiles)
+    ) {
       toast({
         title: "Error",
         description: "Please select a city and fill in all fields",
@@ -189,9 +196,6 @@ export default function AdminMetroAreasPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Metro Areas</h1>
-            <p className="text-muted-foreground">
-              Metro areas define the city options shown in dropdowns
-            </p>
           </div>
           <Button onClick={handleCreate}>
             <Plus className="mr-2 h-4 w-4" />
@@ -256,11 +260,6 @@ export default function AdminMetroAreasPage() {
       <BackButtonHeader
         onBack={handleBack}
         title={viewMode === "edit" ? "Edit Metro Area" : "Add Metro Area"}
-        subtitle={
-          viewMode === "edit"
-            ? "Update metro area settings"
-            : "Configure a new metro area for city filtering"
-        }
       />
 
       <Card>
@@ -279,7 +278,11 @@ export default function AdminMetroAreasPage() {
                 <p className="text-xs text-muted-foreground">
                   Selected: {form.name}, {form.state}
                   {form.latitude && form.longitude && (
-                    <> &middot; {parseFloat(form.latitude).toFixed(4)}, {parseFloat(form.longitude).toFixed(4)}</>
+                    <>
+                      {" "}
+                      &middot; {parseFloat(form.latitude).toFixed(4)},{" "}
+                      {parseFloat(form.longitude).toFixed(4)}
+                    </>
                   )}
                 </p>
               )}

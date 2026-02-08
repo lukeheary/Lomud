@@ -332,10 +332,10 @@ async function main() {
   await db
     .insert(placeMembers)
     .values([
-      { userId: u1, placeId: placeIdBySlug.get("royale-boston")! },
-      { userId: u3, placeId: placeIdBySlug.get("bijou-boston")! },
-      { userId: u2, placeId: placeIdBySlug.get("elsewhere-brooklyn")! },
-      { userId: u4, placeId: placeIdBySlug.get("good-room-brooklyn")! },
+      { userId: u1, placeId: placeIdBySlug.get("royale-boston")!, role: "owner" },
+      { userId: u3, placeId: placeIdBySlug.get("bijou-boston")!, role: "manager" },
+      { userId: u2, placeId: placeIdBySlug.get("elsewhere-brooklyn")!, role: "promoter" },
+      { userId: u4, placeId: placeIdBySlug.get("good-room-brooklyn")!, role: "staff" },
     ])
     .onConflictDoNothing();
 
@@ -343,10 +343,10 @@ async function main() {
   await db
     .insert(placeMembers)
     .values([
-      { userId: u1, placeId: placeIdBySlug.get("neon-nights-collective")! },
-      { userId: u2, placeId: placeIdBySlug.get("midnight-moves")! },
-      { userId: u3, placeId: placeIdBySlug.get("afterhours-society")! },
-      { userId: u4, placeId: placeIdBySlug.get("rooftop-rituals")! },
+      { userId: u1, placeId: placeIdBySlug.get("neon-nights-collective")!, role: "owner" },
+      { userId: u2, placeId: placeIdBySlug.get("midnight-moves")!, role: "manager" },
+      { userId: u3, placeId: placeIdBySlug.get("afterhours-society")!, role: "promoter" },
+      { userId: u4, placeId: placeIdBySlug.get("rooftop-rituals")!, role: "staff" },
     ])
     .onConflictDoNothing();
 

@@ -12,6 +12,12 @@ import { TRPCError } from "@trpc/server";
 import { filterValidCategories } from "@/lib/categories";
 
 const placeTypeSchema = z.enum(["venue", "organizer"]);
+const placeMemberRoleSchema = z.enum([
+  "owner",
+  "manager",
+  "promoter",
+  "staff",
+]);
 
 export const adminRouter = router({
   // ============================================================================
@@ -92,6 +98,7 @@ export const adminRouter = router({
       z.object({
         placeId: z.string().uuid(),
         userId: z.string(),
+        role: placeMemberRoleSchema.default("staff"),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -139,6 +146,7 @@ export const adminRouter = router({
         .values({
           userId: input.userId,
           placeId: input.placeId,
+          role: input.role,
         })
         .returning();
 

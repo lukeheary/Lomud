@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { ResponsiveSelect } from "@/components/ui/responsive-select";
 import { useToast } from "@/hooks/use-toast";
 import { X, Plus } from "lucide-react";
 
@@ -25,6 +26,8 @@ interface PlaceMembersManagerProps {
   canManage?: boolean;
 }
 
+type PlaceMemberRole = "owner" | "manager" | "promoter" | "staff";
+
 export function PlaceMembersManager({
   placeId,
   placeName,
@@ -38,6 +41,7 @@ export function PlaceMembersManager({
   const { toast } = useToast();
   const utils = trpc.useUtils();
   const [userSearch, setUserSearch] = useState("");
+  const [selectedRole, setSelectedRole] = useState<PlaceMemberRole>("staff");
 
   const { data: placeMembers } = trpc.place.getPlaceMembers.useQuery(
     { placeId },
@@ -78,7 +82,7 @@ export function PlaceMembersManager({
   });
 
   const handleAddMember = (userId: string) => {
-    addPlaceMemberMutation.mutate({ placeId, userId });
+    addPlaceMemberMutation.mutate({ placeId, userId, role: selectedRole });
     setUserSearch("");
   };
 
@@ -88,6 +92,12 @@ export function PlaceMembersManager({
 
   const typeLabel = placeType === "venue" ? "venue" : "organizer";
   const defaultDescription = `People who can manage this ${typeLabel}`;
+  const roleOptions = [
+    { value: "owner", label: "Owner" },
+    { value: "manager", label: "Manager" },
+    { value: "promoter", label: "Promoter" },
+    { value: "staff", label: "Staff" },
+  ];
 
   const content = (
     <div className="space-y-4">
@@ -144,6 +154,18 @@ export function PlaceMembersManager({
       {canManage && (
         <div className="space-y-3 border-t pt-4">
           <p className="text-sm font-medium">Add Team Member</p>
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">Role</p>
+            <ResponsiveSelect
+              value={selectedRole}
+              onValueChange={(value) =>
+                setSelectedRole(value as PlaceMemberRole)
+              }
+              options={roleOptions}
+              placeholder="Select a role"
+              title="Select role"
+            />
+          </div>
           <Input
             placeholder="Search users by name or email..."
             value={userSearch}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,8 @@ type ViewMode = "list" | "create" | "edit" | "members" | "create-event";
 export default function AdminPlacesPage() {
   const { toast } = useToast();
   const utils = trpc.useUtils();
+  const searchParams = useSearchParams();
+  const didInitFromParams = useRef(false);
 
   // View mode state
   const [viewMode, setViewMode] = useState<ViewMode>("list");
@@ -40,6 +43,16 @@ export default function AdminPlacesPage() {
 
   // Member management state
   const [selectedPlace, setSelectedPlace] = useState<string>("");
+
+  useEffect(() => {
+    if (didInitFromParams.current) return;
+    const createTarget = searchParams.get("create");
+    if (createTarget === "venue" || createTarget === "organizer") {
+      setActiveTab(createTarget);
+      setViewMode("create");
+    }
+    didInitFromParams.current = true;
+  }, [searchParams]);
 
   // Fetch data
   const { data: places } = trpc.admin.listAllPlaces.useQuery({
@@ -273,11 +286,6 @@ export default function AdminPlacesPage() {
           onBack={handleBack}
           title={
             viewMode === "edit" ? `Edit ${typeLabel}` : `Create ${typeLabel}`
-          }
-          subtitle={
-            viewMode === "edit"
-              ? `Update ${typeLabel.toLowerCase()} information`
-              : `Add a new ${typeLabel.toLowerCase()} to the platform`
           }
         />
 

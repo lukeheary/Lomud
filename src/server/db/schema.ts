@@ -55,6 +55,12 @@ export const activityEntityTypeEnum = pgEnum("activity_entity_type", [
 ]);
 
 export const placeTypeEnum = pgEnum("place_type", ["venue", "organizer"]);
+export const placeMemberRoleEnum = pgEnum("place_member_role", [
+  "owner",
+  "manager",
+  "promoter",
+  "staff",
+]);
 
 // ============================================================================
 // USERS TABLE
@@ -192,6 +198,7 @@ export const placeMembers = pgTable(
     placeId: uuid("place_id")
       .notNull()
       .references(() => places.id, { onDelete: "cascade" }),
+    role: placeMemberRoleEnum("role").default("staff").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({

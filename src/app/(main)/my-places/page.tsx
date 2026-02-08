@@ -35,7 +35,7 @@ export default function MyPlacesPage() {
   const showOrganizersSection = !hasOnlyOneVenue;
 
   return (
-    <div className="container mx-auto space-y-8 py-4">
+    <div className="container mx-auto space-y-4 py-8">
       {/* Venues Section */}
       {showVenuesSection && (
         <div className="space-y-4">
