@@ -16,7 +16,6 @@ import {
   Calendar,
 } from "lucide-react";
 import { EventForm } from "@/components/events/event-form";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   PlaceEditForm,
   type PlaceFormData,
@@ -157,31 +156,20 @@ export default function AdminPlacesPage() {
   if (viewMode === "list") {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Places</h1>
-          </div>
+        <div className="flex items-center justify-between gap-3">
+          <BackButtonHeader
+            backHref="/admin"
+            title={activeTab === "venue" ? "Venues" : "Organizers"}
+            className="min-w-0"
+          />
           <Button onClick={handleCreate}>
             <Plus className="mr-2 h-4 w-4" />
-            Create {activeTab === "venue" ? "Venue" : "Organizer"}
+            <span className="sm:hidden">Add</span>
+            <span className="hidden sm:inline">
+              Add {activeTab === "venue" ? "Venue" : "Organizer"}
+            </span>
           </Button>
         </div>
-
-        <Tabs
-          value={activeTab}
-          onValueChange={(v) => setActiveTab(v as PlaceType)}
-        >
-          <TabsList>
-            <TabsTrigger value="venue">
-              <Building className="mr-2 h-4 w-4" />
-              Venues
-            </TabsTrigger>
-            <TabsTrigger value="organizer">
-              <Building2 className="mr-2 h-4 w-4" />
-              Organizers
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

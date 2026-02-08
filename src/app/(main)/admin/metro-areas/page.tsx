@@ -193,13 +193,16 @@ export default function AdminMetroAreasPage() {
   if (viewMode === "list") {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Metro Areas</h1>
-          </div>
+        <div className="flex items-center justify-between gap-3">
+          <BackButtonHeader
+            backHref="/admin"
+            title="Metro Areas"
+            className="min-w-0"
+          />
           <Button onClick={handleCreate}>
             <Plus className="mr-2 h-4 w-4" />
-            Add Metro Area
+            <span className="sm:hidden">Add</span>
+            <span className="hidden sm:inline">Add Metro Area</span>
           </Button>
         </div>
 
@@ -313,7 +316,7 @@ export default function AdminMetroAreasPage() {
                   ? "Saving..."
                   : viewMode === "edit"
                     ? "Update Metro Area"
-                    : "Create Metro Area"}
+                    : "Add Metro Area"}
               </Button>
               <Button type="button" variant="outline" onClick={handleBack}>
                 Cancel
