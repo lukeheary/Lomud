@@ -29,7 +29,7 @@ export default function AdminPage() {
       label: "Organizers",
       value: organizers?.length ?? 0,
       icon: Building2,
-      href: "/admin/places",
+      href: "/admin/places?type=organizer",
     },
     {
       label: "Metro Areas",

@@ -45,6 +45,10 @@ export default function AdminPlacesPage() {
 
   useEffect(() => {
     if (didInitFromParams.current) return;
+    const typeParam = searchParams.get("type");
+    if (typeParam === "venue" || typeParam === "organizer") {
+      setActiveTab(typeParam);
+    }
     const createTarget = searchParams.get("create");
     if (createTarget === "venue" || createTarget === "organizer") {
       setActiveTab(createTarget);
