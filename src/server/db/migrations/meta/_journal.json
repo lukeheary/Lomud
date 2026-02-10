@@ -120,6 +120,20 @@
       "when": 1770501869296,
       "tag": "0016_quick_vance_astro",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1770746091938,
+      "tag": "0017_add_event_source_url",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1770746482997,
+      "tag": "0018_add_event_external_id",
+      "breakpoints": true
     }
   ]
 }

@@ -46,7 +46,13 @@ interface ScrapedEvent {
 }
 
 interface ScrapeResult {
-  venue: { name: string; address: string; city: string; state: string };
+  venue: {
+    id: string;
+    name: string;
+    address: string;
+    city: string;
+    state: string;
+  };
   events: ScrapedEvent[];
   totalEvents: number;
 }
@@ -234,7 +240,6 @@ function EventCard({ event }: { event: ScrapedEvent }) {
           </div>
         </div>
 
-        {/* Schema mapping debug info */}
         <div className="mt-3 rounded-md bg-muted/50 p-3 text-xs">
           <p className="mb-1 font-medium text-muted-foreground">
             Schema mapping:
@@ -244,8 +249,7 @@ function EventCard({ event }: { event: ScrapedEvent }) {
               title: <span className="text-foreground">{event.title}</span>
             </span>
             <span>
-              venueName:{" "}
-              <span className="text-foreground">{event.venueName}</span>
+              venueName: <span className="text-foreground">{event.venueName}</span>
             </span>
             <span>
               city: <span className="text-foreground">{event.city}</span>
@@ -257,20 +261,13 @@ function EventCard({ event }: { event: ScrapedEvent }) {
               startAt: <span className="text-foreground">{event.startAt}</span>
             </span>
             <span>
-              endAt:{" "}
-              <span className="text-foreground">{event.endAt || "null"}</span>
+              endAt: <span className="text-foreground">{event.endAt || "null"}</span>
             </span>
             <span>
-              coverImageUrl:{" "}
-              <span className="text-foreground">
-                {event.coverImageUrl ? "yes" : "null"}
-              </span>
+              coverImageUrl: <span className="text-foreground">{event.coverImageUrl ? "yes" : "null"}</span>
             </span>
             <span>
-              categories:{" "}
-              <span className="text-foreground">
-                {JSON.stringify(event.categories)}
-              </span>
+              categories: <span className="text-foreground">{JSON.stringify(event.categories)}</span>
             </span>
           </div>
         </div>
@@ -279,8 +276,9 @@ function EventCard({ event }: { event: ScrapedEvent }) {
   );
 }
 
-export default function ScrapeTestPage() {
-  const [url, setUrl] = useState("https://dice.fm/venue/");
+export default function ScrapeTicketmasterPage() {
+  const [venueName, setVenueName] = useState("Big Night Live");
+  const [stateCode, setStateCode] = useState("MA");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<ScrapeResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -314,10 +312,10 @@ export default function ScrapeTestPage() {
     setImportedCount(null);
 
     try {
-      const response = await fetch("/api/scrape-dice", {
+      const response = await fetch("/api/scrape-ticketmaster", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ venueName, stateCode }),
       });
 
       const data = await response.json();
@@ -365,16 +363,22 @@ export default function ScrapeTestPage() {
     <div className="space-y-6">
       <BackButtonHeader
         backHref="/admin"
-        title="Dice.fm Scraper (Test)"
-        subtitle="Scrape events from a Dice.fm venue page and preview schema mapping"
+        title="Ticketmaster Scraper (Test)"
+        subtitle="Search Ticketmaster venues by name/state, then preview event schema mapping"
       />
 
-      <div className="flex gap-3">
+      <div className="grid gap-3 md:grid-cols-[2fr,1fr,auto]">
         <Input
-          placeholder="https://dice.fm/venue/royale-boston-rgpq"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          className="flex-1"
+          placeholder="Big Night Live"
+          value={venueName}
+          onChange={(e) => setVenueName(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && !isLoading && handleScrape()}
+        />
+        <Input
+          placeholder="MA"
+          value={stateCode}
+          maxLength={2}
+          onChange={(e) => setStateCode(e.target.value.toUpperCase())}
           onKeyDown={(e) => e.key === "Enter" && !isLoading && handleScrape()}
         />
         <Button onClick={handleScrape} disabled={isLoading}>
@@ -400,22 +404,17 @@ export default function ScrapeTestPage() {
                 {result.venue.name}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
               <p>{result.venue.address}</p>
               <p>
-                Parsed → city:{" "}
-                <span className="font-medium text-foreground">
-                  {result.venue.city}
-                </span>
-                , state:{" "}
-                <span className="font-medium text-foreground">
-                  {result.venue.state}
-                </span>
+                Ticketmaster venue ID: <span className="font-medium text-foreground">{result.venue.id}</span>
+              </p>
+              <p>
+                Parsed → city: <span className="font-medium text-foreground">{result.venue.city}</span>, state: <span className="font-medium text-foreground">{result.venue.state}</span>
               </p>
             </CardContent>
           </Card>
 
-          {/* Venue selector + import action */}
           <Card>
             <CardContent className="space-y-4 p-4">
               <div className="space-y-2">

@@ -301,6 +301,9 @@ export const events = pgTable(
     title: varchar("title", { length: 255 }).notNull(),
     description: text("description"),
     coverImageUrl: text("cover_image_url"),
+    eventUrl: text("event_url"),
+    source: varchar("source", { length: 50 }),
+    externalId: text("external_id"),
     startAt: timestamp("start_at").notNull(),
     endAt: timestamp("end_at"),
     venueName: varchar("venue_name", { length: 255 }),
@@ -323,6 +326,10 @@ export const events = pgTable(
     startVisibilityIdx: index("events_start_visibility_idx").on(
       table.startAt,
       table.visibility
+    ),
+    sourceExternalIdIdx: uniqueIndex("events_source_external_id_idx").on(
+      table.source,
+      table.externalId
     ),
   })
 );

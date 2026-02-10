@@ -91,21 +91,32 @@ export async function POST(request: NextRequest) {
     const eventArray = Array.isArray(rawEvents) ? rawEvents : [rawEvents];
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const events = eventArray.map((event: any) => ({
-      title: event.name || "Untitled Event",
-      description: event.description || null,
-      coverImageUrl: event.image?.[0] || null,
-      startAt: event.startDate,
-      endAt: event.endDate || null,
-      venueName: venueData.name,
-      address: venueData.address,
-      city,
-      state,
-      categories: ["concerts"],
-      visibility: "public" as const,
-      sourceUrl: event.url,
-      eventStatus: event.eventStatus,
-    }));
+    const events = eventArray.map((event: any) => {
+      const externalId =
+        event.identifier?.value ||
+        event.identifier ||
+        event["@id"] ||
+        event.url ||
+        null;
+
+      return {
+        title: event.name || "Untitled Event",
+        description: event.description || null,
+        coverImageUrl: event.image?.[0] || null,
+        eventUrl: event.url || null,
+        externalId,
+        startAt: event.startDate,
+        endAt: event.endDate || null,
+        venueName: venueData.name,
+        address: venueData.address,
+        city,
+        state,
+        categories: ["concerts"],
+        visibility: "public" as const,
+        source: "dice" as const,
+        eventStatus: event.eventStatus,
+      };
+    });
 
     return NextResponse.json({
       venue: {

@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
         hostname: "dice-media.imgix.net",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "s1.ticketm.net",
+        pathname: "/**",
+      },
     ],
   },
 };

@@ -16,6 +16,7 @@ import {
   Share,
   Edit,
   Users,
+  ExternalLink,
   X,
   Expand,
 } from "lucide-react";
@@ -138,6 +139,9 @@ export default function EventPage() {
       .formatToParts(eventDate)
       .find((part) => part.type === "timeZoneName")?.value || "";
   const formattedTime = `${timeWithoutTz} ${timezone}`;
+  const sourceLabel = event.source
+    ? event.source.charAt(0).toUpperCase() + event.source.slice(1)
+    : "Event Site";
 
   // Check if user can edit this event
   const canEdit =
@@ -224,14 +228,14 @@ export default function EventPage() {
           </div>
 
           {/* Expand Icon - Overlay on bottom left */}
-          {event.coverImageUrl && (
-            <div
-              className="absolute bottom-2 left-2 cursor-pointer rounded-full bg-black/50 p-2 transition-colors hover:bg-black/70"
-              onClick={() => setIsImageModalOpen(true)}
-            >
-              <Expand className="h-4 w-4 text-white" />
-            </div>
-          )}
+          {/*{event.coverImageUrl && (*/}
+          {/*  <div*/}
+          {/*    className="absolute bottom-2 left-2 cursor-pointer rounded-full bg-black/50 p-2 transition-colors hover:bg-black/70"*/}
+          {/*    onClick={() => setIsImageModalOpen(true)}*/}
+          {/*  >*/}
+          {/*    <Expand className="h-4 w-4 text-white" />*/}
+          {/*  </div>*/}
+          {/*)}*/}
 
           {/* Avatars - Overlay on bottom right */}
           {goingUsers.length > 0 && (
@@ -280,6 +284,18 @@ export default function EventPage() {
               <Users className="h-4 w-4" />
               <span>Organized by {event.organizer.name}</span>
             </Link>
+          )}
+
+          {event.eventUrl && (
+            <a
+              href={event.eventUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 flex w-fit items-center gap-2 text-muted-foreground transition-colors hover:underline"
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span>View on {sourceLabel}</span>
+            </a>
           )}
 
           <div className="mt-2 flex flex-wrap gap-2">

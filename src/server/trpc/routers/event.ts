@@ -26,6 +26,9 @@ export const eventRouter = router({
         title: z.string().min(1).max(255),
         description: z.string().optional(),
         coverImageUrl: z.string().url().optional(),
+        eventUrl: z.string().url().optional(),
+        source: z.string().max(50).optional(),
+        externalId: z.string().optional(),
         startAt: z.date(),
         endAt: z.date().optional(),
         venueName: z.string().max(255).optional(),
@@ -105,6 +108,9 @@ export const eventRouter = router({
           venueId: input.venueId ?? null,
           organizerId: input.organizerId ?? null,
           coverImageUrl: input.coverImageUrl ?? null,
+          eventUrl: input.eventUrl ?? null,
+          source: input.source ?? null,
+          externalId: input.externalId ?? null,
         } as any)
         .returning();
 
@@ -130,6 +136,9 @@ export const eventRouter = router({
             title: z.string().min(1).max(255),
             description: z.string().optional(),
             coverImageUrl: z.string().url().optional(),
+            eventUrl: z.string().url().optional(),
+            source: z.string().max(50).optional(),
+            externalId: z.string().optional(),
             startAt: z.date(),
             endAt: z.date().optional(),
             venueName: z.string().max(255).optional(),
@@ -147,10 +156,64 @@ export const eventRouter = router({
         return { created: 0 };
       }
 
-      const values = input.events.map((event) => ({
+      const eventsWithExternal = input.events.filter(
+        (event) => event.source && event.externalId
+      );
+
+      const existingKeys = new Set<string>();
+
+      if (eventsWithExternal.length > 0) {
+        const bySource = new Map<string, Set<string>>();
+
+        eventsWithExternal.forEach((event) => {
+          if (!event.source || !event.externalId) return;
+          const set = bySource.get(event.source) ?? new Set<string>();
+          set.add(event.externalId);
+          bySource.set(event.source, set);
+        });
+
+        for (const [source, ids] of bySource.entries()) {
+          const rows = await ctx.db.query.events.findMany({
+            where: and(
+              eq(events.source, source),
+              inArray(events.externalId, Array.from(ids))
+            ),
+            columns: {
+              source: true,
+              externalId: true,
+            },
+          });
+
+          rows.forEach((row) => {
+            if (row.source && row.externalId) {
+              existingKeys.add(`${row.source}::${row.externalId}`);
+            }
+          });
+        }
+      }
+
+      const seenKeys = new Set<string>();
+      const filteredEvents = input.events.filter((event) => {
+        if (event.source && event.externalId) {
+          const key = `${event.source}::${event.externalId}`;
+          if (existingKeys.has(key)) return false;
+          if (seenKeys.has(key)) return false;
+          seenKeys.add(key);
+        }
+        return true;
+      });
+
+      if (filteredEvents.length === 0) {
+        return { created: 0 };
+      }
+
+      const values = filteredEvents.map((event) => ({
         title: event.title,
         description: event.description ?? null,
         coverImageUrl: event.coverImageUrl ?? null,
+        eventUrl: event.eventUrl ?? null,
+        source: event.source ?? null,
+        externalId: event.externalId ?? null,
         startAt: event.startAt,
         endAt: event.endAt ?? null,
         venueName: event.venueName ?? null,
@@ -166,6 +229,9 @@ export const eventRouter = router({
       const created = await ctx.db
         .insert(events)
         .values(values as any)
+        .onConflictDoNothing({
+          target: [events.source, events.externalId],
+        })
         .returning();
 
       return { created: created.length };
@@ -612,6 +678,9 @@ export const eventRouter = router({
         title: z.string().min(1).max(255).optional(),
         description: z.string().optional(),
         coverImageUrl: z.string().url().optional(),
+        eventUrl: z.string().url().optional(),
+        source: z.string().max(50).optional(),
+        externalId: z.string().optional(),
         startAt: z.date().optional(),
         endAt: z.date().optional(),
         venueName: z.string().max(255).optional(),
@@ -676,6 +745,10 @@ export const eventRouter = router({
         updateData.description = updates.description;
       if (updates.coverImageUrl !== undefined)
         updateData.coverImageUrl = updates.coverImageUrl;
+      if (updates.eventUrl !== undefined) updateData.eventUrl = updates.eventUrl;
+      if (updates.source !== undefined) updateData.source = updates.source;
+      if (updates.externalId !== undefined)
+        updateData.externalId = updates.externalId;
       if (updates.startAt !== undefined) updateData.startAt = updates.startAt;
       if (updates.endAt !== undefined) updateData.endAt = updates.endAt;
       if (updates.venueName !== undefined)
