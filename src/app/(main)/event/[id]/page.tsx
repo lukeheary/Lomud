@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { trpc } from "@/lib/trpc";
@@ -12,7 +12,7 @@ import {
   Calendar,
   MapPin,
   Loader2,
-  Heart,
+  ArrowLeft,
   Share,
   Edit,
   Users,
@@ -30,6 +30,7 @@ type RsvpStatus = "going" | "interested" | "not_going";
 
 export default function EventPage() {
   const params = useParams();
+  const router = useRouter();
   const eventId = params.id as string;
   const { toast } = useToast();
   const utils = trpc.useUtils();
@@ -194,6 +195,16 @@ export default function EventPage() {
               <Calendar className="h-24 w-24 text-muted-foreground/40" />
             </div>
           )}
+
+          {/* Back Button - Overlay on top left */}
+          <Button
+            size="icon"
+            variant="secondary"
+            className="absolute left-4 top-4 h-10 w-10"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
 
           {/* Action Icons - Overlay on top right */}
           <div className="absolute right-4 top-4 flex gap-2">

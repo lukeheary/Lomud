@@ -25,7 +25,11 @@
       "Bash(nvm use:*)",
       "Bash(yes:*)",
       "Bash(npx drizzle-kit:*)",
-      "WebFetch(domain:clerk.com)"
+      "WebFetch(domain:clerk.com)",
+      "WebFetch(domain:dice.fm)",
+      "Bash(pnpm add:*)",
+      "Bash(npx next lint:*)",
+      "Bash(pnpm lint:*)"
     ]
   }
 }

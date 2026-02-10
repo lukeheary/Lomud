@@ -1,0 +1,128 @@
+import { NextRequest, NextResponse } from "next/server";
+import * as cheerio from "cheerio";
+
+function parseAddress(address: string): { city: string; state: string } {
+  const parts = address.split(",").map((s) => s.trim());
+
+  let city = "";
+  let state = "";
+
+  if (parts.length >= 3) {
+    city = parts[parts.length - 3];
+    const stateZip = parts[parts.length - 2];
+    const stateMatch = stateZip.match(/^([A-Z]{2})\s/);
+    if (stateMatch) {
+      state = stateMatch[1];
+    }
+  }
+
+  if (!state) {
+    const match = address.match(/\b([A-Z]{2})\s+\d{5}\b/);
+    if (match) state = match[1];
+  }
+
+  return { city: city || "Unknown", state: state || "XX" };
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const { url } = await request.json();
+
+    if (!url || !url.startsWith("https://dice.fm/venue/")) {
+      return NextResponse.json(
+        {
+          error:
+            "Invalid URL. Must be a Dice.fm venue URL (https://dice.fm/venue/...)",
+        },
+        { status: 400 }
+      );
+    }
+
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      },
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!response.ok) {
+      return NextResponse.json(
+        {
+          error: `Failed to fetch page: ${response.status} ${response.statusText}`,
+        },
+        { status: 502 }
+      );
+    }
+
+    const html = await response.text();
+
+    const $ = cheerio.load(html);
+    const jsonLdScripts = $('script[type="application/ld+json"]');
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let venueData: any = null;
+    jsonLdScripts.each((_, el) => {
+      try {
+        const parsed = JSON.parse($(el).text());
+        const items = Array.isArray(parsed) ? parsed : [parsed];
+        const placeItem = items.find(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (item: any) => item["@type"] === "Place" && item.event
+        );
+        if (placeItem) {
+          venueData = placeItem;
+        }
+      } catch {
+        // skip invalid JSON
+      }
+    });
+
+    if (!venueData) {
+      return NextResponse.json(
+        { error: "No event data found on this page" },
+        { status: 404 }
+      );
+    }
+
+    const { city, state } = parseAddress(venueData.address || "");
+
+    const rawEvents = venueData.event;
+    const eventArray = Array.isArray(rawEvents) ? rawEvents : [rawEvents];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const events = eventArray.map((event: any) => ({
+      title: event.name || "Untitled Event",
+      description: event.description || null,
+      coverImageUrl: event.image?.[0] || null,
+      startAt: event.startDate,
+      endAt: event.endDate || null,
+      venueName: venueData.name,
+      address: venueData.address,
+      city,
+      state,
+      categories: ["concerts"],
+      visibility: "public" as const,
+      sourceUrl: event.url,
+      eventStatus: event.eventStatus,
+    }));
+
+    return NextResponse.json({
+      venue: {
+        name: venueData.name,
+        address: venueData.address,
+        city,
+        state,
+      },
+      events,
+      totalEvents: events.length,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: `Scraping failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      },
+      { status: 500 }
+    );
+  }
+}

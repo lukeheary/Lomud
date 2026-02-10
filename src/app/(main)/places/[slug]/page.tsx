@@ -63,7 +63,7 @@ function StickyHeader({ title }: { title: string }) {
           isHeaderSticky && "border-b"
         )}
       >
-        <div className="mx-auto max-w-4xl px-4">
+        <div className="container mx-auto">
           <div className="text-xl font-semibold">{title}</div>
         </div>
       </div>
@@ -220,7 +220,7 @@ export default function PlacePage() {
       )}
 
       {/* Banner Area */}
-      <div className="relative mx-auto h-32 w-full max-w-4xl overflow-hidden bg-secondary md:h-64 lg:mt-4 lg:rounded-2xl">
+      <div className="relative container mx-auto h-32 overflow-hidden bg-secondary md:h-64 lg:mt-4 lg:rounded-2xl">
         {bannerImageUrl ? (
           <div
             className="absolute inset-0 cursor-pointer"
@@ -253,7 +253,7 @@ export default function PlacePage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-4xl px-4">
+      <div className="container mx-auto">
         {/* Profile Avatar - overlapping the banner */}
         <div className="pointer-events-none -mt-16 flex items-end justify-between md:-mt-24">
           <div className="pointer-events-auto relative">
@@ -419,11 +419,11 @@ export default function PlacePage() {
 
       <div className="pt-8">
         <StickyHeader title="Upcoming Events" />
-        <div className="mx-auto max-w-4xl px-4">
+        <div className="container mx-auto">
           {place.events && place.events.length > 0 ? (
             <EventCardGrid
               events={place.events}
-              columns={{ mobile: 1, tablet: 3, desktop: 3 }}
+              columns={{ mobile: 1, tablet: 3, desktop: 4 }}
               gap="md"
             />
           ) : (
@@ -440,10 +440,10 @@ export default function PlacePage() {
       {place.pastEvents && (place.pastEvents as any[]).length > 0 && (
         <div className="pt-8">
           <StickyHeader title="Past Events" />
-          <div className="mx-auto max-w-4xl px-4">
+          <div className="container mx-auto">
             <EventCardGrid
               events={place.pastEvents as any}
-              columns={{ mobile: 1, tablet: 3, desktop: 3 }}
+              columns={{ mobile: 1, tablet: 3, desktop: 4 }}
               gap="md"
             />
           </div>

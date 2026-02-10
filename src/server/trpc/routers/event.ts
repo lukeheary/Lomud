@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { protectedProcedure, publicProcedure, router } from "../init";
+import { adminProcedure, protectedProcedure, publicProcedure, router } from "../init";
 import {
   events,
   follows,
@@ -119,6 +119,56 @@ export const eventRouter = router({
       }
 
       return event;
+    }),
+
+  batchCreateEvents: adminProcedure
+    .input(
+      z.object({
+        venueId: z.string().uuid().optional(),
+        events: z.array(
+          z.object({
+            title: z.string().min(1).max(255),
+            description: z.string().optional(),
+            coverImageUrl: z.string().url().optional(),
+            startAt: z.date(),
+            endAt: z.date().optional(),
+            venueName: z.string().max(255).optional(),
+            address: z.string().optional(),
+            city: z.string().min(1).max(100),
+            state: z.string().length(2),
+            categories: z.array(z.string()).optional().default([]),
+            visibility: z.enum(["public", "private"]).default("public"),
+          })
+        ),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (input.events.length === 0) {
+        return { created: 0 };
+      }
+
+      const values = input.events.map((event) => ({
+        title: event.title,
+        description: event.description ?? null,
+        coverImageUrl: event.coverImageUrl ?? null,
+        startAt: event.startAt,
+        endAt: event.endAt ?? null,
+        venueName: event.venueName ?? null,
+        address: event.address ?? null,
+        city: event.city,
+        state: event.state,
+        categories: filterValidCategories(event.categories || []),
+        visibility: event.visibility,
+        createdByUserId: ctx.auth.userId,
+        venueId: input.venueId ?? null,
+      }));
+
+      const created = await ctx.db
+        .insert(events)
+        .values(values as any)
+        .returning();
+
+      return { created: created.length };
     }),
 
   listEventsByRange: protectedProcedure

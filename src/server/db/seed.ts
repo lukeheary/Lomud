@@ -128,29 +128,6 @@ async function main() {
     // VENUES (Boston)
     {
       type: "venue" as const,
-      slug: "royale-boston",
-      name: "Royale Boston",
-      description:
-        "Downtown nightclub with touring DJs, themed parties, and big-room energy.",
-      avatarImageUrl: null,
-      address: "279 Tremont St, Boston, MA 02116",
-      city: "Boston",
-      state: "MA",
-      website: "https://royaleboston.com",
-      instagram: "royaleboston",
-      categories: ["clubs", "concerts"],
-      hours: {
-        monday: { open: "22:00", close: "02:00", closed: true },
-        tuesday: { open: "22:00", close: "02:00", closed: true },
-        wednesday: { open: "22:00", close: "02:00", closed: false },
-        thursday: { open: "22:00", close: "02:00", closed: false },
-        friday: { open: "22:00", close: "03:00", closed: false },
-        saturday: { open: "22:00", close: "03:00", closed: false },
-        sunday: { open: "22:00", close: "02:00", closed: true },
-      },
-    },
-    {
-      type: "venue" as const,
       slug: "bijou-boston",
       name: "Bijou Boston",
       description:
@@ -332,7 +309,6 @@ async function main() {
   await db
     .insert(placeMembers)
     .values([
-      { userId: u1, placeId: placeIdBySlug.get("royale-boston")!, role: "owner" },
       { userId: u3, placeId: placeIdBySlug.get("bijou-boston")!, role: "manager" },
       { userId: u2, placeId: placeIdBySlug.get("elsewhere-brooklyn")!, role: "promoter" },
       { userId: u4, placeId: placeIdBySlug.get("good-room-brooklyn")!, role: "staff" },
@@ -355,7 +331,6 @@ async function main() {
     .insert(placeFollows)
     .values([
       { userId: u1, placeId: placeIdBySlug.get("elsewhere-brooklyn")! },
-      { userId: u2, placeId: placeIdBySlug.get("royale-boston")! },
       { userId: u3, placeId: placeIdBySlug.get("bijou-boston")! },
       { userId: u4, placeId: placeIdBySlug.get("good-room-brooklyn")! },
       { userId: u1, placeId: placeIdBySlug.get("midnight-moves")! },
@@ -390,23 +365,6 @@ async function main() {
     // -------------------
     // Boston
     // -------------------
-    {
-      venueId: placeIdBySlug.get("royale-boston")!,
-      organizerId: placeIdBySlug.get("neon-nights-collective") ?? null,
-      createdByUserId: u1,
-      title: "Neon Nights: Royale Takeover",
-      description:
-        "House + disco all night in the main room. Bright fits encouraged; phone-light moments discouraged.",
-      avatarImageUrl: null,
-      startAt: daysFromTodayAt(0, 22, 0),
-      endAt: hoursAfter(daysFromTodayAt(1, 22, 0), 4.5),
-      venueName: "Royale Boston",
-      address: "279 Tremont St, Boston, MA 02116",
-      city: "Boston",
-      state: "MA",
-      categories: ["clubs", "concerts"],
-      visibility: "public" as const,
-    },
     {
       venueId: placeIdBySlug.get("bijou-boston")!,
       organizerId: placeIdBySlug.get("afterhours-society") ?? null,
@@ -444,23 +402,6 @@ async function main() {
 
     // Boston overlaps / test density
     {
-      venueId: placeIdBySlug.get("royale-boston")!,
-      organizerId: placeIdBySlug.get("afterhours-society") ?? null,
-      createdByUserId: u3,
-      title: "Royale Side Room: Tech House Hour",
-      description:
-        "Early side-room warmup: rolling tech house and quick transitions before the main takeover.",
-      avatarImageUrl: null,
-      startAt: daysFromTodayAt(1, 20, 30),
-      endAt: hoursAfter(daysFromTodayAt(1, 20, 30), 2),
-      venueName: "Royale Boston (Side Room)",
-      address: "279 Tremont St, Boston, MA 02116",
-      city: "Boston",
-      state: "MA",
-      categories: ["clubs"],
-      visibility: "public" as const,
-    },
-    {
       venueId: placeIdBySlug.get("bijou-boston")!,
       organizerId: null,
       createdByUserId: u1,
@@ -479,23 +420,6 @@ async function main() {
     },
 
     // Additional Boston Events (Days 0-7)
-    {
-      venueId: placeIdBySlug.get("royale-boston")!,
-      organizerId: placeIdBySlug.get("midnight-moves") ?? null,
-      createdByUserId: u1,
-      title: "Midnight Moves: Opening Night",
-      description:
-        "Season kickoff with extended sets and special guests. Funky house meets soulful disco.",
-      avatarImageUrl: null,
-      startAt: daysFromTodayAt(0, 21, 0),
-      endAt: hoursAfter(daysFromTodayAt(0, 21, 0), 5),
-      venueName: "Royale Boston",
-      address: "279 Tremont St, Boston, MA 02116",
-      city: "Boston",
-      state: "MA",
-      categories: ["clubs", "concerts"],
-      visibility: "public" as const,
-    },
     {
       venueId: placeIdBySlug.get("middlesex-lounge-cambridge")!,
       organizerId: null,
@@ -531,23 +455,6 @@ async function main() {
       visibility: "public" as const,
     },
     {
-      venueId: placeIdBySlug.get("royale-boston")!,
-      organizerId: placeIdBySlug.get("neon-nights-collective") ?? null,
-      createdByUserId: u1,
-      title: "Neon Nights: Throwback Thursday",
-      description:
-        "2000s dance classics meet modern house remixes. Nostalgia with a twist.",
-      avatarImageUrl: null,
-      startAt: daysFromTodayAt(3, 21, 30),
-      endAt: hoursAfter(daysFromTodayAt(3, 21, 30), 4),
-      venueName: "Royale Boston",
-      address: "279 Tremont St, Boston, MA 02116",
-      city: "Boston",
-      state: "MA",
-      categories: ["clubs", "concerts"],
-      visibility: "public" as const,
-    },
-    {
       venueId: placeIdBySlug.get("middlesex-lounge-cambridge")!,
       organizerId: placeIdBySlug.get("afterhours-society") ?? null,
       createdByUserId: u3,
@@ -579,23 +486,6 @@ async function main() {
       city: "Boston",
       state: "MA",
       categories: ["clubs", "bars"],
-      visibility: "public" as const,
-    },
-    {
-      venueId: placeIdBySlug.get("royale-boston")!,
-      organizerId: null,
-      createdByUserId: u3,
-      title: "Saturday Night Live: Open Format",
-      description:
-        "Hip-hop, R&B, top 40, and dance hits. Bottle service available, dress code enforced.",
-      avatarImageUrl: null,
-      startAt: daysFromTodayAt(6, 23, 0),
-      endAt: hoursAfter(daysFromTodayAt(6, 23, 0), 4),
-      venueName: "Royale Boston",
-      address: "279 Tremont St, Boston, MA 02116",
-      city: "Boston",
-      state: "MA",
-      categories: ["clubs", "social"],
       visibility: "public" as const,
     },
     {

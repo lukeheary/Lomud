@@ -213,15 +213,36 @@ export const placeRouter = router({
       const userRsvpMap = new Map<string, any>();
 
       if (ctx.auth.userId && allEventIds.length > 0) {
-        // Fetch user RSVPs
-        const userRsvps = await ctx.db.query.rsvps.findMany({
-          where: and(
-            inArray(rsvps.eventId, allEventIds),
-            eq(rsvps.userId, ctx.auth.userId)
-          ),
-        });
+        // Fetch current user and their RSVPs
+        const [currentUser, userRsvps] = await Promise.all([
+          ctx.db.query.users.findFirst({
+            where: eq(users.id, ctx.auth.userId),
+          }),
+          ctx.db.query.rsvps.findMany({
+            where: and(
+              inArray(rsvps.eventId, allEventIds),
+              eq(rsvps.userId, ctx.auth.userId)
+            ),
+          }),
+        ]);
+
         for (const rsvp of userRsvps) {
           userRsvpMap.set(rsvp.eventId, rsvp);
+        }
+
+        // Add current user to attendeesMap if they're going
+        if (currentUser) {
+          for (const userRsvp of userRsvps) {
+            if (userRsvp.status === "going") {
+              if (!attendeesMap.has(userRsvp.eventId)) {
+                attendeesMap.set(userRsvp.eventId, []);
+              }
+              attendeesMap.get(userRsvp.eventId)!.push({
+                ...userRsvp,
+                user: currentUser,
+              } as any);
+            }
+          }
         }
 
         const userFriends = await ctx.db.query.friends.findMany({
