@@ -70,24 +70,6 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
     pathname?.startsWith("/event/") && !pathname?.includes("/edit");
   const [isNavSolid, setIsNavSolid] = useState(false);
 
-  useEffect(() => {
-    if (!isEventDetail) {
-      setIsNavSolid(false);
-      return;
-    }
-
-    const handleScroll = () => {
-      setIsNavSolid(window.scrollY > 12);
-    };
-
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, [isEventDetail]);
-
   const handleSignOut = async () => {
     await signOut();
     router.push("/");
@@ -106,7 +88,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
           isEventDetail
             ? isNavSolid
               ? "border-border bg-background/90 backdrop-blur"
-              : "border-transparent bg-transparent"
+              : "border-border bg-background md:border-transparent md:bg-transparent md:backdrop-blur-0"
             : (isHome || isPlaceDetail) && showNavbarSearch
               ? "border-transparent bg-background"
               : "border-border bg-background"
