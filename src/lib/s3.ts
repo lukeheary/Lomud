@@ -62,6 +62,56 @@ export async function uploadToS3(
 }
 
 /**
+ * Download an image from a URL and upload it to S3.
+ * Useful for re-hosting scraped event images on our own bucket.
+ */
+export async function uploadImageFromUrl(
+  imageUrl: string,
+  folder: string = "events",
+  fileName?: string
+): Promise<string> {
+  const response = await fetch(imageUrl, {
+    signal: AbortSignal.timeout(15000),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch image: ${response.status}`);
+  }
+
+  const contentType = response.headers.get("content-type") || "image/jpeg";
+
+  // Determine extension from content type
+  const extMap: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/jpg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+    "image/gif": "gif",
+    "image/avif": "avif",
+  };
+  const ext = extMap[contentType] || "jpg";
+
+  const filename =
+    fileName || generateUniqueFilename(`image.${ext}`);
+  const fullPath = getStoragePath(folder);
+  const key = `${fullPath}/${filename}`;
+
+  const arrayBuffer = await response.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  const command = new PutObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: key,
+    Body: buffer,
+    ContentType: contentType,
+  });
+
+  await s3Client.send(command);
+
+  return getS3Url(key);
+}
+
+/**
  * Delete a file from S3
  */
 export async function deleteFromS3(url: string): Promise<void> {

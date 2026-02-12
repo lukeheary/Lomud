@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
         hostname: "s1.ticketm.net",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "www.clubcafe.com",
+        pathname: "/**",
+      },
     ],
   },
 };

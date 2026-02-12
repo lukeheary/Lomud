@@ -13,6 +13,7 @@ import {
   users,
 } from "../../db/schema";
 import { and, desc, eq, gte, ilike, inArray, lte, or, sql } from "drizzle-orm";
+import { uploadImageFromUrl, BUCKET_NAME } from "@/lib/s3";
 import { TRPCError } from "@trpc/server";
 import { logActivity } from "../../utils/activity-logger";
 import { CATEGORIES, filterValidCategories } from "@/lib/categories";
@@ -226,6 +227,7 @@ export const eventRouter = router({
         venueId: input.venueId ?? null,
       }));
 
+      // Insert events first to get IDs
       const created = await ctx.db
         .insert(events)
         .values(values as any)
@@ -233,6 +235,32 @@ export const eventRouter = router({
           target: [events.source, events.externalId],
         })
         .returning();
+
+      // Re-upload external cover images to S3 at events/{id}/coverImage.png
+      const s3BucketHost = `${BUCKET_NAME}.s3`;
+      await Promise.allSettled(
+        created.map(async (row) => {
+          if (
+            !row.coverImageUrl ||
+            row.coverImageUrl.includes(s3BucketHost)
+          ) {
+            return;
+          }
+          try {
+            const s3Url = await uploadImageFromUrl(
+              row.coverImageUrl,
+              `events/${row.id}`,
+              "coverImage.png"
+            );
+            await ctx.db
+              .update(events)
+              .set({ coverImageUrl: s3Url })
+              .where(eq(events.id, row.id));
+          } catch {
+            // Keep the original external URL if upload fails
+          }
+        })
+      );
 
       return { created: created.length };
     }),

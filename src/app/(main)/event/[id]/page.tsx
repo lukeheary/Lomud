@@ -180,7 +180,7 @@ export default function EventPage() {
 
       {/* Cover Image - Banner style on all screens */}
       <div className="mx-auto w-full max-w-4xl lg:px-4 lg:pt-4">
-        <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted lg:aspect-auto lg:h-[400px] lg:rounded-2xl">
+        <div className="relative !aspect-square w-full overflow-hidden bg-muted lg:aspect-auto lg:h-[400px] lg:rounded-2xl">
           {event.coverImageUrl ? (
             <div
               className="relative h-full w-full cursor-pointer"

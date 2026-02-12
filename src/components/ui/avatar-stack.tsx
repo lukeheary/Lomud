@@ -51,7 +51,7 @@ export function AvatarStack({
             src={user.avatarImageUrl}
             name={user.firstName}
             size={avatarSize}
-            className={`${sizeClass} border border-background`}
+            className={`${sizeClass} border border-background bg-background`}
           />
         ))}
       </div>

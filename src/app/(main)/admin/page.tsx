@@ -6,9 +6,8 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
-import { Building, Building2, MapPin, Plus } from "lucide-react";
+import { Building, Building2, Download, MapPin, Plus } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminPage() {
@@ -103,13 +102,33 @@ export default function AdminPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Latest updates on the platform</CardDescription>
+            <CardTitle>Scrapers</CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Recent activity logging coming soon...
-            </p>
+          <CardContent className="grid gap-2">
+            <Link href="/admin/scrape-test">
+              <Card className="p-4 hover:bg-accent">
+                <div className="flex items-center gap-3">
+                  <Download className="h-4 w-4" />
+                  <div className="text-sm font-medium">Dice.fm Scraper</div>
+                </div>
+              </Card>
+            </Link>
+            <Link href="/admin/scrape-clubcafe">
+              <Card className="p-4 hover:bg-accent">
+                <div className="flex items-center gap-3">
+                  <Download className="h-4 w-4" />
+                  <div className="text-sm font-medium">Club Cafe Scraper</div>
+                </div>
+              </Card>
+            </Link>
+            <Link href="/admin/scrape-ticketmaster">
+              <Card className="p-4 hover:bg-accent">
+                <div className="flex items-center gap-3">
+                  <Download className="h-4 w-4" />
+                  <div className="text-sm font-medium">Ticketmaster Scraper</div>
+                </div>
+              </Card>
+            </Link>
           </CardContent>
         </Card>
       </div>
