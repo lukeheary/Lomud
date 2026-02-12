@@ -180,10 +180,10 @@ export default function EventPage() {
 
       {/* Cover Image - Banner style on all screens */}
       <div className="mx-auto w-full max-w-4xl lg:px-4 lg:pt-4">
-        <div className="relative !aspect-square w-full overflow-hidden bg-muted lg:aspect-auto lg:h-[400px] lg:rounded-2xl">
+        <div className="relative !aspect-square w-full overflow-hidden rounded-2xl bg-background p-4 lg:aspect-auto lg:h-[400px]">
           {event.coverImageUrl ? (
             <div
-              className="relative h-full w-full cursor-pointer"
+              className="relative h-full w-full cursor-pointer overflow-hidden rounded-2xl"
               onClick={() => setIsImageModalOpen(true)}
             >
               <Image
@@ -204,14 +204,14 @@ export default function EventPage() {
           <Button
             size="icon"
             variant="secondary"
-            className="absolute left-4 top-4 h-10 w-10"
+            className="absolute left-8 top-8 h-10 w-10"
             onClick={() => router.back()}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
 
           {/* Action Icons - Overlay on top right */}
-          <div className="absolute right-4 top-4 flex gap-2">
+          <div className="absolute right-8 top-8 flex gap-2">
             {canEdit && (
               <Link href={`/event/${eventId}/edit`}>
                 <Button size="icon" variant="secondary" className="h-10 w-10">
@@ -247,7 +247,7 @@ export default function EventPage() {
       </div>
 
       {/* Content */}
-      <div className="mx-auto max-w-4xl p-4 pb-8">
+      <div className="mx-auto max-w-4xl px-4 pb-8">
         {/* Main Content */}
         <div>
           {/* Title & Basic Info */}

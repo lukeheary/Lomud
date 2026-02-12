@@ -66,6 +66,8 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
   const isProfile = pathname === "/profile";
   const isMyPlaces = pathname === "/my-places";
   const isAdminPage = pathname?.startsWith("/admin");
+  const isEventDetail =
+    pathname?.startsWith("/event/") && !pathname?.includes("/edit");
 
   const handleSignOut = async () => {
     await signOut();
@@ -81,10 +83,11 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
       {/* Navigation Bar */}
       <header
         className={cn(
-          "sticky top-0 z-40 bg-background transition-[border-color] duration-150",
-          (isHome || isPlaceDetail) && showNavbarSearch
-            ? "border-b border-transparent"
-            : "border-b"
+          "sticky top-0 z-40 border-b border-transparent bg-background transition-[border-color] duration-150",
+          !isEventDetail &&
+            ((isHome || isPlaceDetail) && showNavbarSearch
+              ? "border-b border-transparent"
+              : "border-b")
         )}
       >
         <div className="container mx-auto flex h-16 items-center px-4">
