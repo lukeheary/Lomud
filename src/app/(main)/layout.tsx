@@ -102,7 +102,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
       {/* Navigation Bar */}
       <header
         className={cn(
-          "sticky top-0 z-40 border-transparent transition-colors duration-150",
+          "sticky top-0 z-40 border-transparent bg-background transition-colors duration-150",
           isEventDetail
             ? isNavSolid
               ? "border-border bg-background/90 backdrop-blur"

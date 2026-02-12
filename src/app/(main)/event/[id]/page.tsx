@@ -143,18 +143,18 @@ export default function EventPage() {
     isAdmin || (currentUser && event.createdByUserId === currentUser.id);
 
   return (
-    <div className="-mt-16 min-h-screen bg-background isolate pt-16 relative">
+    <div className="relative isolate -mt-16 min-h-screen bg-background pt-16">
       {event.coverImageUrl && (
         <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           <Image
             src={event.coverImageUrl}
             alt=""
             fill
-            className="scale-110 object-cover opacity-40 blur-2xl"
+            className="scale-110 object-cover opacity-20 blur-2xl"
             sizes="100vw"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--background))_0%,hsl(var(--background))_10%,hsl(var(--background)/0.85)_40%,hsl(var(--background)/0.3)_70%,hsl(var(--background)/0)_100%)] md:bg-gradient-to-b md:from-background/60 md:via-background/60 md:to-background" />
         </div>
       )}
       {/* Image Modal */}
