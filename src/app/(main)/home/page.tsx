@@ -516,7 +516,7 @@ function HomePageContent() {
         {/* Search and Filters */}
         <div
           className={
-            "z-[45] -mx-4 -mt-4 bg-background px-4 pb-3 pt-4 transition-shadow md:top-16 md:z-30 md:-mx-8 md:bg-background/95 md:px-8 md:pt-4 md:backdrop-blur md:supports-[backdrop-filter]:bg-background"
+            "z-[45] -mx-4 -mt-4 bg-background px-4 pb-3 pt-2 transition-shadow md:top-16 md:z-30 md:-mx-8 md:bg-background/95 md:px-8 md:backdrop-blur md:supports-[backdrop-filter]:bg-background"
           }
         >
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">

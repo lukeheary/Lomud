@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import {
@@ -68,6 +68,25 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
   const isAdminPage = pathname?.startsWith("/admin");
   const isEventDetail =
     pathname?.startsWith("/event/") && !pathname?.includes("/edit");
+  const [isNavSolid, setIsNavSolid] = useState(false);
+
+  useEffect(() => {
+    if (!isEventDetail) {
+      setIsNavSolid(false);
+      return;
+    }
+
+    const handleScroll = () => {
+      setIsNavSolid(window.scrollY > 12);
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [isEventDetail]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -83,11 +102,14 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
       {/* Navigation Bar */}
       <header
         className={cn(
-          "sticky top-0 z-40 border-b border-transparent bg-background transition-[border-color] duration-150",
-          !isEventDetail &&
-            ((isHome || isPlaceDetail) && showNavbarSearch
-              ? "border-b border-transparent"
-              : "border-b")
+          "sticky top-0 z-40 border-transparent transition-colors duration-150",
+          isEventDetail
+            ? isNavSolid
+              ? "border-border bg-background/90 backdrop-blur"
+              : "border-transparent bg-transparent"
+            : (isHome || isPlaceDetail) && showNavbarSearch
+              ? "border-transparent bg-background"
+              : "border-border bg-background"
         )}
       >
         <div className="container mx-auto flex h-16 items-center">
