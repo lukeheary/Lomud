@@ -7,7 +7,6 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { Separator } from "@/components/ui/separator";
 import {
   Calendar,
   MapPin,
@@ -18,7 +17,6 @@ import {
   Users,
   ExternalLink,
   X,
-  Expand,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -124,9 +122,6 @@ export default function EventPage() {
   }
 
   const goingCount = attendees?.filter((a) => a.status === "going").length || 0;
-  const interestedCount =
-    attendees?.filter((a) => a.status === "interested").length || 0;
-
   // Get users who are going for avatar stack
   const goingUsers =
     attendees?.filter((a) => a.status === "going").map((a) => a.user) || [];
@@ -148,7 +143,7 @@ export default function EventPage() {
     isAdmin || (currentUser && event.createdByUserId === currentUser.id);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background">
       {/* Image Modal */}
       {isImageModalOpen && event.coverImageUrl && (
         <div
@@ -178,230 +173,236 @@ export default function EventPage() {
         </div>
       )}
 
-      {/* Cover Image - Banner style on all screens */}
-      <div className="mx-auto w-full max-w-4xl px-4 pb-4 lg:pt-4">
-        <div className="relative !aspect-square w-full overflow-hidden rounded-2xl bg-background lg:aspect-auto lg:h-[400px]">
-          {event.coverImageUrl ? (
-            <div
-              className="relative h-full w-full cursor-pointer overflow-hidden rounded-2xl"
-              onClick={() => setIsImageModalOpen(true)}
-            >
-              <Image
-                src={event.coverImageUrl}
-                alt={event.title}
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
-              <Calendar className="h-24 w-24 text-muted-foreground/40" />
-            </div>
-          )}
+      {/* Desktop two-column layout */}
+      <div className="container mx-auto w-full px-4 pb-8 md:pt-4">
+        <div className="lg:flex lg:items-start lg:gap-10">
+          {/* Cover Image - Left column on desktop */}
+          <div className="lg:w-[360px] lg:flex-none">
+            <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-muted lg:aspect-auto lg:min-h-[360px]">
+              {event.coverImageUrl ? (
+                <div
+                  className="h-full w-full cursor-pointer"
+                  onClick={() => setIsImageModalOpen(true)}
+                >
+                  <Image
+                    src={event.coverImageUrl}
+                    alt={event.title}
+                    fill
+                    className="object-cover"
+                    sizes="360px"
+                    priority
+                  />
+                </div>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
+                  <Calendar className="h-24 w-24 text-muted-foreground/40" />
+                </div>
+              )}
 
-          {/* Back Button - Overlay on top left */}
-          <Button
-            size="icon"
-            variant="secondary"
-            className="absolute left-4 top-4 h-10 w-10"
-            onClick={() => router.back()}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+              {/* Back Button - Overlay on top left */}
+              <Button
+                size="icon"
+                variant="secondary"
+                className="absolute left-4 top-4 h-10 w-10"
+                onClick={() => router.back()}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
 
-          {/* Action Icons - Overlay on top right */}
-          <div className="absolute right-4 top-4 flex gap-2">
-            {canEdit && (
-              <Link href={`/event/${eventId}/edit`}>
+              {/* Action Icons - Overlay on top right */}
+              <div className="absolute right-4 top-4 flex gap-2">
+                {canEdit && (
+                  <Link href={`/event/${eventId}/edit`}>
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="h-10 w-10"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                )}
+                {/*<Button size="icon" variant="secondary" className="h-10 w-10">*/}
+                {/*  <Heart className="h-4 w-4" />*/}
+                {/*</Button>*/}
                 <Button size="icon" variant="secondary" className="h-10 w-10">
-                  <Edit className="h-4 w-4" />
+                  <Share className="h-4 w-4" />
                 </Button>
+              </div>
+
+              {/* Avatars - Overlay on bottom right */}
+              {goingUsers.length > 0 && (
+                <div className="absolute bottom-4 right-4">
+                  <AvatarStack users={goingUsers} maxDisplay={5} size="md" />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Content - Right column on desktop */}
+          <div className="pt-6 lg:flex-1 lg:pt-0">
+            {/* Main Content */}
+            {/* Title & Basic Info */}
+            <div className="mb-2">
+              <h1 className="text-3xl font-bold md:text-4xl">{event.title}</h1>
+            </div>
+
+            <div className="flex items-center gap-2 text-lg">
+              <Calendar className="h-4 w-4" />
+              <span>
+                {formattedDate} at {formattedTime}
+              </span>
+            </div>
+
+            {event.venueName && (
+              <Link
+                className="mt-1 flex w-fit items-center gap-2 text-muted-foreground transition-colors hover:underline"
+                href={`/places/${event.venue?.slug}`}
+              >
+                <MapPin className="h-4 w-4" />
+                {event.venue?.slug ? (
+                  <span className="">{event.venueName}</span>
+                ) : (
+                  <span className="">{event.venueName}</span>
+                )}
               </Link>
             )}
-            {/*<Button size="icon" variant="secondary" className="h-10 w-10">*/}
-            {/*  <Heart className="h-4 w-4" />*/}
-            {/*</Button>*/}
-            <Button size="icon" variant="secondary" className="h-10 w-10">
-              <Share className="h-4 w-4" />
-            </Button>
-          </div>
 
-          {/* Expand Icon - Overlay on bottom left */}
-          {/*{event.coverImageUrl && (*/}
-          {/*  <div*/}
-          {/*    className="absolute bottom-2 left-2 cursor-pointer rounded-full bg-black/50 p-2 transition-colors hover:bg-black/70"*/}
-          {/*    onClick={() => setIsImageModalOpen(true)}*/}
-          {/*  >*/}
-          {/*    <Expand className="h-4 w-4 text-white" />*/}
-          {/*  </div>*/}
-          {/*)}*/}
-
-          {/* Avatars - Overlay on bottom right */}
-          {goingUsers.length > 0 && (
-            <div className="absolute bottom-4 right-4">
-              <AvatarStack users={goingUsers} maxDisplay={5} size="md" />
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="mx-auto max-w-4xl px-4 pb-8">
-        {/* Main Content */}
-        <div>
-          {/* Title & Basic Info */}
-          <div className="mb-2">
-            <h1 className="text-3xl font-bold md:text-4xl">{event.title}</h1>
-          </div>
-
-          <div className="flex items-center gap-2 text-lg">
-            <Calendar className="h-4 w-4" />
-            <span>
-              {formattedDate} at {formattedTime}
-            </span>
-          </div>
-
-          {event.venueName && (
-            <Link
-              className="mt-1 flex w-fit items-center gap-2 text-muted-foreground transition-colors hover:underline"
-              href={`/places/${event.venue?.slug}`}
-            >
-              <MapPin className="h-4 w-4" />
-              {event.venue?.slug ? (
-                <span className="">{event.venueName}</span>
-              ) : (
-                <span className="">{event.venueName}</span>
-              )}
-            </Link>
-          )}
-
-          {event.organizer && (
-            <Link
-              href={`/places/${event.organizer.slug}`}
-              className="mt-1 flex w-fit items-center gap-2 text-muted-foreground transition-colors hover:underline"
-            >
-              <Users className="h-4 w-4" />
-              <span>Organized by {event.organizer.name}</span>
-            </Link>
-          )}
-
-          {event.eventUrl && (
-            <a
-              href={event.eventUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-1 flex w-fit items-center gap-2 text-muted-foreground transition-colors hover:underline"
-            >
-              <ExternalLink className="h-4 w-4" />
-              <span>View on {sourceLabel}</span>
-            </a>
-          )}
-
-          <div className="mt-2 flex flex-wrap gap-2">
-            {event.categories?.map((category) => (
-              <Badge key={category} variant="secondary" className="capitalize">
-                {CATEGORY_LABELS[category as Category] || category}
-              </Badge>
-            ))}
-          </div>
-
-          {/* RSVP Buttons - Shared across mobile and desktop */}
-          <div className="flex gap-2 py-4">
-            <Button
-              variant={
-                event.userRsvp?.status === "interested"
-                  ? "secondary"
-                  : "outline"
-              }
-              className="flex-1 text-base font-medium"
-              size="lg"
-              onClick={() => handleRsvp("interested")}
-              disabled={rsvpMutation.isPending || deleteRsvpMutation.isPending}
-            >
-              Interested
-            </Button>
-            <Button
-              variant={
-                event.userRsvp?.status === "going" ? "default" : "outline"
-              }
-              className={cn(
-                "flex-1 text-base font-medium transition-colors",
-                event.userRsvp?.status === "going" &&
-                  "border-transparent bg-green-500 text-black hover:bg-green-600"
-              )}
-              size="lg"
-              onClick={() => handleRsvp("going")}
-              disabled={rsvpMutation.isPending || deleteRsvpMutation.isPending}
-            >
-              {event.userRsvp?.status === "going" ? "Going" : "I'm Going"}
-            </Button>
-          </div>
-
-          {/*<Separator />*/}
-
-          {/* About Section */}
-          <div className={"pt-4"}>
-            <h2 className="mb-2 text-2xl font-bold">About</h2>
-
-            {/* Event Date */}
-            <div className="mb-6">
-              <p className="text-muted-foreground">{event.title}</p>
-            </div>
-
-            {/* Description */}
-            {event.description && (
-              <div className="mb-6">
-                <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">
-                  {event.description}
-                </p>
-              </div>
+            {event.organizer && (
+              <Link
+                href={`/places/${event.organizer.slug}`}
+                className="mt-1 flex w-fit items-center gap-2 text-muted-foreground transition-colors hover:underline"
+              >
+                <Users className="h-4 w-4" />
+                <span>Organized by {event.organizer.name}</span>
+              </Link>
             )}
 
-            {/* Location Details */}
-            <div className="space-y-2">
-              {event.address && (
-                <p className="text-muted-foreground">{event.address}</p>
-              )}
-              <p className="text-muted-foreground">
-                {event.city}, {event.state}
-              </p>
-            </div>
-          </div>
+            {event.eventUrl && (
+              <a
+                href={event.eventUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 flex w-fit items-center gap-2 text-muted-foreground transition-colors hover:underline"
+              >
+                <ExternalLink className="h-4 w-4" />
+                <span>View on {sourceLabel}</span>
+              </a>
+            )}
 
-          {/* Lineup / Attendees Section */}
-          {attendees && attendees.length > 0 && (
-            <div className={"pt-4"}>
-              <h2 className="mb-4 text-2xl font-bold">Who&apos;s Going</h2>
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-                {attendees
-                  .filter((a) => a.status === "going")
-                  .slice(0, 9)
-                  .map((attendee) => (
-                    <div
-                      key={attendee.user.id}
-                      className="flex items-center gap-3 rounded-lg border bg-card p-3"
-                    >
-                      <UserAvatar
-                        src={attendee.user.avatarImageUrl}
-                        name={attendee.user.firstName}
-                        className="h-10 w-10"
-                      />
-                      <div className="text-sm">
-                        <p className="font-medium">
-                          {attendee.user.firstName} {attendee.user.lastName}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-              {goingCount > 9 && (
-                <p className="mt-4 text-sm text-muted-foreground">
-                  And {goingCount - 9} others are going
-                </p>
-              )}
+            <div className="mt-2 flex flex-wrap gap-2">
+              {event.categories?.map((category) => (
+                <Badge
+                  key={category}
+                  variant="secondary"
+                  className="capitalize"
+                >
+                  {CATEGORY_LABELS[category as Category] || category}
+                </Badge>
+              ))}
             </div>
-          )}
+
+            {/* RSVP Buttons - Shared across mobile and desktop */}
+            <div className="flex gap-2 py-4">
+              <Button
+                variant={
+                  event.userRsvp?.status === "interested"
+                    ? "secondary"
+                    : "outline"
+                }
+                className="flex-1 text-base font-medium"
+                size="lg"
+                onClick={() => handleRsvp("interested")}
+                disabled={
+                  rsvpMutation.isPending || deleteRsvpMutation.isPending
+                }
+              >
+                Interested
+              </Button>
+              <Button
+                variant={
+                  event.userRsvp?.status === "going" ? "default" : "outline"
+                }
+                className={cn(
+                  "flex-1 text-base font-medium transition-colors",
+                  event.userRsvp?.status === "going" &&
+                    "border-transparent bg-green-500 text-black hover:bg-green-600"
+                )}
+                size="lg"
+                onClick={() => handleRsvp("going")}
+                disabled={
+                  rsvpMutation.isPending || deleteRsvpMutation.isPending
+                }
+              >
+                {event.userRsvp?.status === "going" ? "Going" : "I'm Going"}
+              </Button>
+            </div>
+
+            {/*<Separator />*/}
+
+            {/* About Section */}
+            <div className={"pt-4"}>
+              <h2 className="mb-2 text-2xl font-bold">About</h2>
+
+              {/* Event Date */}
+              <div className="mb-6">
+                <p className="text-muted-foreground">{event.title}</p>
+              </div>
+
+              {/* Description */}
+              {event.description && (
+                <div className="mb-6">
+                  <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">
+                    {event.description}
+                  </p>
+                </div>
+              )}
+
+              {/* Location Details */}
+              <div className="space-y-2">
+                {event.address && (
+                  <p className="text-muted-foreground">{event.address}</p>
+                )}
+                <p className="text-muted-foreground">
+                  {event.city}, {event.state}
+                </p>
+              </div>
+            </div>
+
+            {/* Lineup / Attendees Section */}
+            {attendees && attendees.length > 0 && (
+              <div className={"pt-4"}>
+                <h2 className="mb-4 text-2xl font-bold">Who&apos;s Going</h2>
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+                  {attendees
+                    .filter((a) => a.status === "going")
+                    .slice(0, 9)
+                    .map((attendee) => (
+                      <div
+                        key={attendee.user.id}
+                        className="flex items-center gap-3 rounded-lg border bg-card p-3"
+                      >
+                        <UserAvatar
+                          src={attendee.user.avatarImageUrl}
+                          name={attendee.user.firstName}
+                          className="h-10 w-10"
+                        />
+                        <div className="text-sm">
+                          <p className="font-medium">
+                            {attendee.user.firstName} {attendee.user.lastName}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+                {goingCount > 9 && (
+                  <p className="mt-4 text-sm text-muted-foreground">
+                    And {goingCount - 9} others are going
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

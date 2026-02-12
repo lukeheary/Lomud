@@ -90,7 +90,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
               : "border-b")
         )}
       >
-        <div className="container mx-auto flex h-16 items-center px-4">
+        <div className="container mx-auto flex h-16 items-center">
           {/* Left Side - Logo */}
           <div className="flex items-center">
             <Link
