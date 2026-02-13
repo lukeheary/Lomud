@@ -10,7 +10,6 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import {
   Calendar,
   MapPin,
-  Loader2,
   ArrowLeft,
   Share,
   Edit,
@@ -27,6 +26,42 @@ import { useState } from "react";
 import { CATEGORY_LABELS, type Category } from "@/lib/categories";
 
 type RsvpStatus = "going" | "interested" | "not_going";
+
+function EventPageSkeleton() {
+  return (
+    <div className="relative isolate -mt-16 min-h-screen bg-background pt-16">
+      <div className="container w-full px-4 pb-8 pt-4">
+        <div className="lg:flex lg:items-start lg:gap-10">
+          <div className="lg:w-[360px] lg:flex-none">
+            <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-muted lg:aspect-auto lg:min-h-[360px]">
+              <div className="h-full w-full animate-pulse bg-muted" />
+            </div>
+          </div>
+
+          <div className="pt-6 lg:flex-1 lg:pt-0">
+            <div className="space-y-3">
+              <div className="h-9 w-2/3 animate-pulse rounded-full bg-muted" />
+              <div className="h-5 w-1/2 animate-pulse rounded-full bg-muted" />
+              <div className="h-4 w-1/3 animate-pulse rounded-full bg-muted" />
+            </div>
+
+            <div className="mt-4 flex gap-2">
+              <div className="h-12 flex-1 animate-pulse rounded-full bg-muted" />
+              <div className="h-12 flex-1 animate-pulse rounded-full bg-muted" />
+            </div>
+
+            <div className="mt-6 space-y-3">
+              <div className="h-6 w-40 animate-pulse rounded-full bg-muted" />
+              <div className="h-4 w-full animate-pulse rounded-full bg-muted" />
+              <div className="h-4 w-5/6 animate-pulse rounded-full bg-muted" />
+              <div className="h-4 w-2/3 animate-pulse rounded-full bg-muted" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function EventPage() {
   const params = useParams();
@@ -100,11 +135,7 @@ export default function EventPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <EventPageSkeleton />;
   }
 
   if (!event) {

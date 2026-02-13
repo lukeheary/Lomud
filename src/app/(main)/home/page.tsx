@@ -685,26 +685,6 @@ function HomePageContent() {
           </div>
         </div>
 
-        {/* Friend Activity Feed - only show if there's activity and not in search mode */}
-        {!isSearchMode && hasRecentActivity && isCurrentWeek && (
-          <div className="mb-4">
-            <StickySectionHeader>
-              <div className="flex items-center gap-1 pb-1 md:pb-2">
-                <Link
-                  href="/friends"
-                  className="flex items-center gap-1 transition-colors hover:text-primary"
-                >
-                  <h1 className="text-xl font-bold tracking-tight">
-                    Recent Activity
-                  </h1>
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-              </div>
-            </StickySectionHeader>
-            <ActivityFeed limit={3} hideWhenEmpty />
-          </div>
-        )}
-
         {/*  <Tabs*/}
         {/*    value={viewMode}*/}
         {/*    onValueChange={(value) => setViewMode(value as ViewMode)}*/}
@@ -774,6 +754,28 @@ function HomePageContent() {
           </div>
         )}
       </div>
+
+      {/* Friend Activity Feed - only show if there's activity and not in search mode */}
+      {!isSearchMode && hasRecentActivity && isCurrentWeek && (
+        <div className="mb-4">
+          <StickySectionHeader>
+            <div className="flex items-center gap-1 pb-1 md:pb-2">
+              <Link
+                href="/friends"
+                className="flex items-center gap-1 transition-colors hover:text-primary"
+              >
+                <h1 className="text-xl font-bold tracking-tight">
+                  Recent Activity
+                </h1>
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </StickySectionHeader>
+          <div className="container mx-auto px-4">
+            <ActivityFeed limit={3} hideWhenEmpty />
+          </div>
+        </div>
+      )}
 
       {/* Week View - outside container for full-width sticky headers */}
       {!isSearchMode && viewMode === "week" && events && !showSkeletons && (
