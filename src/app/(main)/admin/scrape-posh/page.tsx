@@ -410,8 +410,8 @@ export default function ScrapePoshPage() {
             />
             <p className="mt-1.5 text-xs text-muted-foreground">
               Paste individual event URLs (posh.vip/e/...) for best results.
-              Group URLs (posh.vip/g/...) may not discover events since Posh
-              loads them client-side.
+              Group URLs (posh.vip/g/...) are supported, but if no events are
+              found, try pasting the individual event links instead.
             </p>
           </div>
           <Button onClick={handleScrape} disabled={isLoading}>

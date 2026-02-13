@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as cheerio from "cheerio";
 
+const POSH_EVENT_URL_REGEX =
+  /https?:\/\/posh\.vip\/e\/[A-Za-z0-9_-]+/g;
+const POSH_EVENT_PATH_REGEX =
+  /["'](\/e\/[A-Za-z0-9_-]+)(?:[?#][^"']*)?["']/g;
+const POSH_GROUP_API_BASE =
+  "https://posh.vip/api/web/v2/util/group_url/";
+
 interface PoshJsonLd {
   "@type": string;
   name?: string;
@@ -27,6 +34,654 @@ interface PoshJsonLd {
       longitude?: number;
     };
   };
+}
+
+function normalizePoshEventUrl(rawUrl: string | null | undefined): string | null {
+  if (!rawUrl) return null;
+  let url = rawUrl.trim();
+  if (!url) return null;
+
+  if (url.startsWith("//")) {
+    url = `https:${url}`;
+  }
+
+  if (url.startsWith("/e/")) {
+    url = `https://posh.vip${url}`;
+  } else if (url.startsWith("posh.vip/")) {
+    url = `https://${url}`;
+  }
+
+  if (!url.includes("posh.vip/e/")) return null;
+
+  // Strip query/hash
+  url = url.split("#")[0].split("?")[0];
+
+  return url;
+}
+
+function buildPoshEventUrlFromSlug(slug: string | null | undefined): string | null {
+  if (!slug) return null;
+  const cleaned = slug.trim().replace(/^\/e\//, "");
+  if (!cleaned) return null;
+  const lastSegment = cleaned.split("/").filter(Boolean).pop();
+  if (!lastSegment) return null;
+  return normalizePoshEventUrl(`https://posh.vip/e/${lastSegment}`);
+}
+
+function extractSlugFromUrl(url: string, marker: string): string | null {
+  try {
+    const cleaned = url.split("#")[0].split("?")[0];
+    const parts = cleaned.split("/").filter(Boolean);
+    const index = parts.findIndex((part) => part === marker);
+    if (index !== -1 && parts[index + 1]) {
+      return parts[index + 1];
+    }
+  } catch {
+    // ignore parse errors
+  }
+  return null;
+}
+
+function cleanPoshImageUrl(imageUrl: string | null): string | null {
+  if (!imageUrl) return null;
+  let url = imageUrl;
+  if (url.startsWith("//")) {
+    url = `https:${url}`;
+  }
+  if (url.includes("/cdn-cgi/image/")) {
+    const s3Match = url.match(/(https:\/\/posh-images[^"'\s]+)/);
+    if (s3Match) {
+      url = s3Match[1];
+    }
+  }
+  return url;
+}
+
+function looksLikeEventObject(obj: Record<string, unknown>): boolean {
+  const keys = Object.keys(obj).map((key) => key.toLowerCase());
+  const hasName =
+    keys.includes("name") || keys.includes("title");
+  const hasDate = keys.some((key) =>
+    key.includes("start") || key.includes("date") || key.includes("time")
+  );
+  const hasLocation = keys.some((key) =>
+    key.includes("venue") || key.includes("location")
+  );
+  const typeValue =
+    (typeof obj.type === "string" ? obj.type : null) ||
+    (typeof obj.__typename === "string" ? obj.__typename : null) ||
+    (typeof obj["@type"] === "string" ? obj["@type"] : null);
+  const isEventType = !!typeValue && typeValue.toLowerCase().includes("event");
+
+  return (hasName && (hasDate || hasLocation)) || isEventType;
+}
+
+function collectEventObjects(
+  value: unknown,
+  results: Record<string, unknown>[],
+  visited: WeakSet<object>,
+  depth: number
+) {
+  if (depth > 6 || value === null || value === undefined) return;
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      collectEventObjects(item, results, visited, depth + 1);
+    }
+    return;
+  }
+
+  if (typeof value === "object") {
+    if (visited.has(value)) return;
+    visited.add(value);
+    const obj = value as Record<string, unknown>;
+
+    if (looksLikeEventObject(obj)) {
+      results.push(obj);
+    }
+
+    for (const val of Object.values(obj)) {
+      collectEventObjects(val, results, visited, depth + 1);
+    }
+  }
+}
+
+function collectEventUrlsFromObject(
+  value: unknown,
+  urls: Set<string>,
+  visited: WeakSet<object>,
+  depth: number
+) {
+  if (depth > 6 || value === null || value === undefined) return;
+
+  if (typeof value === "string") {
+    const normalized = normalizePoshEventUrl(value);
+    if (normalized) urls.add(normalized);
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      collectEventUrlsFromObject(item, urls, visited, depth + 1);
+    }
+    return;
+  }
+
+  if (typeof value === "object") {
+    if (visited.has(value)) return;
+    visited.add(value);
+    const obj = value as Record<string, unknown>;
+
+    const slugValue =
+      typeof obj.slug === "string" ? obj.slug : null;
+    if (slugValue && looksLikeEventObject(obj)) {
+      const url = buildPoshEventUrlFromSlug(slugValue);
+      if (url) urls.add(url);
+    }
+
+    const eventSlugValue =
+      typeof obj.eventSlug === "string" ? obj.eventSlug : null;
+    if (eventSlugValue) {
+      const url = buildPoshEventUrlFromSlug(eventSlugValue);
+      if (url) urls.add(url);
+    }
+
+    for (const [key, val] of Object.entries(obj)) {
+      if (typeof val === "string" && key.toLowerCase().includes("url")) {
+        const normalized = normalizePoshEventUrl(val);
+        if (normalized) urls.add(normalized);
+      }
+    }
+
+    for (const val of Object.values(obj)) {
+      collectEventUrlsFromObject(val, urls, visited, depth + 1);
+    }
+  }
+}
+
+function extractEventUrlsFromHtml(html: string, $: cheerio.CheerioAPI): string[] {
+  const urls = new Set<string>();
+
+  const addUrl = (raw: string | null | undefined) => {
+    const normalized = normalizePoshEventUrl(raw);
+    if (normalized) urls.add(normalized);
+  };
+
+  const addSlug = (raw: string | null | undefined) => {
+    const url = buildPoshEventUrlFromSlug(raw);
+    if (url) urls.add(url);
+  };
+
+  $("a[href*=\"/e/\"]").each((_, el) => {
+    addUrl($(el).attr("href"));
+  });
+
+  $(".EventCard").each((_, el) => {
+    const $el = $(el);
+    addUrl($el.attr("data-event-url"));
+    addSlug($el.attr("data-event-slug"));
+    addUrl($el.attr("data-href"));
+    addUrl($el.find("a[href*=\"/e/\"]").attr("href"));
+  });
+
+  $("[data-event-url]").each((_, el) => addUrl($(el).attr("data-event-url")));
+  $("[data-event-slug]").each((_, el) => addSlug($(el).attr("data-event-slug")));
+  $("[data-event]").each((_, el) => {
+    const raw = $(el).attr("data-event");
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw);
+      collectEventUrlsFromObject(parsed, urls, new WeakSet<object>(), 0);
+    } catch {
+      // Ignore invalid JSON in attributes
+    }
+  });
+
+  const nextData = $("#__NEXT_DATA__").html();
+  if (nextData) {
+    try {
+      const parsed = JSON.parse(nextData);
+      collectEventUrlsFromObject(parsed, urls, new WeakSet<object>(), 0);
+    } catch {
+      // Ignore invalid JSON
+    }
+  }
+
+  for (const match of html.matchAll(POSH_EVENT_URL_REGEX)) {
+    addUrl(match[0]);
+  }
+
+  for (const match of html.matchAll(POSH_EVENT_PATH_REGEX)) {
+    addUrl(match[1]);
+  }
+
+  return Array.from(urls);
+}
+
+function getPathValue(
+  obj: Record<string, unknown> | null | undefined,
+  path: string[]
+): unknown {
+  if (!obj) return undefined;
+  let current: unknown = obj;
+  for (const key of path) {
+    if (!current || typeof current !== "object") return undefined;
+    current = (current as Record<string, unknown>)[key];
+  }
+  return current;
+}
+
+function pickStringFromPaths(
+  obj: Record<string, unknown> | null | undefined,
+  paths: Array<string | string[]>
+): string | null {
+  if (!obj) return null;
+  for (const path of paths) {
+    const value =
+      typeof path === "string" ? obj[path] : getPathValue(obj, path);
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+  return null;
+}
+
+function parseDateValue(value: unknown): string | null {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value.toISOString();
+  }
+  if (typeof value === "number") {
+    const ms = value < 1_000_000_000_000 ? value * 1000 : value;
+    const date = new Date(ms);
+    return Number.isNaN(date.getTime()) ? null : date.toISOString();
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const parsed = new Date(trimmed);
+    return Number.isNaN(parsed.getTime()) ? null : trimmed;
+  }
+  return null;
+}
+
+function extractImageUrl(value: unknown): string | null {
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const extracted = extractImageUrl(item);
+      if (extracted) return extracted;
+    }
+    return null;
+  }
+  if (value && typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    const direct = pickStringFromPaths(obj, [
+      "url",
+      "src",
+      "secure_url",
+      "original",
+      "large",
+      "medium",
+    ]);
+    if (direct) return direct;
+  }
+  return null;
+}
+
+function extractAddressFromValue(value: unknown): {
+  address: string;
+  city: string;
+  state: string;
+} | null {
+  if (!value) return null;
+  if (typeof value === "string") {
+    return parseAddress(value);
+  }
+  if (typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    const addressLine =
+      pickStringFromPaths(obj, [
+        "streetAddress",
+        "address1",
+        "line1",
+        "street",
+        "address",
+      ]) || "";
+    const city =
+      pickStringFromPaths(obj, ["city", "town"]) || "";
+    const state =
+      pickStringFromPaths(obj, ["state", "region", "state_code"]) || "";
+    const combined = [addressLine, city, state].filter(Boolean).join(", ");
+    if (combined) {
+      const parsed = parseAddress(combined);
+      return {
+        address: parsed.address || addressLine,
+        city: city || parsed.city,
+        state: state || parsed.state,
+      };
+    }
+  }
+  return null;
+}
+
+function extractLocationFields(
+  raw: Record<string, unknown>
+): { venueName: string; address: string; city: string; state: string } {
+  const venueName =
+    pickStringFromPaths(raw, [
+      ["venue", "name"],
+      ["venue", "title"],
+      ["location", "name"],
+      "venue_name",
+      "venueName",
+      "location_name",
+    ]) || "";
+
+  const addressValue =
+    getPathValue(raw, ["venue", "address"]) ??
+    getPathValue(raw, ["location", "address"]) ??
+    raw.address;
+
+  const city =
+    pickStringFromPaths(raw, [
+      "city",
+      ["venue", "city"],
+      ["location", "city"],
+      ["address", "city"],
+    ]) || "";
+
+  const state =
+    pickStringFromPaths(raw, [
+      "state",
+      ["venue", "state"],
+      ["location", "state"],
+      ["address", "state"],
+    ]) || "";
+
+  const addressParsed = extractAddressFromValue(addressValue);
+  const address =
+    addressParsed?.address ||
+    (typeof addressValue === "string" ? addressValue : "") ||
+    "";
+
+  return {
+    venueName,
+    address,
+    city: city || addressParsed?.city || "Boston",
+    state: state || addressParsed?.state || "MA",
+  };
+}
+
+function mapPoshApiEvent(
+  raw: Record<string, unknown>,
+  group?: { name?: string; url?: string } | null
+) {
+  const title =
+    pickStringFromPaths(raw, ["name", "title", "event_name", "eventName"]) ||
+    "Untitled Event";
+
+  const description = pickStringFromPaths(raw, [
+    "description",
+    "event_description",
+    "summary",
+    "details",
+  ]);
+
+  const imageCandidate =
+    pickStringFromPaths(raw, [
+      "image",
+      "image_url",
+      "cover_image_url",
+      "coverImageUrl",
+      "cover_image",
+      "flyer",
+      "flyer_url",
+      "poster",
+      "poster_url",
+      "og_image",
+    ]) ||
+    extractImageUrl(raw.images) ||
+    extractImageUrl(raw.image) ||
+    null;
+  const coverImageUrl = cleanPoshImageUrl(imageCandidate);
+
+  const eventUrl =
+    normalizePoshEventUrl(
+      pickStringFromPaths(raw, [
+        "url",
+        "event_url",
+        "eventUrl",
+        "canonical_url",
+      ])
+    ) || null;
+
+  const slug =
+    pickStringFromPaths(raw, [
+      "slug",
+      "event_slug",
+      "eventSlug",
+    ]) || null;
+
+  const externalIdRaw =
+    pickStringFromPaths(raw, ["id", "event_id", "uuid"]) ||
+    (typeof raw.id === "number" ? String(raw.id) : null) ||
+    slug ||
+    null;
+  const externalId = externalIdRaw ? `posh-${externalIdRaw}` : null;
+
+  const startAt =
+    parseDateValue(
+      getPathValue(raw, ["start"]) ??
+        getPathValue(raw, ["start_at"]) ??
+        getPathValue(raw, ["startAt"]) ??
+        getPathValue(raw, ["start_date"]) ??
+        getPathValue(raw, ["startDate"]) ??
+        getPathValue(raw, ["start_time"]) ??
+        getPathValue(raw, ["startTime"]) ??
+        getPathValue(raw, ["start_datetime"])
+    ) || null;
+
+  const endAt =
+    parseDateValue(
+      getPathValue(raw, ["end"]) ??
+        getPathValue(raw, ["end_at"]) ??
+        getPathValue(raw, ["endAt"]) ??
+        getPathValue(raw, ["end_date"]) ??
+        getPathValue(raw, ["endDate"]) ??
+        getPathValue(raw, ["end_time"]) ??
+        getPathValue(raw, ["endTime"]) ??
+        getPathValue(raw, ["end_datetime"])
+    ) || null;
+
+  const { venueName, address, city, state } = extractLocationFields(raw);
+
+  const organizerName =
+    pickStringFromPaths(raw, [
+      ["organizer", "name"],
+      ["group", "name"],
+      ["host", "name"],
+      ["organization", "name"],
+      "organizer_name",
+    ]) ||
+    group?.name ||
+    null;
+
+  const organizerUrl =
+    pickStringFromPaths(raw, [
+      ["organizer", "url"],
+      ["group", "url"],
+      ["host", "url"],
+      ["organization", "url"],
+      "organizer_url",
+    ]) ||
+    group?.url ||
+    null;
+
+  const eventStatus =
+    pickStringFromPaths(raw, ["eventStatus", "event_status", "status"]) ||
+    "EventScheduled";
+
+  return {
+    title,
+    description: description || null,
+    coverImageUrl,
+    eventUrl: eventUrl || buildPoshEventUrlFromSlug(slug),
+    externalId,
+    startAt,
+    endAt,
+    venueName,
+    address,
+    city,
+    state,
+    categories: ["nightlife"],
+    visibility: "public" as const,
+    source: "posh" as const,
+    eventStatus,
+    organizerName,
+    organizerUrl,
+  };
+}
+
+function extractEventCandidatesFromApi(data: unknown): Record<string, unknown>[] {
+  const paths: string[][] = [
+    ["events"],
+    ["data", "events"],
+    ["group", "events"],
+    ["data", "group", "events"],
+    ["group", "upcoming_events"],
+    ["data", "group", "upcoming_events"],
+    ["result", "events"],
+  ];
+
+  for (const path of paths) {
+    const value = getPathValue(
+      data as Record<string, unknown>,
+      path
+    );
+    if (Array.isArray(value)) {
+      return value.filter(
+        (item): item is Record<string, unknown> =>
+          !!item && typeof item === "object"
+      );
+    }
+    if (value && typeof value === "object") {
+      const edges = (value as Record<string, unknown>).edges;
+      if (Array.isArray(edges)) {
+        return edges
+          .map((edge) =>
+            edge && typeof edge === "object"
+              ? (edge as Record<string, unknown>).node
+              : null
+          )
+          .filter(
+            (item): item is Record<string, unknown> =>
+              !!item && typeof item === "object"
+          );
+      }
+      const nodes = (value as Record<string, unknown>).nodes;
+      if (Array.isArray(nodes)) {
+        return nodes.filter(
+          (item): item is Record<string, unknown> =>
+            !!item && typeof item === "object"
+        );
+      }
+    }
+  }
+
+  const collected: Record<string, unknown>[] = [];
+  collectEventObjects(data, collected, new WeakSet<object>(), 0);
+  return collected;
+}
+
+function extractGroupInfoFromApi(
+  data: unknown,
+  fallbackEvents: Record<string, unknown>[]
+): { name: string; url?: string } | null {
+  const groupPaths: string[][] = [
+    ["group"],
+    ["data", "group"],
+    ["result", "group"],
+  ];
+
+  for (const path of groupPaths) {
+    const value = getPathValue(
+      data as Record<string, unknown>,
+      path
+    );
+    if (value && typeof value === "object") {
+      const groupObj = value as Record<string, unknown>;
+      const name =
+        pickStringFromPaths(groupObj, ["name", "title"]) || "";
+      if (name) {
+        const url =
+          pickStringFromPaths(groupObj, ["url"]) ||
+          (pickStringFromPaths(groupObj, ["slug"])
+            ? `https://posh.vip/g/${pickStringFromPaths(groupObj, [
+                "slug",
+              ])}`
+            : undefined);
+        return { name, url: url || undefined };
+      }
+    }
+  }
+
+  if (fallbackEvents.length > 0) {
+    const groupObj =
+      (fallbackEvents[0].group as Record<string, unknown>) || null;
+    if (groupObj) {
+      const name =
+        pickStringFromPaths(groupObj, ["name", "title"]) || "";
+      if (name) {
+        const url =
+          pickStringFromPaths(groupObj, ["url"]) ||
+          (pickStringFromPaths(groupObj, ["slug"])
+            ? `https://posh.vip/g/${pickStringFromPaths(groupObj, [
+                "slug",
+              ])}`
+            : undefined);
+        return { name, url: url || undefined };
+      }
+    }
+  }
+
+  return null;
+}
+
+async function fetchGroupEventsFromApi(groupUrl: string) {
+  const groupSlug = extractSlugFromUrl(groupUrl, "g");
+  if (!groupSlug) {
+    return { events: [], organizer: null };
+  }
+
+  const apiUrl = `${POSH_GROUP_API_BASE}${groupSlug}`;
+  const response = await fetch(apiUrl, {
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      Accept: "application/json",
+    },
+    signal: AbortSignal.timeout(15000),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch group API ${apiUrl}: ${response.status}`
+    );
+  }
+
+  const data = (await response.json()) as unknown;
+  const rawEvents = extractEventCandidatesFromApi(data);
+  const organizer = extractGroupInfoFromApi(data, rawEvents);
+  const now = new Date();
+  const events = rawEvents
+    .map((raw) => mapPoshApiEvent(raw, organizer))
+    .filter((event) => event.startAt)
+    .filter((event) => {
+      const start = new Date(event.startAt);
+      return !Number.isNaN(start.getTime()) && start >= now;
+    });
+
+  return { events, organizer };
 }
 
 function parseAddress(fullAddress: string): {
@@ -74,15 +729,7 @@ function extractEventFromJsonLd(jsonLd: PoshJsonLd, eventUrl: string) {
     : jsonLd.image || null;
 
   // Clean up posh CDN image URL - extract the original S3 URL or use as-is
-  let coverImageUrl = imageUrl;
-  if (coverImageUrl?.includes("/cdn-cgi/image/")) {
-    // Extract the original image URL after the CDN transform params
-    // e.g. https://posh.vip/cdn-cgi/image/width=1200,.../https://posh-images-...s3.amazonaws.com/...
-    const s3Match = coverImageUrl.match(/(https:\/\/posh-images[^"'\s]+)/);
-    if (s3Match) {
-      coverImageUrl = s3Match[1];
-    }
-  }
+  const coverImageUrl = cleanPoshImageUrl(imageUrl);
 
   const fullAddress =
     jsonLd.location?.address?.streetAddress || "";
@@ -113,6 +760,31 @@ function extractEventFromJsonLd(jsonLd: PoshJsonLd, eventUrl: string) {
     organizerName: jsonLd.organizer?.name || null,
     organizerUrl: jsonLd.organizer?.url || null,
   };
+}
+
+function extractEventFromStructuredData(
+  data: unknown,
+  eventUrl: string
+) {
+  const candidates: Record<string, unknown>[] = [];
+  collectEventObjects(data, candidates, new WeakSet<object>(), 0);
+  if (candidates.length === 0) return null;
+
+  const targetSlug = extractSlugFromUrl(eventUrl, "e");
+  const best =
+    candidates.find((candidate) => {
+      const slug =
+        pickStringFromPaths(candidate, ["slug", "event_slug", "eventSlug"]) ||
+        null;
+      if (slug && targetSlug && slug === targetSlug) return true;
+      const url =
+        normalizePoshEventUrl(
+          pickStringFromPaths(candidate, ["url", "event_url", "eventUrl"])
+        ) || null;
+      return url ? url.includes(`/e/${targetSlug}`) : false;
+    }) || candidates[0];
+
+  return mapPoshApiEvent(best, null);
 }
 
 async function scrapeEventPage(url: string) {
@@ -148,7 +820,21 @@ async function scrapeEventPage(url: string) {
   }
 
   if (!jsonLdScript) {
-    throw new Error(`No JSON-LD event data found on ${url}`);
+    const nextData = $("#__NEXT_DATA__").html();
+    if (!nextData) {
+      throw new Error(`No JSON-LD event data found on ${url}`);
+    }
+    try {
+      const parsed = JSON.parse(nextData);
+      const structuredEvent = extractEventFromStructuredData(parsed, url);
+      if (structuredEvent) {
+        return structuredEvent;
+      }
+    } catch {
+      // fall through to error below
+    }
+
+    throw new Error(`No event data found in JSON-LD or Next.js data on ${url}`);
   }
 
   const jsonLd: PoshJsonLd = JSON.parse(jsonLdScript);
@@ -173,21 +859,7 @@ async function discoverEventUrls(groupUrl: string): Promise<string[]> {
   const html = await response.text();
   const $ = cheerio.load(html);
 
-  // Look for links to individual event pages
-  const urls = new Set<string>();
-  $('a[href*="/e/"]').each((_, el) => {
-    const href = $(el).attr("href");
-    if (href) {
-      const fullUrl = href.startsWith("http")
-        ? href
-        : `https://posh.vip${href}`;
-      if (fullUrl.includes("posh.vip/e/")) {
-        urls.add(fullUrl);
-      }
-    }
-  });
-
-  return Array.from(urls);
+  return extractEventUrlsFromHtml(html, $);
 }
 
 export async function POST(request: NextRequest) {
@@ -221,57 +893,95 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Try to discover event URLs from group pages
-    for (const groupUrl of groupUrls) {
-      try {
-        const discovered = await discoverEventUrls(groupUrl);
-        eventUrls.push(...discovered);
-      } catch {
-        // Group pages are client-rendered, discovery may not work
-        // That's OK, we just won't add any from this group
-      }
-    }
-
-    if (eventUrls.length === 0) {
-      return NextResponse.json(
-        {
-          error:
-            "No event URLs found. Posh group pages load events client-side, so please paste individual event URLs (posh.vip/e/...) directly.",
-        },
-        { status: 400 }
-      );
-    }
-
-    // Deduplicate
-    const uniqueUrls = [...new Set(eventUrls)];
-
-    // Scrape each event page
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const events: any[] = [];
     const errors: { url: string; error: string }[] = [];
+    let organizerFromGroup: { name: string; url?: string } | null = null;
 
-    // Process in batches of 5 to avoid overwhelming the server
-    const batchSize = 5;
-    for (let i = 0; i < uniqueUrls.length; i += batchSize) {
-      const batch = uniqueUrls.slice(i, i + batchSize);
-      const results = await Promise.allSettled(
-        batch.map((url) => scrapeEventPage(url))
-      );
+    // Try the group API first (best chance of full data)
+    for (const groupUrl of groupUrls) {
+      let groupEvents: any[] = [];
+      let groupOrganizer: { name: string; url?: string } | null = null;
+      let groupApiFailed = false;
 
-      for (let j = 0; j < results.length; j++) {
-        const result = results[j];
-        if (result.status === "fulfilled") {
-          events.push(result.value);
-        } else {
+      try {
+        const result = await fetchGroupEventsFromApi(groupUrl);
+        groupEvents = result.events;
+        groupOrganizer = result.organizer;
+      } catch (error) {
+        groupApiFailed = true;
+      }
+
+      if (groupEvents.length > 0) {
+        events.push(...groupEvents);
+        if (!organizerFromGroup && groupOrganizer) {
+          organizerFromGroup = groupOrganizer;
+        }
+        continue;
+      }
+
+      // Fallback: try to discover event URLs from group page HTML
+      try {
+        const discovered = await discoverEventUrls(groupUrl);
+        eventUrls.push(...discovered);
+      } catch (error) {
+        if (groupApiFailed) {
           errors.push({
-            url: batch[j],
-            error: result.reason?.message || "Unknown error",
+            url: groupUrl,
+            error:
+              error instanceof Error ? error.message : "Failed to scrape group",
           });
         }
       }
     }
 
-    if (events.length === 0) {
+    // Deduplicate URLs and skip any already sourced via group API
+    const existingEventUrls = new Set(
+      events
+        .map((event) => event.eventUrl)
+        .filter((url): url is string => typeof url === "string")
+    );
+    const uniqueUrls = [...new Set(eventUrls)].filter(
+      (url) => !existingEventUrls.has(url)
+    );
+
+    // Process in batches of 5 to avoid overwhelming the server
+    const batchSize = 5;
+    if (uniqueUrls.length > 0) {
+      for (let i = 0; i < uniqueUrls.length; i += batchSize) {
+        const batch = uniqueUrls.slice(i, i + batchSize);
+        const results = await Promise.allSettled(
+          batch.map((url) => scrapeEventPage(url))
+        );
+
+        for (let j = 0; j < results.length; j++) {
+          const result = results[j];
+          if (result.status === "fulfilled") {
+            events.push(result.value);
+          } else {
+            errors.push({
+              url: batch[j],
+              error: result.reason?.message || "Unknown error",
+            });
+          }
+        }
+      }
+    }
+
+    // Deduplicate by externalId or URL
+    const seen = new Set<string>();
+    const uniqueEvents = events.filter((event) => {
+      const key =
+        event.externalId ||
+        event.eventUrl ||
+        `${event.title}-${event.startAt}`;
+      if (!key) return true;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    if (uniqueEvents.length === 0) {
       return NextResponse.json(
         {
           error: "Failed to scrape any events",
@@ -281,18 +991,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Extract organizer info from first event
-    const organizer = events[0]?.organizerName
-      ? {
-          name: events[0].organizerName,
-          url: events[0].organizerUrl,
-        }
-      : null;
+    // Extract organizer info from group (preferred) or first event
+    const organizer =
+      organizerFromGroup ||
+      (uniqueEvents[0]?.organizerName
+        ? {
+            name: uniqueEvents[0].organizerName,
+            url: uniqueEvents[0].organizerUrl,
+          }
+        : null);
 
     return NextResponse.json({
       organizer,
-      events,
-      totalEvents: events.length,
+      events: uniqueEvents,
+      totalEvents: uniqueEvents.length,
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error) {
