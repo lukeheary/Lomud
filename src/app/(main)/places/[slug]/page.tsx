@@ -17,7 +17,6 @@ import {
   Building,
   Building2,
   Edit,
-  Expand,
   X,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -180,15 +179,6 @@ export default function PlacePage() {
     place.members?.some((member: any) => member.userId === currentUser.id);
   const canEdit = isAdmin || isMember;
 
-  // Banner image fallback logic:
-  // 1. Use coverImageUrl if set
-  // 2. Use next upcoming event's cover image if available
-  // 3. Use place profile image if available
-  // 4. Fall back to gradient placeholder
-  const nextEventImageUrl = place.events?.[0]?.coverImageUrl;
-  const bannerImageUrl =
-    (place as any).coverImageUrl || nextEventImageUrl || place.logoImageUrl;
-
   return (
     <div className="min-h-screen bg-background pb-8">
       {expandedImage && (
@@ -219,144 +209,101 @@ export default function PlacePage() {
         </div>
       )}
 
-      {/* Banner Area */}
-      <div className="relative container mx-auto h-32 overflow-hidden bg-secondary md:h-64 lg:mt-4 lg:rounded-2xl">
-        {bannerImageUrl ? (
-          <div
-            className="absolute inset-0 cursor-pointer"
-            onClick={() =>
-              setExpandedImage({
-                url: bannerImageUrl,
-                alt: `${place.name} banner`,
-              })
-            }
-          >
-            <img
-              src={bannerImageUrl}
-              alt={`${place.name} banner`}
-              className="h-full w-full object-cover"
-            />
-          </div>
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5" />
-        )}
-
-        {/* Edit Button - top right of banner */}
-        <div className="absolute right-4 top-4 flex gap-2">
-          {canEdit && (
-            <Link href={`/places/${slug}/edit`}>
-              <Button size="icon" variant="secondary" className="h-10 w-10">
-                <Edit className="h-4 w-4" />
-              </Button>
-            </Link>
-          )}
-        </div>
-      </div>
-
       <div className="container mx-auto">
-        {/* Profile Avatar - overlapping the banner */}
-        <div className="pointer-events-none -mt-16 flex items-end justify-between md:-mt-24">
-          <div className="pointer-events-auto relative">
-            <Avatar
-              className={cn(
-                "h-32 w-32 border-4 border-background shadow-md md:h-48 md:w-48",
-                place.logoImageUrl && "cursor-pointer"
-              )}
-              onClick={() =>
-                place.logoImageUrl &&
-                setExpandedImage({
-                  url: place.logoImageUrl,
-                  alt: `${place.name} profile`,
-                })
-              }
-            >
-              {place.logoImageUrl ? (
-                <AvatarImage
-                  src={place.logoImageUrl}
-                  alt={place.name}
-                  className="bg-background object-cover"
-                />
-              ) : null}
-              <AvatarFallback className="bg-secondary text-2xl font-bold">
-                {place.name.substring(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            {/*{place.logoImageUrl && (*/}
-            {/*  <div*/}
-            {/*    className="absolute bottom-1 right-1 cursor-pointer rounded-full bg-black/50 p-1.5 transition-colors hover:bg-black/70"*/}
-            {/*    onClick={(e) => {*/}
-            {/*      e.stopPropagation();*/}
-            {/*      setExpandedImage({*/}
-            {/*        url: place.logoImageUrl!,*/}
-            {/*        alt: `${place.name} profile`,*/}
-            {/*      });*/}
-            {/*    }}*/}
-            {/*  >*/}
-            {/*    <Expand className="h-3.5 w-3.5 text-white" />*/}
-            {/*  </div>*/}
-            {/*)}*/}
-          </div>
+        <div className="pt-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-4">
+              <Avatar
+                className={cn(
+                  "h-20 w-20 border-2 border-background shadow-sm md:h-28 md:w-28",
+                  place.logoImageUrl && "cursor-pointer"
+                )}
+                onClick={() =>
+                  place.logoImageUrl &&
+                  setExpandedImage({
+                    url: place.logoImageUrl,
+                    alt: `${place.name} profile`,
+                  })
+                }
+              >
+                {place.logoImageUrl ? (
+                  <AvatarImage
+                    src={place.logoImageUrl}
+                    alt={place.name}
+                    className="bg-background object-cover"
+                  />
+                ) : null}
+                <AvatarFallback className="bg-secondary text-2xl font-bold">
+                  {place.name.substring(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
 
-          {/* Action Buttons (Follow) - aligned with bottom of avatar */}
-          <div className="pointer-events-auto mb-2">
-            <Button
-              variant={isFollowing ? "outline" : "default"}
-              onClick={handleFollowToggle}
-              disabled={followMutation.isPending || unfollowMutation.isPending}
-              className="rounded-full"
-            >
-              {isFollowing ? (
-                <>
-                  <Heart className="mr-2 h-4 w-4 fill-current" />
-                  Following
-                </>
-              ) : (
-                <>
-                  <Heart className="mr-2 h-4 w-4" />
-                  Follow
-                </>
+              <div className="space-y-1">
+                <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+                  {place.name}
+                </h1>
+                <p className="text-muted-foreground">@{place.slug}</p>
+                {isVenue ? (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <TypeIcon className="h-4 w-4" />
+                    <span>{place.address}</span>
+                  </div>
+                ) : place.city && place.state ? (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <MapPin className="h-4 w-4" />
+                    <span>
+                      {place.city}, {place.state}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant={isFollowing ? "outline" : "default"}
+                onClick={handleFollowToggle}
+                disabled={followMutation.isPending || unfollowMutation.isPending}
+                className="rounded-full"
+              >
+                {isFollowing ? (
+                  <>
+                    <Heart className="mr-2 h-4 w-4 fill-current" />
+                    Following
+                  </>
+                ) : (
+                  <>
+                    <Heart className="mr-2 h-4 w-4" />
+                    Follow
+                  </>
+                )}
+              </Button>
+              {canEdit && (
+                <Link href={`/places/${slug}/edit`}>
+                  <Button size="icon" variant="secondary" className="h-10 w-10">
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                </Link>
               )}
-            </Button>
+            </div>
           </div>
         </div>
 
         {/* Place Info */}
         <div className="mt-4 space-y-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
-                {place.name}
-              </h1>
-            </div>
-            <p className="text-muted-foreground md:text-base">@{place.slug}</p>
-
-            {place.description && (
-              <p className="mt-3 whitespace-pre-wrap leading-normal">
+          {place.description && (
+            <div>
+              <p className="whitespace-pre-wrap leading-normal">
                 {place.description}
               </p>
-            )}
-          </div>
+            </div>
+          )}
 
           <div className="flex flex-col gap-x-4 gap-y-2 text-muted-foreground">
             {/*<div className="flex items-center gap-1">*/}
             {/*  <TypeIcon className="h-4 w-4" />*/}
             {/*  <span>{isVenue ? "Venue" : "Organizer"}</span>*/}
             {/*</div>*/}
-            {isVenue ? (
-              <div className="flex items-center gap-2">
-                <TypeIcon className="h-4 w-4" />
-                {/*<MapPin className="h-4 w-4" />*/}
-                <span>{place.address}</span>
-              </div>
-            ) : place.city && place.state ? (
-              <div className="flex items-center gap-1">
-                <MapPin className="h-4 w-4" />
-                <span>
-                  {place.city}, {place.state}
-                </span>
-              </div>
-            ) : null}
-
             {isVenue && (place as any).hours && (
               <VenueHoursDisplay hours={(place as any).hours as VenueHours} />
             )}
