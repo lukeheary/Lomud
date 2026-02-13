@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as cheerio from "cheerio";
 
-const POSH_EVENT_URL_REGEX =
-  /https?:\/\/posh\.vip\/e\/[A-Za-z0-9_-]+/g;
-const POSH_EVENT_PATH_REGEX =
-  /["'](\/e\/[A-Za-z0-9_-]+)(?:[?#][^"']*)?["']/g;
-const POSH_GROUP_API_BASE =
-  "https://posh.vip/api/web/v2/util/group_url/";
+const POSH_EVENT_URL_REGEX = /https?:\/\/posh\.vip\/e\/[A-Za-z0-9_-]+/g;
+const POSH_EVENT_PATH_REGEX = /["'](\/e\/[A-Za-z0-9_-]+)(?:[?#][^"']*)?["']/g;
+const POSH_GROUP_API_BASE = "https://posh.vip/api/web/v2/util/group_url/";
 
 interface PoshJsonLd {
   "@type": string;
@@ -36,7 +33,9 @@ interface PoshJsonLd {
   };
 }
 
-function normalizePoshEventUrl(rawUrl: string | null | undefined): string | null {
+function normalizePoshEventUrl(
+  rawUrl: string | null | undefined
+): string | null {
   if (!rawUrl) return null;
   let url = rawUrl.trim();
   if (!url) return null;
@@ -59,7 +58,9 @@ function normalizePoshEventUrl(rawUrl: string | null | undefined): string | null
   return url;
 }
 
-function buildPoshEventUrlFromSlug(slug: string | null | undefined): string | null {
+function buildPoshEventUrlFromSlug(
+  slug: string | null | undefined
+): string | null {
   if (!slug) return null;
   const cleaned = slug.trim().replace(/^\/e\//, "");
   if (!cleaned) return null;
@@ -99,13 +100,13 @@ function cleanPoshImageUrl(imageUrl: string | null): string | null {
 
 function looksLikeEventObject(obj: Record<string, unknown>): boolean {
   const keys = Object.keys(obj).map((key) => key.toLowerCase());
-  const hasName =
-    keys.includes("name") || keys.includes("title");
-  const hasDate = keys.some((key) =>
-    key.includes("start") || key.includes("date") || key.includes("time")
+  const hasName = keys.includes("name") || keys.includes("title");
+  const hasDate = keys.some(
+    (key) =>
+      key.includes("start") || key.includes("date") || key.includes("time")
   );
-  const hasLocation = keys.some((key) =>
-    key.includes("venue") || key.includes("location")
+  const hasLocation = keys.some(
+    (key) => key.includes("venue") || key.includes("location")
   );
   const typeValue =
     (typeof obj.type === "string" ? obj.type : null) ||
@@ -172,8 +173,7 @@ function collectEventUrlsFromObject(
     visited.add(value);
     const obj = value as Record<string, unknown>;
 
-    const slugValue =
-      typeof obj.slug === "string" ? obj.slug : null;
+    const slugValue = typeof obj.slug === "string" ? obj.slug : null;
     if (slugValue && looksLikeEventObject(obj)) {
       const url = buildPoshEventUrlFromSlug(slugValue);
       if (url) urls.add(url);
@@ -199,7 +199,10 @@ function collectEventUrlsFromObject(
   }
 }
 
-function extractEventUrlsFromHtml(html: string, $: cheerio.CheerioAPI): string[] {
+function extractEventUrlsFromHtml(
+  html: string,
+  $: cheerio.CheerioAPI
+): string[] {
   const urls = new Set<string>();
 
   const addUrl = (raw: string | null | undefined) => {
@@ -212,7 +215,7 @@ function extractEventUrlsFromHtml(html: string, $: cheerio.CheerioAPI): string[]
     if (url) urls.add(url);
   };
 
-  $("a[href*=\"/e/\"]").each((_, el) => {
+  $('a[href*="/e/"]').each((_, el) => {
     addUrl($(el).attr("href"));
   });
 
@@ -221,11 +224,13 @@ function extractEventUrlsFromHtml(html: string, $: cheerio.CheerioAPI): string[]
     addUrl($el.attr("data-event-url"));
     addSlug($el.attr("data-event-slug"));
     addUrl($el.attr("data-href"));
-    addUrl($el.find("a[href*=\"/e/\"]").attr("href"));
+    addUrl($el.find('a[href*="/e/"]').attr("href"));
   });
 
   $("[data-event-url]").each((_, el) => addUrl($(el).attr("data-event-url")));
-  $("[data-event-slug]").each((_, el) => addSlug($(el).attr("data-event-slug")));
+  $("[data-event-slug]").each((_, el) =>
+    addSlug($(el).attr("data-event-slug"))
+  );
   $("[data-event]").each((_, el) => {
     const raw = $(el).attr("data-event");
     if (!raw) return;
@@ -298,8 +303,9 @@ function parseDateParts(value: string): {
   minute: number;
   second: number;
 } | null {
-  const match =
-    value.trim().match(
+  const match = value
+    .trim()
+    .match(
       /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2})(?::(\d{2}))?(?::(\d{2}))?)?/
     );
   if (!match) return null;
@@ -345,9 +351,7 @@ function toUtcIsoFromZonedParts(
       )
     );
     if (Number.isNaN(utcDate.getTime())) return null;
-    const tzDate = new Date(
-      utcDate.toLocaleString("en-US", { timeZone })
-    );
+    const tzDate = new Date(utcDate.toLocaleString("en-US", { timeZone }));
     if (Number.isNaN(tzDate.getTime())) return null;
     const offsetMs = utcDate.getTime() - tzDate.getTime();
     const corrected = new Date(utcDate.getTime() + offsetMs);
@@ -421,15 +425,7 @@ function timeZoneFromState(state: string | null | undefined): string | null {
     "TX",
     "WI",
   ]);
-  const mountain = new Set([
-    "AZ",
-    "CO",
-    "ID",
-    "MT",
-    "NM",
-    "UT",
-    "WY",
-  ]);
+  const mountain = new Set(["AZ", "CO", "ID", "MT", "NM", "UT", "WY"]);
   const pacific = new Set(["CA", "NV", "OR", "WA"]);
   if (eastern.has(upper)) return "America/New_York";
   if (central.has(upper)) return "America/Chicago";
@@ -539,8 +535,7 @@ function extractAddressFromValue(value: unknown): {
         "street",
         "address",
       ]) || "";
-    const city =
-      pickStringFromPaths(obj, ["city", "town"]) || "";
+    const city = pickStringFromPaths(obj, ["city", "town"]) || "";
     const state =
       pickStringFromPaths(obj, ["state", "region", "state_code"]) || "";
     const combined = [addressLine, city, state].filter(Boolean).join(", ");
@@ -556,9 +551,12 @@ function extractAddressFromValue(value: unknown): {
   return null;
 }
 
-function extractLocationFields(
-  raw: Record<string, unknown>
-): { venueName: string; address: string; city: string; state: string } {
+function extractLocationFields(raw: Record<string, unknown>): {
+  venueName: string;
+  address: string;
+  city: string;
+  state: string;
+} {
   const venueName =
     pickStringFromPaths(raw, [
       ["venue", "name"],
@@ -679,11 +677,7 @@ function mapPoshApiEvent(
     ) || null;
 
   const slug =
-    pickStringFromPaths(raw, [
-      "slug",
-      "event_slug",
-      "eventSlug",
-    ]) || null;
+    pickStringFromPaths(raw, ["slug", "event_slug", "eventSlug"]) || null;
 
   const externalIdRaw =
     pickStringFromPaths(raw, ["id", "event_id", "uuid"]) ||
@@ -796,7 +790,9 @@ function mapPoshApiEvent(
   };
 }
 
-function extractEventCandidatesFromApi(data: unknown): Record<string, unknown>[] {
+function extractEventCandidatesFromApi(
+  data: unknown
+): Record<string, unknown>[] {
   const paths: string[][] = [
     ["events"],
     ["data", "events"],
@@ -808,10 +804,7 @@ function extractEventCandidatesFromApi(data: unknown): Record<string, unknown>[]
   ];
 
   for (const path of paths) {
-    const value = getPathValue(
-      data as Record<string, unknown>,
-      path
-    );
+    const value = getPathValue(data as Record<string, unknown>, path);
     if (Array.isArray(value)) {
       return value.filter(
         (item): item is Record<string, unknown> =>
@@ -858,21 +851,15 @@ function extractGroupInfoFromApi(
   ];
 
   for (const path of groupPaths) {
-    const value = getPathValue(
-      data as Record<string, unknown>,
-      path
-    );
+    const value = getPathValue(data as Record<string, unknown>, path);
     if (value && typeof value === "object") {
       const groupObj = value as Record<string, unknown>;
-      const name =
-        pickStringFromPaths(groupObj, ["name", "title"]) || "";
+      const name = pickStringFromPaths(groupObj, ["name", "title"]) || "";
       if (name) {
         const url =
           pickStringFromPaths(groupObj, ["url"]) ||
           (pickStringFromPaths(groupObj, ["slug"])
-            ? `https://posh.vip/g/${pickStringFromPaths(groupObj, [
-                "slug",
-              ])}`
+            ? `https://posh.vip/g/${pickStringFromPaths(groupObj, ["slug"])}`
             : undefined);
         return { name, url: url || undefined };
       }
@@ -883,15 +870,12 @@ function extractGroupInfoFromApi(
     const groupObj =
       (fallbackEvents[0].group as Record<string, unknown>) || null;
     if (groupObj) {
-      const name =
-        pickStringFromPaths(groupObj, ["name", "title"]) || "";
+      const name = pickStringFromPaths(groupObj, ["name", "title"]) || "";
       if (name) {
         const url =
           pickStringFromPaths(groupObj, ["url"]) ||
           (pickStringFromPaths(groupObj, ["slug"])
-            ? `https://posh.vip/g/${pickStringFromPaths(groupObj, [
-                "slug",
-              ])}`
+            ? `https://posh.vip/g/${pickStringFromPaths(groupObj, ["slug"])}`
             : undefined);
         return { name, url: url || undefined };
       }
@@ -918,9 +902,7 @@ async function fetchGroupEventsFromApi(groupUrl: string) {
   });
 
   if (!response.ok) {
-    throw new Error(
-      `Failed to fetch group API ${apiUrl}: ${response.status}`
-    );
+    throw new Error(`Failed to fetch group API ${apiUrl}: ${response.status}`);
   }
 
   const data = (await response.json()) as unknown;
@@ -931,7 +913,7 @@ async function fetchGroupEventsFromApi(groupUrl: string) {
     .map((raw) => mapPoshApiEvent(raw, organizer))
     .filter((event) => event.startAt)
     .filter((event) => {
-      const start = new Date(event.startAt);
+      const start = new Date(event.startAt!);
       return !Number.isNaN(start.getTime()) && start >= now;
     });
 
@@ -985,15 +967,11 @@ function extractEventFromJsonLd(jsonLd: PoshJsonLd, eventUrl: string) {
   // Clean up posh CDN image URL - extract the original S3 URL or use as-is
   const coverImageUrl = cleanPoshImageUrl(imageUrl);
 
-  const fullAddress =
-    jsonLd.location?.address?.streetAddress || "";
+  const fullAddress = jsonLd.location?.address?.streetAddress || "";
   const { address, city, state } = parseAddress(fullAddress);
 
   // Extract external ID from the event URL slug
-  const urlSlug = eventUrl
-    .replace(/\/$/, "")
-    .split("/")
-    .pop();
+  const urlSlug = eventUrl.replace(/\/$/, "").split("/").pop();
 
   return {
     title: jsonLd.name || "Untitled Event",
@@ -1016,10 +994,7 @@ function extractEventFromJsonLd(jsonLd: PoshJsonLd, eventUrl: string) {
   };
 }
 
-function extractEventFromStructuredData(
-  data: unknown,
-  eventUrl: string
-) {
+function extractEventFromStructuredData(data: unknown, eventUrl: string) {
   const candidates: Record<string, unknown>[] = [];
   collectEventObjects(data, candidates, new WeakSet<object>(), 0);
   if (candidates.length === 0) return null;
@@ -1046,8 +1021,7 @@ async function scrapeEventPage(url: string) {
     headers: {
       "User-Agent":
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      Accept:
-        "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     },
     signal: AbortSignal.timeout(15000),
   });
@@ -1226,9 +1200,7 @@ export async function POST(request: NextRequest) {
     const seen = new Set<string>();
     const uniqueEvents = events.filter((event) => {
       const key =
-        event.externalId ||
-        event.eventUrl ||
-        `${event.title}-${event.startAt}`;
+        event.externalId || event.eventUrl || `${event.title}-${event.startAt}`;
       if (!key) return true;
       if (seen.has(key)) return false;
       seen.add(key);
