@@ -131,6 +131,72 @@ function StickyDateHeader({
   );
 }
 
+function StickySectionHeader({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const [isHeaderSticky, setIsHeaderSticky] = useState(false);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsHeaderSticky(!entry.isIntersecting);
+      },
+      {
+        rootMargin: "-65px 0px 0px 0px",
+        threshold: 0,
+      }
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.unobserve(sentinel);
+    };
+  }, []);
+
+  return (
+    <>
+      <div ref={sentinelRef} className="h-0 w-full" />
+      <div
+        className={cn(
+          "sticky top-16 z-30 w-full bg-background pb-2",
+          isHeaderSticky && "border-b"
+        )}
+      >
+        <div className="container mx-auto px-4">{children}</div>
+      </div>
+    </>
+  );
+}
+
+function EventSkeletonGrid({ count = 8 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
+      {Array.from({ length: count }).map((_, index) => (
+        <div
+          key={`event-skeleton-${index}`}
+          className="rounded-2xl bg-card p-2 shadow-sm"
+        >
+          <div className="flex animate-pulse md:block">
+            <div className="h-24 w-24 shrink-0 rounded-2xl bg-muted md:aspect-square md:h-auto md:w-full lg:max-w-[274px]" />
+            <div className="flex-1 space-y-2 py-2 pl-3 pr-1 md:px-3 md:py-3">
+              <div className="h-4 w-3/4 rounded-full bg-muted" />
+              <div className="h-3 w-1/2 rounded-full bg-muted" />
+              <div className="h-3 w-2/3 rounded-full bg-muted" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function HomePageContent() {
   const { toast } = useToast();
   const [activeFilter, setActiveFilter] = useState<EventFilterTab>("all");
@@ -330,6 +396,9 @@ function HomePageContent() {
       enabled: isReady,
     }
   );
+
+  const showSkeletons =
+    !isReady || isLoading || (isFetching && !isSearching && !isSearchMode);
 
   // Fetch recently added events (for when search is focused but no query)
   const { data: recentEvents, isLoading: recentLoading } =
@@ -619,18 +688,19 @@ function HomePageContent() {
         {/* Friend Activity Feed - only show if there's activity and not in search mode */}
         {!isSearchMode && hasRecentActivity && isCurrentWeek && (
           <div className="mb-4">
-            <div className="flex items-center gap-1 pb-2 md:pb-3">
-              <Link
-                href="/friends"
-                className="flex items-center gap-1 transition-colors hover:text-primary"
-              >
-                <h1 className="text-xl font-bold tracking-tight">
-                  Recent Activity
-                </h1>
-                <ChevronRight className="h-4 w-4" />
-              </Link>
-            </div>
-
+            <StickySectionHeader>
+              <div className="flex items-center gap-1 pb-1 md:pb-2">
+                <Link
+                  href="/friends"
+                  className="flex items-center gap-1 transition-colors hover:text-primary"
+                >
+                  <h1 className="text-xl font-bold tracking-tight">
+                    Recent Activity
+                  </h1>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </StickySectionHeader>
             <ActivityFeed limit={3} hideWhenEmpty />
           </div>
         )}
@@ -654,15 +724,15 @@ function HomePageContent() {
         {/*  </div>*/}
         {/*)}*/}
 
-        {/* Initial Loading State */}
-        {(isLoading || !isReady) && !events && (
-          <div className="flex justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        {/* Initial / Transition Loading State */}
+        {showSkeletons && (
+          <div className="py-6">
+            <EventSkeletonGrid count={8} />
           </div>
         )}
 
         {/* Recently Added Events (when search focused but no query) */}
-        {isSearchMode && !isSearching && (
+        {isSearchMode && !isSearching && !showSkeletons && (
           <div className="space-y-4">
             {/*<h2 className="text-lg font-semibold">Recently Added</h2>*/}
             {recentLoading ? (
@@ -684,7 +754,7 @@ function HomePageContent() {
         )}
 
         {/* Search Results - flat list, no date headers */}
-        {isSearching && events && (
+        {isSearching && events && !showSkeletons && (
           <div className="space-y-4">
             {events.length === 0 ? (
               <div className="py-12 text-center">
@@ -706,7 +776,7 @@ function HomePageContent() {
       </div>
 
       {/* Week View - outside container for full-width sticky headers */}
-      {!isSearchMode && viewMode === "week" && events && (
+      {!isSearchMode && viewMode === "week" && events && !showSkeletons && (
         <div className="space-y-6">
           {daysToDisplay.map((date, index) => {
             const dateKey = format(date, "yyyy-MM-dd");
@@ -748,7 +818,7 @@ function HomePageContent() {
 
       <div className="container mx-auto px-4">
         {/* Month View - only show when not in search mode */}
-        {!isSearchMode && viewMode === "month" && events && (
+        {!isSearchMode && viewMode === "month" && events && !showSkeletons && (
           <Card>
             <CardContent className="p-4">
               {/* Day of week headers */}

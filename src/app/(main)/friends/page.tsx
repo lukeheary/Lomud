@@ -171,28 +171,29 @@ function FriendsPageContent() {
   const isSearching = searchQuery.length >= 2;
 
   return (
-    <div className="container mx-auto py-4">
+    <div className="container mx-auto pt-4">
       {/* Sticky sentinel for intersection observer */}
       <div ref={stickySentinelRef} className="h-0" />
 
-      <div className="flex flex-col gap-2 md:flex-row md:items-center">
-        <div className="flex-1">
-          <Suspense fallback={null}>
-            <SearchInput
-              ref={searchInputRef}
-              placeholder="Search friends or find new people..."
-              value={searchQuery}
-              onChange={setSearchQuery}
-              onFocus={() => setIsSearchMode(true)}
-              showBack={isSearchMode}
-              onBack={handleExitSearch}
-              className="w-full"
-            />
-          </Suspense>
-        </div>
+      <div className="z-[45] -mx-4 -mt-4 bg-background px-4 pb-3 pt-2 transition-shadow md:top-16 md:z-30 md:-mx-8 md:bg-background/95 md:px-8 md:backdrop-blur md:supports-[backdrop-filter]:bg-background">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center">
+          <div className="flex-1">
+            <Suspense fallback={null}>
+              <SearchInput
+                ref={searchInputRef}
+                placeholder="Search friends or find new people..."
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onFocus={() => setIsSearchMode(true)}
+                showBack={isSearchMode}
+                onBack={handleExitSearch}
+                className="w-full"
+              />
+            </Suspense>
+          </div>
 
-        {!isSearchMode && (
-          <div className="grid grid-cols-2 gap-2 md:flex md:w-auto">
+          {!isSearchMode && (
+            <div className="grid grid-cols-2 gap-2 md:flex md:w-auto">
             <Link href="/friends/list" className="md:w-32 lg:w-40">
               <Card className="cursor-pointer rounded-full bg-muted transition-colors hover:bg-muted/80">
                 <CardContent className="flex h-12 items-center justify-between px-4 py-0">
@@ -208,34 +209,34 @@ function FriendsPageContent() {
                 </CardContent>
               </Card>
             </Link>
-
-            <Link href="/friends/requests" className="md:w-32 lg:w-40">
-              <Card className="cursor-pointer rounded-full bg-muted transition-colors hover:bg-muted/80">
-                <CardContent className="flex h-12 items-center justify-between px-4 py-0">
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1.5">
-                      <p className="flex flex-row items-center gap-1.5 text-base font-medium lg:text-lg">
-                        <span>{receivedRequests.length}</span>
-                        <span className={"text-sm text-muted-foreground"}>
-                          {pluralize("Request", receivedRequests.length)}
-                        </span>
-                      </p>
-                      {/*{receivedRequests.length > 0 && (*/}
-                      {/*  <Badge*/}
-                      {/*    variant="default"*/}
-                      {/*    className="px-1 py-0 text-[10px] md:text-xs"*/}
-                      {/*  >*/}
-                      {/*    New*/}
-                      {/*  </Badge>*/}
-                      {/*)}*/}
+              <Link href="/friends/requests" className="md:w-32 lg:w-40">
+                <Card className="cursor-pointer rounded-full bg-muted transition-colors hover:bg-muted/80">
+                  <CardContent className="flex h-12 items-center justify-between px-4 py-0">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <p className="flex flex-row items-center gap-1.5 text-base font-medium lg:text-lg">
+                          <span>{receivedRequests.length}</span>
+                          <span className={"text-sm text-muted-foreground"}>
+                            {pluralize("Request", receivedRequests.length)}
+                          </span>
+                        </p>
+                        {/*{receivedRequests.length > 0 && (*/}
+                        {/*  <Badge*/}
+                        {/*    variant="default"*/}
+                        {/*    className="px-1 py-0 text-[10px] md:text-xs"*/}
+                        {/*  >*/}
+                        {/*    New*/}
+                        {/*  </Badge>*/}
+                        {/*)}*/}
+                      </div>
                     </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground lg:h-5 lg:w-5" />
-                </CardContent>
-              </Card>
-            </Link>
-          </div>
-        )}
+                    <ChevronRight className="h-4 w-4 text-muted-foreground lg:h-5 lg:w-5" />
+                  </CardContent>
+                </Card>
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
 
       {isSearchMode ? (

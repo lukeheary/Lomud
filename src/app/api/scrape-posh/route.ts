@@ -286,21 +286,213 @@ function pickStringFromPaths(
   return null;
 }
 
-function parseDateValue(value: unknown): string | null {
+function hasTimeZoneDesignator(value: string): boolean {
+  return /[zZ]|[+-]\d{2}:?\d{2}$/.test(value);
+}
+
+function parseDateParts(value: string): {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second: number;
+} | null {
+  const match =
+    value.trim().match(
+      /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2})(?::(\d{2}))?(?::(\d{2}))?)?/
+    );
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4] ?? 0);
+  const minute = Number(match[5] ?? 0);
+  const second = Number(match[6] ?? 0);
+  if (
+    Number.isNaN(year) ||
+    Number.isNaN(month) ||
+    Number.isNaN(day) ||
+    Number.isNaN(hour) ||
+    Number.isNaN(minute) ||
+    Number.isNaN(second)
+  ) {
+    return null;
+  }
+  return { year, month, day, hour, minute, second };
+}
+
+function toUtcIsoFromZonedParts(
+  parts: {
+    year: number;
+    month: number;
+    day: number;
+    hour: number;
+    minute: number;
+    second: number;
+  },
+  timeZone: string
+): string | null {
+  try {
+    const utcDate = new Date(
+      Date.UTC(
+        parts.year,
+        parts.month - 1,
+        parts.day,
+        parts.hour,
+        parts.minute,
+        parts.second
+      )
+    );
+    if (Number.isNaN(utcDate.getTime())) return null;
+    const tzDate = new Date(
+      utcDate.toLocaleString("en-US", { timeZone })
+    );
+    if (Number.isNaN(tzDate.getTime())) return null;
+    const offsetMs = utcDate.getTime() - tzDate.getTime();
+    const corrected = new Date(utcDate.getTime() + offsetMs);
+    return Number.isNaN(corrected.getTime()) ? null : corrected.toISOString();
+  } catch {
+    return null;
+  }
+}
+
+function normalizeTimeZone(raw: string): string {
+  const trimmed = raw.trim();
+  const upper = trimmed.toUpperCase();
+  const map: Record<string, string> = {
+    EST: "America/New_York",
+    EDT: "America/New_York",
+    CST: "America/Chicago",
+    CDT: "America/Chicago",
+    MST: "America/Denver",
+    MDT: "America/Denver",
+    PST: "America/Los_Angeles",
+    PDT: "America/Los_Angeles",
+    AKST: "America/Anchorage",
+    AKDT: "America/Anchorage",
+    HST: "Pacific/Honolulu",
+  };
+  return map[upper] ?? trimmed;
+}
+
+function timeZoneFromState(state: string | null | undefined): string | null {
+  if (!state) return null;
+  const upper = state.trim().toUpperCase();
+  const eastern = new Set([
+    "CT",
+    "DE",
+    "FL",
+    "GA",
+    "IN",
+    "KY",
+    "ME",
+    "MD",
+    "MA",
+    "MI",
+    "NH",
+    "NJ",
+    "NY",
+    "NC",
+    "OH",
+    "PA",
+    "RI",
+    "SC",
+    "TN",
+    "VT",
+    "VA",
+    "WV",
+    "DC",
+  ]);
+  const central = new Set([
+    "AL",
+    "AR",
+    "IA",
+    "IL",
+    "KS",
+    "LA",
+    "MN",
+    "MO",
+    "MS",
+    "ND",
+    "NE",
+    "OK",
+    "SD",
+    "TX",
+    "WI",
+  ]);
+  const mountain = new Set([
+    "AZ",
+    "CO",
+    "ID",
+    "MT",
+    "NM",
+    "UT",
+    "WY",
+  ]);
+  const pacific = new Set(["CA", "NV", "OR", "WA"]);
+  if (eastern.has(upper)) return "America/New_York";
+  if (central.has(upper)) return "America/Chicago";
+  if (mountain.has(upper)) return "America/Denver";
+  if (pacific.has(upper)) return "America/Los_Angeles";
+  if (upper === "AK") return "America/Anchorage";
+  if (upper === "HI") return "Pacific/Honolulu";
+  return null;
+}
+
+function parseDateValueWithTimeZone(
+  value: unknown,
+  timeZone: string | null,
+  assumeLocal: boolean
+): string | null {
   if (value instanceof Date) {
     return Number.isNaN(value.getTime()) ? null : value.toISOString();
   }
+
+  const normalizedTimeZone = timeZone ? normalizeTimeZone(timeZone) : null;
+  const offsetMatch =
+    normalizedTimeZone?.match(/^([+-]\d{2}):?(\d{2})$/) ?? null;
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    if (hasTimeZoneDesignator(trimmed)) {
+      if (normalizedTimeZone && assumeLocal) {
+        const withoutTz = trimmed.replace(/[zZ]|[+-]\d{2}:?\d{2}$/, "");
+        const parts = parseDateParts(withoutTz);
+        if (parts) {
+          const converted = toUtcIsoFromZonedParts(parts, normalizedTimeZone);
+          if (converted) return converted;
+        }
+      }
+      const parsed = new Date(trimmed);
+      return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+    }
+
+    if (offsetMatch) {
+      const offset = `${offsetMatch[1]}:${offsetMatch[2]}`;
+      const withOffset = `${trimmed}${offset}`;
+      const parsed = new Date(withOffset);
+      return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+    }
+
+    if (normalizedTimeZone && assumeLocal) {
+      const parts = parseDateParts(trimmed);
+      if (!parts) return null;
+      const converted = toUtcIsoFromZonedParts(parts, normalizedTimeZone);
+      return converted ?? trimmed;
+    }
+
+    return trimmed;
+  }
+
   if (typeof value === "number") {
     const ms = value < 1_000_000_000_000 ? value * 1000 : value;
     const date = new Date(ms);
     return Number.isNaN(date.getTime()) ? null : date.toISOString();
   }
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-    if (!trimmed) return null;
-    const parsed = new Date(trimmed);
-    return Number.isNaN(parsed.getTime()) ? null : trimmed;
-  }
+
   return null;
 }
 
@@ -412,6 +604,37 @@ function extractLocationFields(
   };
 }
 
+function extractTimeZone(raw: Record<string, unknown>): string | null {
+  const timeZone =
+    pickStringFromPaths(raw, [
+      "timezone",
+      "time_zone",
+      "timeZone",
+      "tz",
+      ["venue", "timezone"],
+      ["venue", "time_zone"],
+      ["location", "timezone"],
+      ["location", "time_zone"],
+    ]) || null;
+  return timeZone ? normalizeTimeZone(timeZone) : null;
+}
+
+function pickDateValue(
+  raw: Record<string, unknown>,
+  candidates: Array<{ path: string | string[]; assumeLocal: boolean }>
+): { value: unknown; assumeLocal: boolean } | null {
+  for (const candidate of candidates) {
+    const value =
+      typeof candidate.path === "string"
+        ? raw[candidate.path]
+        : getPathValue(raw, candidate.path);
+    if (value !== undefined && value !== null && value !== "") {
+      return { value, assumeLocal: candidate.assumeLocal };
+    }
+  }
+  return null;
+}
+
 function mapPoshApiEvent(
   raw: Record<string, unknown>,
   group?: { name?: string; url?: string } | null
@@ -469,31 +692,62 @@ function mapPoshApiEvent(
     null;
   const externalId = externalIdRaw ? `posh-${externalIdRaw}` : null;
 
+  const { venueName, address, city, state } = extractLocationFields(raw);
+  const timeZone = extractTimeZone(raw) || timeZoneFromState(state);
+
+  const startCandidate = pickDateValue(raw, [
+    { path: "start_local", assumeLocal: true },
+    { path: "start_time_local", assumeLocal: true },
+    { path: "start_datetime_local", assumeLocal: true },
+    { path: "start_at_local", assumeLocal: true },
+    { path: ["start", "local"], assumeLocal: true },
+    { path: ["start_at", "local"], assumeLocal: true },
+    { path: ["start_time", "local"], assumeLocal: true },
+    { path: "start", assumeLocal: Boolean(timeZone) },
+    { path: "start_at", assumeLocal: Boolean(timeZone) },
+    { path: "startAt", assumeLocal: Boolean(timeZone) },
+    { path: "start_date", assumeLocal: Boolean(timeZone) },
+    { path: "startDate", assumeLocal: Boolean(timeZone) },
+    { path: "start_time", assumeLocal: Boolean(timeZone) },
+    { path: "startTime", assumeLocal: Boolean(timeZone) },
+    { path: "start_datetime", assumeLocal: Boolean(timeZone) },
+  ]);
+
+  const endCandidate = pickDateValue(raw, [
+    { path: "end_local", assumeLocal: true },
+    { path: "end_time_local", assumeLocal: true },
+    { path: "end_datetime_local", assumeLocal: true },
+    { path: "end_at_local", assumeLocal: true },
+    { path: ["end", "local"], assumeLocal: true },
+    { path: ["end_at", "local"], assumeLocal: true },
+    { path: ["end_time", "local"], assumeLocal: true },
+    { path: "end", assumeLocal: Boolean(timeZone) },
+    { path: "end_at", assumeLocal: Boolean(timeZone) },
+    { path: "endAt", assumeLocal: Boolean(timeZone) },
+    { path: "end_date", assumeLocal: Boolean(timeZone) },
+    { path: "endDate", assumeLocal: Boolean(timeZone) },
+    { path: "end_time", assumeLocal: Boolean(timeZone) },
+    { path: "endTime", assumeLocal: Boolean(timeZone) },
+    { path: "end_datetime", assumeLocal: Boolean(timeZone) },
+  ]);
+
   const startAt =
-    parseDateValue(
-      getPathValue(raw, ["start"]) ??
-        getPathValue(raw, ["start_at"]) ??
-        getPathValue(raw, ["startAt"]) ??
-        getPathValue(raw, ["start_date"]) ??
-        getPathValue(raw, ["startDate"]) ??
-        getPathValue(raw, ["start_time"]) ??
-        getPathValue(raw, ["startTime"]) ??
-        getPathValue(raw, ["start_datetime"])
-    ) || null;
+    (startCandidate
+      ? parseDateValueWithTimeZone(
+          startCandidate.value,
+          timeZone,
+          startCandidate.assumeLocal
+        )
+      : null) || null;
 
   const endAt =
-    parseDateValue(
-      getPathValue(raw, ["end"]) ??
-        getPathValue(raw, ["end_at"]) ??
-        getPathValue(raw, ["endAt"]) ??
-        getPathValue(raw, ["end_date"]) ??
-        getPathValue(raw, ["endDate"]) ??
-        getPathValue(raw, ["end_time"]) ??
-        getPathValue(raw, ["endTime"]) ??
-        getPathValue(raw, ["end_datetime"])
-    ) || null;
-
-  const { venueName, address, city, state } = extractLocationFields(raw);
+    (endCandidate
+      ? parseDateValueWithTimeZone(
+          endCandidate.value,
+          timeZone,
+          endCandidate.assumeLocal
+        )
+      : null) || null;
 
   const organizerName =
     pickStringFromPaths(raw, [

@@ -12,12 +12,7 @@ import { TRPCError } from "@trpc/server";
 import { filterValidCategories } from "@/lib/categories";
 
 const placeTypeSchema = z.enum(["venue", "organizer"]);
-const placeMemberRoleSchema = z.enum([
-  "owner",
-  "manager",
-  "promoter",
-  "staff",
-]);
+const placeMemberRoleSchema = z.enum(["owner", "manager", "promoter", "staff"]);
 
 export const adminRouter = router({
   // ============================================================================
@@ -33,8 +28,8 @@ export const adminRouter = router({
           .min(3)
           .max(100)
           .regex(
-            /^[a-z0-9-]+$/,
-            "Slug must be lowercase alphanumeric with hyphens"
+            /^[a-z0-9_-]+$/,
+            "Slug must be lowercase alphanumeric with hyphens and underscores"
           ),
         name: z.string().min(1).max(255),
         description: z.string().optional(),
@@ -232,10 +227,7 @@ export const adminRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const terms = input.query
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean);
+      const terms = input.query.trim().split(/\s+/).filter(Boolean);
 
       const nameSearchConditions = terms.map((term) =>
         or(
@@ -296,10 +288,7 @@ export const adminRouter = router({
         });
       }
 
-      const [metro] = await ctx.db
-        .insert(metroAreas)
-        .values(input)
-        .returning();
+      const [metro] = await ctx.db.insert(metroAreas).values(input).returning();
 
       return metro;
     }),

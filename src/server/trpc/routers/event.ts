@@ -132,6 +132,7 @@ export const eventRouter = router({
     .input(
       z.object({
         venueId: z.string().uuid().optional(),
+        organizerId: z.string().uuid().optional(),
         events: z.array(
           z.object({
             title: z.string().min(1).max(255),
@@ -146,6 +147,8 @@ export const eventRouter = router({
             address: z.string().optional(),
             city: z.string().min(1).max(100),
             state: z.string().length(2),
+            organizerId: z.string().uuid().optional(),
+            venueId: z.string().uuid().optional(),
             categories: z.array(z.string()).optional().default([]),
             visibility: z.enum(["public", "private"]).default("public"),
           })
@@ -224,7 +227,8 @@ export const eventRouter = router({
         categories: filterValidCategories(event.categories || []),
         visibility: event.visibility,
         createdByUserId: ctx.auth.userId,
-        venueId: input.venueId ?? null,
+        venueId: event.venueId ?? input.venueId ?? null,
+        organizerId: event.organizerId ?? input.organizerId ?? null,
       }));
 
       // Insert events first to get IDs

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -57,25 +57,35 @@ interface ScrapeResult {
   errors?: { url: string; error: string }[];
 }
 
-interface SelectedVenue {
+interface SelectedPlace {
   id: string;
   name: string;
   city: string | null;
   state: string | null;
+  address?: string | null;
 }
 
-function VenueDropdown({
+type EditableEvent = ScrapedEvent & {
+  venueId?: string | null;
+  linkedVenue?: SelectedPlace | null;
+};
+
+function PlaceDropdown({
+  type,
   selected,
   onSelect,
+  placeholder,
 }: {
-  selected: SelectedVenue | null;
-  onSelect: (venue: SelectedVenue | null) => void;
+  type: "venue" | "organizer";
+  selected: SelectedPlace | null;
+  onSelect: (place: SelectedPlace | null) => void;
+  placeholder: string;
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
   const { data: results, isLoading } = trpc.place.searchPlaces.useQuery(
-    { query: search, type: "venue" },
+    { query: search, type },
     { enabled: search.length > 2 }
   );
 
@@ -112,7 +122,7 @@ function VenueDropdown({
         >
           <span className="flex items-center gap-2">
             <Building className="h-4 w-4" />
-            Link to a venue (optional)
+            {placeholder}
           </span>
           <Search className="h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -146,6 +156,7 @@ function VenueDropdown({
                     name: v.name,
                     city: v.city,
                     state: v.state,
+                    address: v.address ?? null,
                   });
                   setOpen(false);
                   setSearch("");
@@ -175,7 +186,15 @@ function VenueDropdown({
   );
 }
 
-function EventCard({ event }: { event: ScrapedEvent }) {
+function EventCard({
+  event,
+  selectedVenue,
+  onSelectVenue,
+}: {
+  event: EditableEvent;
+  selectedVenue: SelectedPlace | null;
+  onSelectVenue: (venue: SelectedPlace | null) => void;
+}) {
   const [showFullDesc, setShowFullDesc] = useState(false);
 
   return (
@@ -226,7 +245,19 @@ function EventCard({ event }: { event: ScrapedEvent }) {
 
             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <MapPin className="h-3.5 w-3.5" />
-              <span>{event.venueName}</span>
+              <span>{event.venueName || "Venue not set"}</span>
+            </div>
+
+            <div className="space-y-2 text-xs text-muted-foreground">
+              <p className="font-medium text-muted-foreground">
+                Link to existing venue
+              </p>
+              <PlaceDropdown
+                type="venue"
+                selected={selectedVenue}
+                onSelect={onSelectVenue}
+                placeholder="Link to a venue (optional)"
+              />
             </div>
 
             <div className="flex flex-wrap gap-1.5">
@@ -299,11 +330,14 @@ export default function ScrapePoshPage() {
   const [urlsText, setUrlsText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<ScrapeResult | null>(null);
+  const [editableEvents, setEditableEvents] = useState<EditableEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [importedCount, setImportedCount] = useState<number | null>(null);
-  const [selectedVenue, setSelectedVenue] = useState<SelectedVenue | null>(
+  const [selectedVenue, setSelectedVenue] = useState<SelectedPlace | null>(
     null
   );
+  const [selectedOrganizer, setSelectedOrganizer] =
+    useState<SelectedPlace | null>(null);
   const { toast } = useToast();
 
   const batchCreate = trpc.event.batchCreateEvents.useMutation({
@@ -311,7 +345,7 @@ export default function ScrapePoshPage() {
       setImportedCount(data.created);
       toast({
         title: "Events imported",
-        description: `${data.created} events added to WIG${selectedVenue ? ` (linked to ${selectedVenue.name})` : ""}`,
+        description: `${data.created} events added to WIG${selectedVenue ? ` (default venue: ${selectedVenue.name})` : ""}`,
       });
     },
     onError: (err) => {
@@ -322,6 +356,20 @@ export default function ScrapePoshPage() {
       });
     },
   });
+
+  useEffect(() => {
+    if (result?.events) {
+      setEditableEvents(
+        result.events.map((event) => ({
+          ...event,
+          venueId: null,
+          linkedVenue: null,
+        }))
+      );
+    } else {
+      setEditableEvents([]);
+    }
+  }, [result]);
 
   const handleScrape = async () => {
     setIsLoading(true);
@@ -363,9 +411,9 @@ export default function ScrapePoshPage() {
   };
 
   const handleImport = () => {
-    if (!result) return;
+    if (!result || editableEvents.length === 0) return;
 
-    const events = result.events.map((event) => ({
+    const events = editableEvents.map((event) => ({
       title: event.title,
       description: event.description ?? undefined,
       coverImageUrl: event.coverImageUrl ?? undefined,
@@ -378,14 +426,35 @@ export default function ScrapePoshPage() {
       address: event.address,
       city: event.city,
       state: event.state,
+      venueId: event.venueId ?? undefined,
       categories: event.categories,
       visibility: event.visibility as "public" | "private",
     }));
 
     batchCreate.mutate({
       venueId: selectedVenue?.id,
+      organizerId: selectedOrganizer?.id,
       events,
     });
+  };
+
+  const updateEvent = (index: number, patch: Partial<EditableEvent>) => {
+    setEditableEvents((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], ...patch };
+      return next;
+    });
+  };
+
+  const applyDefaultVenueToAll = () => {
+    if (!selectedVenue) return;
+    setEditableEvents((prev) =>
+      prev.map((event) => ({
+        ...event,
+        venueId: selectedVenue.id,
+        linkedVenue: selectedVenue,
+      }))
+    );
   };
 
   return (
@@ -476,16 +545,39 @@ export default function ScrapePoshPage() {
           <Card>
             <CardContent className="space-y-4 p-4">
               <div className="space-y-2">
-                <p className="text-sm font-medium">Link to venue</p>
-                <VenueDropdown
+                <p className="text-sm font-medium">Default venue (optional)</p>
+                <PlaceDropdown
+                  type="venue"
                   selected={selectedVenue}
                   onSelect={setSelectedVenue}
+                  placeholder="Link to a venue (optional)"
+                />
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={applyDefaultVenueToAll}
+                    disabled={!selectedVenue}
+                  >
+                    Apply default to all events
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Organizer (optional)</p>
+                <PlaceDropdown
+                  type="organizer"
+                  selected={selectedOrganizer}
+                  onSelect={setSelectedOrganizer}
+                  placeholder="Link to an organizer (optional)"
                 />
               </div>
 
               <div className="flex items-center justify-between border-t pt-4">
                 <p className="text-sm text-muted-foreground">
-                  {result.totalEvents} events to import
+                  {editableEvents.length} events to import
                 </p>
 
                 {importedCount !== null ? (
@@ -512,9 +604,28 @@ export default function ScrapePoshPage() {
           </Card>
 
           <div className="space-y-3">
-            {result.events.map((event, index) => (
-              <EventCard key={index} event={event} />
-            ))}
+            {editableEvents.map((event, index) => {
+              return (
+                <EventCard
+                  key={index}
+                  event={event}
+                  selectedVenue={event.linkedVenue ?? null}
+                  onSelectVenue={(venue) => {
+                    if (venue) {
+                      updateEvent(index, {
+                        venueId: venue.id,
+                        linkedVenue: venue,
+                      });
+                    } else {
+                      updateEvent(index, {
+                        venueId: null,
+                        linkedVenue: null,
+                      });
+                    }
+                  }}
+                />
+              );
+            })}
           </div>
         </>
       )}

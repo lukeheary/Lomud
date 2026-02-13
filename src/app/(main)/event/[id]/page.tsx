@@ -17,6 +17,7 @@ import {
   Users,
   ExternalLink,
   X,
+  Expand,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -55,10 +56,10 @@ export default function EventPage() {
   // RSVP mutation
   const rsvpMutation = trpc.event.setRsvpStatus.useMutation({
     onSuccess: () => {
-      toast({
-        title: "RSVP Updated",
-        description: "Your RSVP has been updated successfully",
-      });
+      // toast({
+      //   title: "RSVP Updated",
+      //   description: "Your RSVP has been updated successfully",
+      // });
       utils.event.getEventById.invalidate();
       utils.event.listEventAttendees.invalidate();
     },
@@ -133,7 +134,8 @@ export default function EventPage() {
     new Intl.DateTimeFormat("en-US", { timeZoneName: "short" })
       .formatToParts(eventDate)
       .find((part) => part.type === "timeZoneName")?.value || "";
-  const formattedTime = `${timeWithoutTz} ${timezone}`;
+  // const formattedTime = `${timeWithoutTz} ${timezone}`;
+  const formattedTime = `${timeWithoutTz}`;
   const sourceLabel = event.source
     ? event.source.charAt(0).toUpperCase() + event.source.slice(1)
     : "Event Site";
@@ -193,10 +195,7 @@ export default function EventPage() {
           <div className="lg:w-[360px] lg:flex-none">
             <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-muted lg:aspect-auto lg:min-h-[360px]">
               {event.coverImageUrl ? (
-                <div
-                  className="h-full w-full cursor-pointer"
-                  onClick={() => setIsImageModalOpen(true)}
-                >
+                <div className="h-full w-full">
                   <Image
                     src={event.coverImageUrl}
                     alt={event.title}
@@ -249,6 +248,18 @@ export default function EventPage() {
                   <AvatarStack users={goingUsers} maxDisplay={5} size="md" />
                 </div>
               )}
+
+              {/* Expand Button - bottom left */}
+              {event.coverImageUrl && (
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="absolute bottom-4 left-4 h-10 w-10"
+                  onClick={() => setIsImageModalOpen(true)}
+                >
+                  <Expand className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
 
@@ -260,16 +271,9 @@ export default function EventPage() {
               <h1 className="text-3xl font-bold md:text-4xl">{event.title}</h1>
             </div>
 
-            <div className="flex items-center gap-2 text-lg">
-              <Calendar className="h-4 w-4" />
-              <span>
-                {formattedDate} at {formattedTime}
-              </span>
-            </div>
-
             {event.venueName && (
               <Link
-                className="mt-1 flex w-fit items-center gap-2 text-muted-foreground transition-colors hover:underline"
+                className="mt-1 flex w-fit items-center gap-2 text-lg transition-colors hover:underline"
                 href={`/places/${event.venue?.slug}`}
               >
                 <MapPin className="h-4 w-4" />
@@ -280,6 +284,13 @@ export default function EventPage() {
                 )}
               </Link>
             )}
+
+            <div className="mt-1 flex items-center gap-2 text-lg">
+              <Calendar className="h-4 w-4" />
+              <span>
+                {formattedDate} at {formattedTime}
+              </span>
+            </div>
 
             {event.organizer && (
               <Link

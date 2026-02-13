@@ -225,12 +225,13 @@ function PlacesPageContent() {
   const isLoading = isLoadingPlaces;
 
   return (
-    <div className="container mx-auto py-4">
+    <div className="container mx-auto pt-4">
       {/* Sticky sentinel for intersection observer */}
       <div ref={stickySentinelRef} className="h-0" />
 
       {/* Search and Filters */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="z-[45] -mx-4 -mt-4 bg-background px-4 pb-3 pt-2 transition-shadow md:top-16 md:z-30 md:-mx-8 md:bg-background/95 md:px-8 md:backdrop-blur md:supports-[backdrop-filter]:bg-background">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <Suspense fallback={null}>
           <SearchInput
             ref={searchInputRef}
@@ -273,6 +274,7 @@ function PlacesPageContent() {
             title="Select City"
             className="w-48 grow"
           />
+        </div>
         </div>
       </div>
 
