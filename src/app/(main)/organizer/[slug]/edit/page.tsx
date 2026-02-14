@@ -36,7 +36,7 @@ export default function EditPlacePage() {
         description: "Place updated successfully",
       });
       // Navigate to the new slug if it changed
-      router.push(`/places/${variables.slug || slug}`);
+      router.push(`/organizer/${variables.slug || slug}`);
     },
     onError: (error) => {
       toast({
@@ -110,7 +110,7 @@ export default function EditPlacePage() {
         <p className="mb-4 text-muted-foreground">
           The place you&apos;re looking for doesn&apos;t exist
         </p>
-        <Link href="/places">
+        <Link href="/venues-and-organizers">
           <Button>Browse Places</Button>
         </Link>
       </div>
@@ -125,7 +125,7 @@ export default function EditPlacePage() {
         <p className="mb-4 text-muted-foreground">
           You don&apos;t have permission to edit this place
         </p>
-        <Link href={`/places/${slug}`}>
+        <Link href={`/organizer/${slug}`}>
           <Button>Back to Place</Button>
         </Link>
       </div>
@@ -166,7 +166,7 @@ export default function EditPlacePage() {
         placeId={place.id}
         mode="edit"
         onSubmit={handleSubmit}
-        onCancel={() => router.push(`/places/${slug}`)}
+        onCancel={() => router.push(`/organizer/${slug}`)}
         isSubmitting={updateMutation.isPending}
       />
     </div>

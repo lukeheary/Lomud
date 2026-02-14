@@ -107,7 +107,7 @@ export default function MyPlacesPage() {
                   You are not a member of any venues. Contact an admin to be
                   added to a venue.
                 </p>
-                <Link href="/places?filter=venues">
+                <Link href="/venues-and-organizers?filter=venues">
                   <Button>Browse Venues</Button>
                 </Link>
               </CardContent>

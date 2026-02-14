@@ -59,9 +59,14 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
   const { showNavbarSearch, scrollToSearchAndFocus } = useNavbarSearch();
 
   const isHome = pathname === "/home";
-  const isPlaces = pathname === "/places" || pathname?.startsWith("/places/");
+  const isPlaces =
+    pathname === "/venues-and-organizers" ||
+    pathname?.startsWith("/venues-and-organizers/") ||
+    pathname?.startsWith("/venue/") ||
+    pathname?.startsWith("/organizer/");
   const isPlaceDetail =
-    pathname?.startsWith("/places/") && !pathname?.includes("/edit");
+    (pathname?.startsWith("/venue/") || pathname?.startsWith("/organizer/")) &&
+    !pathname?.includes("/edit");
   const isFriends = pathname === "/friends";
   const isProfile = pathname === "/profile";
   const isMyPlaces = pathname === "/my-places";
@@ -116,7 +121,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                 Home
               </Button>
             </Link>
-            <Link href="/places">
+            <Link href="/venues-and-organizers">
               <Button
                 variant="ghost"
                 size="sm"
@@ -274,7 +279,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                     </Button>
                   </Link>
 
-                  <Link href="/places" onClick={closeMobileMenu}>
+                  <Link href="/venues-and-organizers" onClick={closeMobileMenu}>
                     <Button
                       variant="ghost"
                       className={`w-full justify-start px-4 text-base ${isPlaces ? "text-foreground" : "text-muted-foreground"}`}

@@ -162,7 +162,7 @@ export default function PlacePage() {
         <p className="mb-4 text-muted-foreground">
           The place you&apos;re looking for doesn&apos;t exist
         </p>
-        <Link href="/places">
+        <Link href="/venues-and-organizers">
           <Button>Browse Places</Button>
         </Link>
       </div>
@@ -285,7 +285,7 @@ export default function PlacePage() {
                 )}
               </Button>
               {canEdit && (
-                <Link href={`/places/${slug}/edit`}>
+                <Link href={`/venue/${slug}/edit`}>
                   <Button size="icon" variant="secondary" className="h-10 w-10">
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -370,7 +370,7 @@ export default function PlacePage() {
               )}
             </Button>
             {canEdit && (
-              <Link href={`/places/${slug}/edit`}>
+              <Link href={`/venue/${slug}/edit`}>
                 <Button size="icon" variant="secondary" className="h-10 w-10">
                   <Edit className="h-4 w-4" />
                 </Button>

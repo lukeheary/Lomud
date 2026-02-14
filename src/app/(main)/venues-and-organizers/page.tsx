@@ -234,49 +234,49 @@ function PlacesPageContent() {
       {/* Search and Filters */}
       <div className="z-[45] -mx-4 -mt-4 bg-background px-4 pb-3 pt-2 transition-shadow md:top-16 md:z-30 md:-mx-8 md:bg-background/95 md:px-8 md:backdrop-blur md:supports-[backdrop-filter]:bg-background">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <Suspense fallback={null}>
-          <SearchInput
-            ref={searchInputRef}
-            placeholder="Search venues & organizers..."
-            value={searchQuery}
-            onChange={setSearchQuery}
-            className="w-full"
-          />
-        </Suspense>
+          <Suspense fallback={null}>
+            <SearchInput
+              ref={searchInputRef}
+              placeholder="Search venues & organizers..."
+              value={searchQuery}
+              onChange={setSearchQuery}
+              className="w-full"
+            />
+          </Suspense>
 
-        {/* Filters */}
-        <div className="flex shrink-0 gap-2">
-          {/* Type Filter */}
-          <ResponsiveSelect
-            value={filterType}
-            onValueChange={(value) => setFilterType(value as FilterType)}
-            options={[
-              { value: "all", label: "All Places" },
-              { value: "venues", label: "Venues" },
-              { value: "organizers", label: "Organizers" },
-              { value: "following", label: "Following" },
-            ]}
-            placeholder="Filter"
-            title="Filter Places"
-            className="w-40 sm:w-[170px]"
-          />
+          {/* Filters */}
+          <div className="flex shrink-0 gap-2">
+            {/* Type Filter */}
+            <ResponsiveSelect
+              value={filterType}
+              onValueChange={(value) => setFilterType(value as FilterType)}
+              options={[
+                { value: "all", label: "All Places" },
+                { value: "venues", label: "Venues" },
+                { value: "organizers", label: "Organizers" },
+                { value: "following", label: "Following" },
+              ]}
+              placeholder="Filter"
+              title="Filter Places"
+              className="w-40 sm:w-[170px]"
+            />
 
-          {/* City Filter */}
-          <ResponsiveSelect
-            value={effectiveCity ?? "all"}
-            onValueChange={setSelectedCity}
-            options={[
-              { value: "all", label: "All Cities" },
-              ...(cities?.map((city) => ({
-                value: city.city,
-                label: `${city.city}, ${city.state}`,
-              })) || []),
-            ]}
-            placeholder="Select city"
-            title="Select City"
-            className="w-48 grow"
-          />
-        </div>
+            {/* City Filter */}
+            <ResponsiveSelect
+              value={effectiveCity ?? "all"}
+              onValueChange={setSelectedCity}
+              options={[
+                { value: "all", label: "All Cities" },
+                ...(cities?.map((city) => ({
+                  value: city.city,
+                  label: `${city.city}, ${city.state}`,
+                })) || []),
+              ]}
+              placeholder="Select city"
+              title="Select City"
+              className="w-48 grow"
+            />
+          </div>
         </div>
       </div>
 
@@ -289,9 +289,9 @@ function PlacesPageContent() {
 
       {/* Combined Grid */}
       {!isLoading && isReady && combinedItems.length > 0 && (
-        <div className="grid gap-2 py-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-2 py-2 md:grid-cols-2 lg:grid-cols-3">
           {combinedItems.map((item) => (
-            <Link key={`${item.type}-${item.id}`} href={`/places/${item.slug}`}>
+            <Link key={`${item.type}-${item.id}`} href={`/${item.type === "venue" ? "venue" : "organizer"}/${item.slug}`}>
               <Card className="relative h-28 cursor-pointer overflow-hidden !border-none bg-card p-2 transition-all duration-300 hover:bg-accent/50">
                 <div className="flex h-full">
                   <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-2xl bg-muted">

@@ -203,7 +203,7 @@ export default function ManagePlacePage() {
                   ))}
                   {upcomingEvents.length > 5 && (
                     <Link
-                      href={`/places/${place.slug}`}
+                      href={`/${isVenue ? "venue" : "organizer"}/${place.slug}`}
                       className="block text-center text-sm text-muted-foreground hover:text-primary"
                     >
                       View all {upcomingEvents.length} events
@@ -258,13 +258,13 @@ export default function ManagePlacePage() {
                   Create New Event
                 </Button>
               </Link>
-              <Link href={`/places/${place.slug}`} className="block">
+              <Link href={`/${isVenue ? "venue" : "organizer"}/${place.slug}`} className="block">
                 <Button variant="outline" className="w-full justify-start">
                   <Eye className="mr-2 h-4 w-4" />
                   View Public Page
                 </Button>
               </Link>
-              <Link href={`/places/${place.slug}/edit`} className="block">
+              <Link href={`/${isVenue ? "venue" : "organizer"}/${place.slug}/edit`} className="block">
                 <Button variant="outline" className="w-full justify-start">
                   <Edit className="mr-2 h-4 w-4" />
                   Edit {typeLabel}

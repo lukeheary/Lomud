@@ -132,12 +132,79 @@ export function PlaceEditForm({
       formattedAddress: string;
       latitude?: number;
       longitude?: number;
+      openingHours?: google.maps.places.PlaceOpeningHours;
     }) => {
       // Generate slug from place name
       const slug = place.name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "");
+
+      // Convert Google opening_hours to our VenueHours format
+      let hours: VenueHours | null = null;
+      if (place.openingHours?.periods) {
+        const dayMap: Record<number, string> = {
+          0: "sunday",
+          1: "monday",
+          2: "tuesday",
+          3: "wednesday",
+          4: "thursday",
+          5: "friday",
+          6: "saturday",
+        };
+
+        const formatGoogleTime = (time: string) => {
+          // Google returns "HHMM", we need "HH:MM"
+          return `${time.slice(0, 2)}:${time.slice(2)}`;
+        };
+
+        // Check if open 24/7 (single period with open day 0, time 0000, no close)
+        const is24_7 =
+          place.openingHours.periods.length === 1 &&
+          place.openingHours.periods[0].open?.time === "0000" &&
+          !place.openingHours.periods[0].close;
+
+        if (is24_7) {
+          hours = {};
+          for (let i = 0; i < 7; i++) {
+            (hours as any)[dayMap[i]] = {
+              open: "00:00",
+              close: "23:59",
+              closed: false,
+            };
+          }
+        } else {
+          hours = {};
+          // Initialize all days as closed
+          for (let i = 0; i < 7; i++) {
+            (hours as any)[dayMap[i]] = {
+              open: "09:00",
+              close: "17:00",
+              closed: true,
+            };
+          }
+          // Fill in open days from periods
+          for (const period of place.openingHours.periods) {
+            const dayNum = period.open?.day;
+            if (dayNum == null) continue;
+            const dayName = dayMap[dayNum];
+            if (!dayName) continue;
+
+            const openTime = period.open?.time
+              ? formatGoogleTime(period.open.time)
+              : "09:00";
+            const closeTime = period.close?.time
+              ? formatGoogleTime(period.close.time)
+              : "23:59";
+
+            (hours as any)[dayName] = {
+              open: openTime,
+              close: closeTime,
+              closed: false,
+            };
+          }
+        }
+      }
 
       setFormData((prev) => ({
         ...prev,
@@ -148,6 +215,7 @@ export function PlaceEditForm({
         state: place.state,
         latitude: place.latitude || null,
         longitude: place.longitude || null,
+        hours: hours ?? prev.hours,
         instagram: isSlugSynced
           ? (slug.length >= 3 ? slug : `${prev.type}-${slug}`).replace(/-/g, "")
           : prev.instagram,

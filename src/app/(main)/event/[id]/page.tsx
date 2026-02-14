@@ -305,7 +305,7 @@ export default function EventPage() {
             {event.venueName && (
               <Link
                 className="mt-1 flex w-fit items-center gap-2 text-lg transition-colors hover:underline"
-                href={`/places/${event.venue?.slug}`}
+                href={`/venue/${event.venue?.slug}`}
               >
                 <MapPin className="h-4 w-4" />
                 {event.venue?.slug ? (
@@ -325,7 +325,7 @@ export default function EventPage() {
 
             {event.organizer && (
               <Link
-                href={`/places/${event.organizer.slug}`}
+                href={`/organizer/${event.organizer.slug}`}
                 className="mt-1 flex w-fit items-center gap-2 text-muted-foreground transition-colors hover:underline"
               >
                 <Users className="h-4 w-4" />

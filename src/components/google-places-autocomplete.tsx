@@ -14,6 +14,7 @@ interface PlaceResult {
   formattedAddress: string;
   latitude?: number;
   longitude?: number;
+  openingHours?: google.maps.places.PlaceOpeningHours;
 }
 
 interface GooglePlacesAutocompleteProps {
@@ -65,7 +66,7 @@ function AutocompleteInput({
     ).google.maps.places.Autocomplete(inputRef.current, {
       types,
       componentRestrictions: { country: "us" },
-      fields: ["address_components", "formatted_address", "name", "geometry"],
+      fields: ["address_components", "formatted_address", "name", "geometry", "opening_hours"],
     });
 
     // Add place changed listener
@@ -139,6 +140,7 @@ function AutocompleteInput({
           formattedAddress,
           latitude,
           longitude,
+          openingHours: place.opening_hours || undefined,
         });
       }
     );
