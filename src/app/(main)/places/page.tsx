@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import {
   Suspense,
@@ -12,7 +13,7 @@ import {
 import { trpc } from "@/lib/trpc";
 import { SearchInput } from "@/components/ui/search-input";
 import { useNavbarSearch } from "@/contexts/nav-search-context";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Building, Building2, MapPin, Loader2 } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { ResponsiveSelect } from "@/components/ui/responsive-select";
@@ -186,6 +187,7 @@ function PlacesPageContent() {
         city: place.city,
         state: place.state,
         slug: place.slug,
+        logoImageUrl: place.logoImageUrl,
         latitude: place.latitude,
         longitude: place.longitude,
       }))
@@ -287,37 +289,45 @@ function PlacesPageContent() {
 
       {/* Combined Grid */}
       {!isLoading && isReady && combinedItems.length > 0 && (
-        <div className="grid gap-4 py-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-2 py-4 md:grid-cols-2 lg:grid-cols-3">
           {combinedItems.map((item) => (
             <Link key={`${item.type}-${item.id}`} href={`/places/${item.slug}`}>
-              <Card className="h-full cursor-pointer transition-colors hover:bg-accent/50">
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      {item.type === "venue" ? (
-                        <Building className="h-5 w-5 shrink-0 text-muted-foreground" />
-                      ) : (
-                        <Building2 className="h-5 w-5 shrink-0 text-muted-foreground" />
-                      )}
-                      <CardTitle className="text-lg">{item.name}</CardTitle>
-                    </div>
+              <Card className="relative h-28 cursor-pointer overflow-hidden !border-none bg-card p-2 transition-all duration-300 hover:bg-accent/50">
+                <div className="flex h-full">
+                  <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-2xl bg-muted">
+                    {item.logoImageUrl ? (
+                      <Image
+                        src={item.logoImageUrl}
+                        alt={item.name}
+                        fill
+                        className="object-cover"
+                        sizes="96px"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        {item.type === "venue" ? (
+                          <Building className="h-8 w-8 text-muted-foreground/40" />
+                        ) : (
+                          <Building2 className="h-8 w-8 text-muted-foreground/40" />
+                        )}
+                      </div>
+                    )}
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {item.description && (
-                    <p className="line-clamp-2 text-sm text-muted-foreground">
-                      {item.description}
-                    </p>
-                  )}
-                  {item.city && item.state && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <MapPin className="h-4 w-4" />
-                      <span>
-                        {item.city}, {item.state}
-                      </span>
-                    </div>
-                  )}
-                </CardContent>
+
+                  <div className="flex-1 space-y-0.5 py-1 pl-3 pr-1">
+                    <h3 className="line-clamp-2 text-base font-bold leading-tight">
+                      {item.name}
+                    </h3>
+                    {item.city && item.state && (
+                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <MapPin className="h-3.5 w-3.5" />
+                        <span>
+                          {item.city}, {item.state}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </Card>
             </Link>
           ))}

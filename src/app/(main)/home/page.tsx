@@ -131,11 +131,7 @@ function StickyDateHeader({
   );
 }
 
-function StickySectionHeader({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function StickySectionHeader({ children }: { children: React.ReactNode }) {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const [isHeaderSticky, setIsHeaderSticky] = useState(false);
 
@@ -706,7 +702,7 @@ function HomePageContent() {
 
         {/* Initial / Transition Loading State */}
         {showSkeletons && (
-          <div className="py-6">
+          <div className="py-2">
             <EventSkeletonGrid count={8} />
           </div>
         )}
@@ -772,7 +768,7 @@ function HomePageContent() {
             </div>
           </StickySectionHeader>
           <div className="container mx-auto px-4">
-            <ActivityFeed limit={3} hideWhenEmpty />
+            <ActivityFeed limit={3} hideWhenEmpty hidePastEvents />
           </div>
         </div>
       )}

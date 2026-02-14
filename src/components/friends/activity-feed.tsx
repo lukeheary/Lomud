@@ -11,7 +11,7 @@ import {
   CalendarPlus,
   Circle,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, startOfDay } from "date-fns";
 import Link from "next/link";
 import { formatRelativeEventDate } from "@/lib/utils";
 
@@ -22,8 +22,13 @@ interface ActivityItemProps {
 function ActivityItem({ activity }: ActivityItemProps) {
   const { actor, type, entityId, metadata, createdAt, event } = activity;
 
-  const eventRelativeDate = event?.startAt
-    ? formatRelativeEventDate(new Date(event.startAt))
+  const eventDate = event?.startAt ? new Date(event.startAt) : null;
+  const isEventPast = eventDate
+    ? startOfDay(eventDate) < startOfDay(new Date())
+    : false;
+
+  const eventRelativeDate = eventDate
+    ? formatRelativeEventDate(eventDate)
     : null;
 
   const renderIcon = () => {
@@ -62,7 +67,7 @@ function ActivityItem({ activity }: ActivityItemProps) {
       case "rsvp_going":
         return (
           <>
-            {actorName} is going to{" "}
+            {actorName} {isEventPast ? "went to" : "is going to"}{" "}
             <Link
               href={`/event/${entityId}`}
               className="font-medium text-primary hover:underline"
@@ -92,7 +97,7 @@ function ActivityItem({ activity }: ActivityItemProps) {
       case "rsvp_interested":
         return (
           <>
-            {actorName} is interested in{" "}
+            {actorName} {isEventPast ? "was interested in" : "is interested in"}{" "}
             <Link
               href={`/event/${entityId}`}
               className="font-medium text-primary hover:underline"
@@ -224,15 +229,27 @@ function ActivityItem({ activity }: ActivityItemProps) {
 interface ActivityFeedProps {
   limit?: number;
   hideWhenEmpty?: boolean;
+  hidePastEvents?: boolean;
 }
 
 export function ActivityFeed({
   limit = 50,
   hideWhenEmpty = false,
+  hidePastEvents = false,
 }: ActivityFeedProps) {
-  const { data: activities, isLoading } = trpc.friends.getFriendFeed.useQuery({
-    limit,
-  });
+  const { data: rawActivities, isLoading } =
+    trpc.friends.getFriendFeed.useQuery({
+      limit,
+    });
+
+  const activities = hidePastEvents
+    ? rawActivities?.filter((activity: any) => {
+        if (!activity.event?.startAt) return true;
+        const eventDate = startOfDay(new Date(activity.event.startAt));
+        const today = startOfDay(new Date());
+        return eventDate >= today;
+      })
+    : rawActivities;
 
   if (isLoading) {
     return (

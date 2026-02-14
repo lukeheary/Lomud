@@ -24,7 +24,6 @@ import { useAuth } from "@clerk/nextjs";
 import { VenueHoursDisplay } from "@/components/venue-hours-display";
 import { VenueHours } from "@/components/venue-hours-editor";
 import pluralize from "pluralize";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
 function StickyHeader({ title }: { title: string }) {
@@ -213,9 +212,9 @@ export default function PlacePage() {
         <div className="pt-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-4">
-              <Avatar
+              <div
                 className={cn(
-                  "h-20 w-20 border-2 border-background shadow-sm md:h-28 md:w-28",
+                  "relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-2xl bg-muted shadow-sm md:h-32 md:w-32",
                   place.logoImageUrl && "cursor-pointer"
                 )}
                 onClick={() =>
@@ -227,16 +226,23 @@ export default function PlacePage() {
                 }
               >
                 {place.logoImageUrl ? (
-                  <AvatarImage
+                  <Image
                     src={place.logoImageUrl}
                     alt={place.name}
-                    className="bg-background object-cover"
+                    fill
+                    className="object-cover"
+                    sizes="(min-width: 768px) 128px, 96px"
                   />
-                ) : null}
-                <AvatarFallback className="bg-secondary text-2xl font-bold">
-                  {place.name.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center">
+                    {isVenue ? (
+                      <Building className="h-10 w-10 text-muted-foreground/40" />
+                    ) : (
+                      <Building2 className="h-10 w-10 text-muted-foreground/40" />
+                    )}
+                  </div>
+                )}
+              </div>
 
               <div className="space-y-1">
                 <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
@@ -259,7 +265,7 @@ export default function PlacePage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="hidden items-center gap-2 md:flex">
               <Button
                 variant={isFollowing ? "outline" : "default"}
                 onClick={handleFollowToggle}
@@ -342,6 +348,35 @@ export default function PlacePage() {
               ))}
             </div>
           )}
+
+          {/* Mobile follow button */}
+          <div className="flex items-center gap-2 md:hidden">
+            <Button
+              variant={isFollowing ? "outline" : "default"}
+              onClick={handleFollowToggle}
+              disabled={followMutation.isPending || unfollowMutation.isPending}
+              className="flex-1 rounded-full"
+            >
+              {isFollowing ? (
+                <>
+                  <Heart className="mr-2 h-4 w-4 fill-current" />
+                  Following
+                </>
+              ) : (
+                <>
+                  <Heart className="mr-2 h-4 w-4" />
+                  Follow
+                </>
+              )}
+            </Button>
+            {canEdit && (
+              <Link href={`/places/${slug}/edit`}>
+                <Button size="icon" variant="secondary" className="h-10 w-10">
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </Link>
+            )}
+          </div>
 
           {/*<div className="flex items-center gap-4 text-sm">*/}
           {/*  <div className="flex items-center gap-1">*/}

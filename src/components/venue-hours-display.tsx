@@ -1,8 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { Clock, ChevronDown } from "lucide-react";
+import { Clock, ChevronRight } from "lucide-react";
 import type { VenueHours } from "@/components/venue-hours-editor";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const DAYS = [
   { key: "monday", label: "Monday" },
@@ -16,15 +22,9 @@ const DAYS = [
 
 interface VenueHoursDisplayProps {
   hours: VenueHours | null;
-  defaultOpen?: boolean;
 }
 
-export function VenueHoursDisplay({
-  hours,
-  defaultOpen = false,
-}: VenueHoursDisplayProps) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
+export function VenueHoursDisplay({ hours }: VenueHoursDisplayProps) {
   if (!hours) return null;
 
   const formatTime = (time: string) => {
@@ -47,30 +47,24 @@ export function VenueHoursDisplay({
       : null;
 
   return (
-    <div className="w-full space-y-2 md:max-w-xs">
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between rounded-md text-left font-medium transition-colors"
-      >
-        <div className="flex items-center gap-2">
-          <Clock className="h-4 w-4" />
-          <span>Hours</span>
-          {todayLabel && !isOpen && (
-            <span className="font-normal text-muted-foreground">
-              · {todayLabel}
-            </span>
+    <Dialog>
+      <DialogTrigger asChild>
+        <button
+          type="button"
+          className="flex items-center gap-2 text-left transition-colors"
+        >
+          <Clock className="h-4 w-4 flex-shrink-0" />
+          {todayLabel && (
+            <span className="text-muted-foreground">{todayLabel}</span>
           )}
-        </div>
-        <ChevronDown
-          className={`h-4 w-4 text-muted-foreground transition-transform ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
-      </button>
-
-      {isOpen && (
-        <div className="space-y-1.5 pl-6">
+          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+        </button>
+      </DialogTrigger>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Hours</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2">
           {DAYS.map(({ key, label }) => {
             const dayHours = hours[key as keyof VenueHours];
             if (!dayHours) return null;
@@ -80,7 +74,7 @@ export function VenueHoursDisplay({
             return (
               <div
                 key={key}
-                className={`flex items-center justify-between border-b pb-1.5 last:border-0 last:pb-0 ${
+                className={`flex items-center justify-between border-b pb-2 last:border-0 last:pb-0 ${
                   isToday ? "font-medium" : ""
                 }`}
               >
@@ -103,7 +97,7 @@ export function VenueHoursDisplay({
             );
           })}
         </div>
-      )}
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
