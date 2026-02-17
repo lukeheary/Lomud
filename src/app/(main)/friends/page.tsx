@@ -194,21 +194,21 @@ function FriendsPageContent() {
 
           {!isSearchMode && (
             <div className="grid grid-cols-2 gap-2 md:flex md:w-auto">
-            <Link href="/friends/list" className="md:w-32 lg:w-40">
-              <Card className="cursor-pointer rounded-full bg-muted transition-colors hover:bg-muted/80">
-                <CardContent className="flex h-12 items-center justify-between px-4 py-0">
-                  <div className="flex items-center gap-2">
-                    <p className="flex flex-row items-center gap-1.5 text-base font-medium lg:text-lg">
-                      <span>{acceptedFriends.length}</span>
-                      <span className={"text-sm text-muted-foreground"}>
-                        {pluralize("Friend", acceptedFriends.length)}
-                      </span>
-                    </p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground lg:h-5 lg:w-5" />
-                </CardContent>
-              </Card>
-            </Link>
+              <Link href="/friends/list" className="md:w-32 lg:w-40">
+                <Card className="cursor-pointer rounded-full bg-muted transition-colors hover:bg-muted/80">
+                  <CardContent className="flex h-12 items-center justify-between px-4 py-0">
+                    <div className="flex items-center gap-2">
+                      <p className="flex flex-row items-center gap-1.5 text-base font-medium lg:text-lg">
+                        <span>{acceptedFriends.length}</span>
+                        <span className={"text-sm text-muted-foreground"}>
+                          {pluralize("Friend", acceptedFriends.length)}
+                        </span>
+                      </p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground lg:h-5 lg:w-5" />
+                  </CardContent>
+                </Card>
+              </Link>
               <Link href="/friends/requests" className="md:w-32 lg:w-40">
                 <Card className="cursor-pointer rounded-full bg-muted transition-colors hover:bg-muted/80">
                   <CardContent className="flex h-12 items-center justify-between px-4 py-0">
@@ -385,7 +385,7 @@ function FriendsPageContent() {
           )}
 
           {/* Activity Feed */}
-          <div className={"pt-4"}>
+          <div>
             <h2 className="mb-3 text-xl font-semibold">Activity</h2>
             <ActivityFeed />
           </div>

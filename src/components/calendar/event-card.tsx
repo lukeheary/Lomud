@@ -43,11 +43,10 @@ export function EventCard({ event }: EventCardProps) {
                 <Calendar className="h-12 w-12 text-muted-foreground/20 md:h-24 md:w-24" />
               </div>
             )}
-
           </div>
 
           {/* Event Information - to the right on mobile, below on desktop */}
-          <div className="flex-1 space-y-0.5 py-1 pl-3 pr-1 md:px-3 md:py-3">
+          <div className="flex-1 space-y-1 py-1 pl-3 pr-1 md:px-3 md:py-3">
             {/* Title */}
             <h3 className="line-clamp-2 text-base font-bold leading-tight transition-colors group-hover:text-primary md:text-base">
               {event.title}

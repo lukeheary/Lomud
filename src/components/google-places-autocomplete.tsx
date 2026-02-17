@@ -75,10 +75,7 @@ function AutocompleteInput({
       () => {
         const place = autocompleteRef.current?.getPlace();
 
-        console.log("Place selected:", place);
-
         if (!place || !place.address_components) {
-          console.log("No place or address components found");
           return;
         }
 
@@ -120,17 +117,6 @@ function AutocompleteInput({
           latitude = typeof location.lat === 'function' ? location.lat() : location.lat;
           longitude = typeof location.lng === 'function' ? location.lng() : location.lng;
         }
-
-        console.log("Extracted data:", {
-          name,
-          address,
-          city,
-          state,
-          formattedAddress,
-          latitude,
-          longitude,
-          geometry: place.geometry,
-        });
 
         onPlaceSelectRef.current({
           name,

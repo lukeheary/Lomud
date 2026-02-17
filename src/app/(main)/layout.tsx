@@ -129,7 +129,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                   isPlaces ? "text-foreground" : "text-muted-foreground"
                 }
               >
-                Places
+                Venues & Organizers
               </Button>
             </Link>
             <Link href="/friends">
@@ -286,7 +286,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                       size="lg"
                     >
                       <MapPin className="mr-3 h-5 w-5" />
-                      Places
+                      Venues & Organizers
                     </Button>
                   </Link>
                   <Link href="/friends" onClick={closeMobileMenu}>
@@ -312,11 +312,13 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                         className={`w-full justify-start px-4 text-base ${isProfile ? "text-foreground" : "text-muted-foreground"}`}
                         size="lg"
                       >
-                        <UserAvatar
-                          src={user?.avatarImageUrl}
-                          name={user?.firstName}
-                          className="mr-3 h-5 w-5"
-                        />
+                        <div className="mr-3 h-5 w-5 shrink-0">
+                          <UserAvatar
+                            src={user?.avatarImageUrl}
+                            name={user?.firstName}
+                            className="h-full w-full"
+                          />
+                        </div>
                         My Profile
                       </Button>
                     </Link>

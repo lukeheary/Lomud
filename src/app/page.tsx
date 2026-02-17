@@ -170,7 +170,7 @@ export default async function LandingPage() {
                       </div>
 
                       {/* Event Info - right on mobile, below on desktop */}
-                      <div className="flex-1 space-y-0.5 py-1 pl-3 pr-1 md:px-1 md:py-3">
+                      <div className="flex-1 space-y-1 py-1 pl-3 pr-1 md:px-1 md:py-3">
                         <h3 className="line-clamp-2 text-base font-bold leading-tight">
                           {event.title}
                         </h3>

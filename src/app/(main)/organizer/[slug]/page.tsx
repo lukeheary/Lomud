@@ -101,10 +101,10 @@ export default function PlacePage() {
   // Follow mutation
   const followMutation = trpc.place.followPlace.useMutation({
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: `You are now following this ${place?.type === "venue" ? "venue" : "organizer"}`,
-      });
+      // toast({
+      //   title: "Success",
+      //   description: `You are now following this ${place?.type === "venue" ? "venue" : "organizer"}`,
+      // });
       utils.place.isFollowingPlace.invalidate();
       utils.place.getPlaceBySlug.invalidate();
     },
@@ -179,7 +179,7 @@ export default function PlacePage() {
   const canEdit = isAdmin || isMember;
 
   return (
-    <div className="min-h-screen bg-background pb-8">
+    <div className="bg-background pb-8">
       {expandedImage && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xl"
@@ -251,7 +251,7 @@ export default function PlacePage() {
                 <p className="text-muted-foreground">@{place.slug}</p>
                 {isVenue ? (
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <TypeIcon className="h-4 w-4" />
+                    <MapPin className="h-4 w-4" />
                     <span>{place.address}</span>
                   </div>
                 ) : place.city && place.state ? (
@@ -269,7 +269,9 @@ export default function PlacePage() {
               <Button
                 variant={isFollowing ? "outline" : "default"}
                 onClick={handleFollowToggle}
-                disabled={followMutation.isPending || unfollowMutation.isPending}
+                disabled={
+                  followMutation.isPending || unfollowMutation.isPending
+                }
                 className="rounded-full"
               >
                 {isFollowing ? (
@@ -409,8 +411,8 @@ export default function PlacePage() {
               gap="md"
             />
           ) : (
-            <div className="py-8 text-center">
-              <p className="text-muted-foreground">
+            <div className="flex min-h-[112px] items-center justify-center rounded-lg border border-dashed md:min-h-[300px]">
+              <p className="text-sm text-muted-foreground">
                 No upcoming events scheduled
               </p>
             </div>

@@ -145,7 +145,7 @@ export const placeRouter = router({
         );
       }
 
-      return await ctx.db.query.places.findMany({
+      const placesList = await ctx.db.query.places.findMany({
         where: conditions.length > 0 ? and(...conditions) : undefined,
         limit: input.limit,
         offset: input.offset,
@@ -155,6 +155,44 @@ export const placeRouter = router({
           members: true,
         },
       });
+
+      if (placesList.length === 0) return [];
+
+      const placeIds = placesList.map((p) => p.id);
+      const now = new Date();
+
+      // Count upcoming events where this place is the venue
+      const venueCounts = await ctx.db
+        .select({
+          placeId: events.venueId,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(events)
+        .where(and(inArray(events.venueId, placeIds), gte(events.startAt, now)))
+        .groupBy(events.venueId);
+
+      // Count upcoming events where this place is the organizer
+      const organizerCounts = await ctx.db
+        .select({
+          placeId: events.organizerId,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(events)
+        .where(and(inArray(events.organizerId, placeIds), gte(events.startAt, now)))
+        .groupBy(events.organizerId);
+
+      const countMap = new Map<string, number>();
+      for (const row of venueCounts) {
+        if (row.placeId) countMap.set(row.placeId, (countMap.get(row.placeId) ?? 0) + row.count);
+      }
+      for (const row of organizerCounts) {
+        if (row.placeId) countMap.set(row.placeId, (countMap.get(row.placeId) ?? 0) + row.count);
+      }
+
+      return placesList.map((p) => ({
+        ...p,
+        eventCount: countMap.get(p.id) ?? 0,
+      }));
     }),
 
   getPlaceBySlug: publicProcedure

@@ -14,7 +14,7 @@ import { trpc } from "@/lib/trpc";
 import { SearchInput } from "@/components/ui/search-input";
 import { useNavbarSearch } from "@/contexts/nav-search-context";
 import { Card, CardContent } from "@/components/ui/card";
-import { Building, Building2, MapPin, Loader2 } from "lucide-react";
+import { Building, Building2, CalendarDays, MapPin, Loader2 } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { ResponsiveSelect } from "@/components/ui/responsive-select";
 import { getDistanceMiles, type Coordinates } from "@/lib/geo";
@@ -190,6 +190,7 @@ function PlacesPageContent() {
         logoImageUrl: place.logoImageUrl,
         latitude: place.latitude,
         longitude: place.longitude,
+        eventCount: place.eventCount,
       }))
       .sort((a, b) => {
         if (referenceCoords) {
@@ -251,7 +252,7 @@ function PlacesPageContent() {
               value={filterType}
               onValueChange={(value) => setFilterType(value as FilterType)}
               options={[
-                { value: "all", label: "All Places" },
+                { value: "all", label: "All" },
                 { value: "venues", label: "Venues" },
                 { value: "organizers", label: "Organizers" },
                 { value: "following", label: "Following" },
@@ -291,7 +292,10 @@ function PlacesPageContent() {
       {!isLoading && isReady && combinedItems.length > 0 && (
         <div className="grid gap-2 py-2 md:grid-cols-2 lg:grid-cols-3">
           {combinedItems.map((item) => (
-            <Link key={`${item.type}-${item.id}`} href={`/${item.type === "venue" ? "venue" : "organizer"}/${item.slug}`}>
+            <Link
+              key={`${item.type}-${item.id}`}
+              href={`/${item.type === "venue" ? "venue" : "organizer"}/${item.slug}`}
+            >
               <Card className="relative h-28 cursor-pointer overflow-hidden !border-none bg-card p-2 transition-all duration-300 hover:bg-accent/50">
                 <div className="flex h-full">
                   <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-2xl bg-muted">
@@ -314,7 +318,7 @@ function PlacesPageContent() {
                     )}
                   </div>
 
-                  <div className="flex-1 space-y-0.5 py-1 pl-3 pr-1">
+                  <div className="flex-1 space-y-1 py-1 pl-3 pr-1">
                     <h3 className="line-clamp-2 text-base font-bold leading-tight">
                       {item.name}
                     </h3>
@@ -326,6 +330,12 @@ function PlacesPageContent() {
                         </span>
                       </div>
                     )}
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <CalendarDays className="h-3.5 w-3.5" />
+                      <span>
+                        {item.eventCount} upcoming {item.eventCount === 1 ? "event" : "events"}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </Card>
