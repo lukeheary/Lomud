@@ -19,8 +19,31 @@ import { useQueryState } from "nuqs";
 import { ResponsiveSelect } from "@/components/ui/responsive-select";
 import { getDistanceMiles, type Coordinates } from "@/lib/geo";
 import { resolveMetroArea } from "@/lib/metro-areas";
+import { cn } from "@/lib/utils";
 
 type FilterType = "all" | "venues" | "organizers" | "following";
+
+function PlaceSkeletonGrid({ count = 9 }: { count?: number }) {
+  return (
+    <div className="grid gap-2 py-2 md:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: count }).map((_, index) => (
+        <div
+          key={`place-skeleton-${index}`}
+          className="h-28 rounded-2xl bg-card p-2"
+        >
+          <div className="flex h-full animate-pulse">
+            <div className="h-24 w-24 flex-shrink-0 rounded-2xl bg-muted" />
+            <div className="flex-1 space-y-2 py-1 pl-3 pr-1">
+              <div className="h-4 w-3/4 rounded-full bg-muted" />
+              <div className="h-3 w-1/2 rounded-full bg-muted" />
+              <div className="h-3 w-2/3 rounded-full bg-muted" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function PlacesPageContent() {
   const { setShowNavbarSearch, registerScrollToSearch } = useNavbarSearch();
@@ -282,11 +305,7 @@ function PlacesPageContent() {
       </div>
 
       {/* Loading State */}
-      {(isLoading || !isReady) && (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      )}
+      {(isLoading || !isReady) && <PlaceSkeletonGrid />}
 
       {/* Combined Grid */}
       {!isLoading && isReady && combinedItems.length > 0 && (
@@ -318,22 +337,32 @@ function PlacesPageContent() {
                     )}
                   </div>
 
-                  <div className="flex-1 space-y-1 py-1 pl-3 pr-1">
-                    <h3 className="line-clamp-2 text-base font-bold leading-tight">
-                      {item.name}
-                    </h3>
-                    {item.city && item.state && (
-                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                        <MapPin className="h-3.5 w-3.5" />
+                  <div className="flex flex-1 flex-col justify-between py-1 pl-3 pr-1">
+                    <div className="space-y-1">
+                      <h3 className="line-clamp-2 text-base font-bold leading-tight">
+                        {item.name}
+                      </h3>
+                      {item.city && item.state && (
+                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                          <MapPin className="h-3.5 w-3.5" />
+                          <span>
+                            {item.city}, {item.state}
+                          </span>
+                        </div>
+                      )}
+                      <div className={cn(
+                        "flex items-center gap-1.5 text-sm",
+                        item.eventCount === 0 ? "text-muted-foreground/40" : "text-muted-foreground"
+                      )}>
+                        <CalendarDays className="h-3.5 w-3.5" />
                         <span>
-                          {item.city}, {item.state}
+                          {item.eventCount} upcoming {item.eventCount === 1 ? "event" : "events"}
                         </span>
                       </div>
-                    )}
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                      <CalendarDays className="h-3.5 w-3.5" />
-                      <span>
-                        {item.eventCount} upcoming {item.eventCount === 1 ? "event" : "events"}
+                    </div>
+                    <div className="flex justify-end">
+                      <span className="text-xs text-muted-foreground/50">
+                        {item.type === "venue" ? "Venue" : "Organizer"}
                       </span>
                     </div>
                   </div>

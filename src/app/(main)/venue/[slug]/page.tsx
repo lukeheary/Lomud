@@ -57,8 +57,8 @@ function StickyHeader({ title }: { title: string }) {
       <div ref={sentinelRef} className="h-0 w-full" />
       <div
         className={cn(
-          "sticky top-16 z-30 w-full bg-background pb-2",
-          isHeaderSticky && "border-b"
+          "sticky top-16 z-30 w-full bg-background pb-2"
+          // isHeaderSticky && "border-b"
         )}
       >
         <div className="container mx-auto">
@@ -345,7 +345,7 @@ export default function PlacePage() {
             <div className="flex flex-wrap gap-2">
               {place.categories.map((cat) => (
                 <Badge key={cat} variant="secondary" className="capitalize">
-                  {cat}
+                  {(place as any).categoryLabels?.[cat] || cat}
                 </Badge>
               ))}
             </div>

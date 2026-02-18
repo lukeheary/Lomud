@@ -5,10 +5,13 @@ import { Pool, neonConfig } from "@neondatabase/serverless";
 import ws from "ws";
 import * as schema from "./schema";
 import {
+  categories,
+  eventCategories,
   users,
   cities,
   places,
   events,
+  placeCategories,
   placeMembers,
   placeFollows,
   activityEvents,
@@ -33,6 +36,8 @@ async function main() {
   console.log("🧹 Clearing existing place/event data...");
 
   // Delete dependents first to avoid FK violations
+  await db.delete(placeCategories);
+  await db.delete(eventCategories);
   await db.delete(placeMembers);
   await db.delete(placeFollows);
   await db.delete(activityEvents);
@@ -120,6 +125,23 @@ async function main() {
   console.log(`✓ Seeded cities (${cityData.length})`);
 
   // ---------------------------------------------------------------------------
+  // CATEGORIES
+  // ---------------------------------------------------------------------------
+  const defaultCategories = [
+    { key: "bars", label: "Bars", sortOrder: 10 },
+    { key: "clubs", label: "Clubs", sortOrder: 20 },
+    { key: "comedy", label: "Comedy", sortOrder: 30 },
+    { key: "concerts", label: "Concerts", sortOrder: 40 },
+    { key: "lgbt", label: "LGBT", sortOrder: 50 },
+    { key: "social", label: "Social", sortOrder: 60 },
+    { key: "theater", label: "Theater", sortOrder: 70 },
+    { key: "nightlife", label: "Nightlife", sortOrder: 80 },
+  ];
+
+  await db.insert(categories).values(defaultCategories).onConflictDoNothing();
+  console.log(`✓ Ensured ${defaultCategories.length} categories exist`);
+
+  // ---------------------------------------------------------------------------
   // PLACES (venues and organizers combined)
   // ---------------------------------------------------------------------------
   console.log("Creating places (venues and organizers)...");
@@ -138,7 +160,7 @@ async function main() {
       state: "MA",
       website: null,
       instagram: null,
-      categories: ["clubs", "bars"],
+      categoryKeys: ["clubs", "bars"],
       hours: {
         monday: { open: "21:00", close: "02:00", closed: true },
         tuesday: { open: "21:00", close: "02:00", closed: true },
@@ -161,7 +183,7 @@ async function main() {
       state: "MA",
       website: null,
       instagram: null,
-      categories: ["bars", "lgbt"],
+      categoryKeys: ["bars", "lgbt"],
       hours: {
         monday: { open: "17:00", close: "01:00", closed: true },
         tuesday: { open: "17:00", close: "01:00", closed: false },
@@ -186,7 +208,7 @@ async function main() {
       state: "NY",
       website: "https://www.elsewhere.club",
       instagram: "elsewherenyc",
-      categories: ["clubs", "concerts", "social"],
+      categoryKeys: ["clubs", "concerts", "social"],
       hours: {
         monday: { open: "19:00", close: "02:00", closed: true },
         tuesday: { open: "19:00", close: "02:00", closed: true },
@@ -209,7 +231,7 @@ async function main() {
       state: "NY",
       website: null,
       instagram: null,
-      categories: ["clubs", "lgbt"],
+      categoryKeys: ["clubs", "lgbt"],
       hours: {
         monday: { open: "20:00", close: "04:00", closed: true },
         tuesday: { open: "20:00", close: "04:00", closed: true },
@@ -272,7 +294,12 @@ async function main() {
     },
   ];
 
-  await db.insert(places).values(placeData).onConflictDoNothing();
+  await db
+    .insert(places)
+    .values(
+      placeData.map(({ categoryKeys: _categoryKeys, ...place }) => place) as any
+    )
+    .onConflictDoNothing();
 
   const placeRows = await db
     .select({ id: places.id, slug: places.slug, type: places.type })
@@ -291,6 +318,46 @@ async function main() {
     .filter((s) => !placeIdBySlug.get(s));
   if (missingSlugs.length > 0) {
     throw new Error(`Missing place IDs for slugs: ${missingSlugs.join(", ")}`);
+  }
+
+  const allPlaceCategoryKeys = Array.from(
+    new Set(
+      placeData.flatMap((place) =>
+        Array.isArray((place as any).categoryKeys)
+          ? ((place as any).categoryKeys as string[])
+          : []
+      )
+    )
+  );
+
+  if (allPlaceCategoryKeys.length > 0) {
+    const categoryRows = await db
+      .select({ id: categories.id, key: categories.key })
+      .from(categories)
+      .where(inArray(categories.key, allPlaceCategoryKeys));
+
+    const categoryIdByKey = new Map(categoryRows.map((row) => [row.key, row.id]));
+
+    const placeCategoryRows = placeData.flatMap((place) => {
+      const placeId = placeIdBySlug.get(place.slug);
+      const categoryKeys = Array.isArray((place as any).categoryKeys)
+        ? ((place as any).categoryKeys as string[])
+        : [];
+
+      if (!placeId || categoryKeys.length === 0) return [];
+
+      return categoryKeys
+        .map((key) => categoryIdByKey.get(key))
+        .filter((categoryId): categoryId is string => Boolean(categoryId))
+        .map((categoryId) => ({
+          placeId,
+          categoryId,
+        }));
+    });
+
+    if (placeCategoryRows.length > 0) {
+      await db.insert(placeCategories).values(placeCategoryRows).onConflictDoNothing();
+    }
   }
 
   console.log(`✓ Ensured ${placeRows.length} places exist`);
@@ -379,7 +446,7 @@ async function main() {
       address: "51 Stuart St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
-      categories: ["clubs"],
+      categoryKeys: ["clubs"],
       visibility: "public" as const,
     },
     {
@@ -396,7 +463,7 @@ async function main() {
       address: "14 Massachusetts Ave, Cambridge, MA 02139",
       city: "Cambridge",
       state: "MA",
-      categories: ["bars", "lgbt"],
+      categoryKeys: ["bars", "lgbt"],
       visibility: "public" as const,
     },
 
@@ -415,7 +482,7 @@ async function main() {
       address: "51 Stuart St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
-      categories: ["bars", "social"],
+      categoryKeys: ["bars", "social"],
       visibility: "public" as const,
     },
 
@@ -434,7 +501,7 @@ async function main() {
       address: "14 Massachusetts Ave, Cambridge, MA 02139",
       city: "Cambridge",
       state: "MA",
-      categories: ["bars", "social"],
+      categoryKeys: ["bars", "social"],
       visibility: "public" as const,
     },
     {
@@ -451,7 +518,7 @@ async function main() {
       address: "51 Stuart St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
-      categories: ["clubs"],
+      categoryKeys: ["clubs"],
       visibility: "public" as const,
     },
     {
@@ -468,7 +535,7 @@ async function main() {
       address: "14 Massachusetts Ave, Cambridge, MA 02139",
       city: "Cambridge",
       state: "MA",
-      categories: ["clubs", "lgbt"],
+      categoryKeys: ["clubs", "lgbt"],
       visibility: "public" as const,
     },
     {
@@ -485,7 +552,7 @@ async function main() {
       address: "51 Stuart St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
-      categories: ["clubs", "bars"],
+      categoryKeys: ["clubs", "bars"],
       visibility: "public" as const,
     },
     {
@@ -502,7 +569,7 @@ async function main() {
       address: "14 Massachusetts Ave, Cambridge, MA 02139",
       city: "Cambridge",
       state: "MA",
-      categories: ["bars", "social"],
+      categoryKeys: ["bars", "social"],
       visibility: "public" as const,
     },
 
@@ -521,7 +588,7 @@ async function main() {
       address: "51 Stuart St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
-      categories: ["bars", "social"],
+      categoryKeys: ["bars", "social"],
       visibility: "public" as const,
     },
     {
@@ -538,7 +605,7 @@ async function main() {
       address: "14 Massachusetts Ave, Cambridge, MA 02139",
       city: "Cambridge",
       state: "MA",
-      categories: ["bars", "lgbt"],
+      categoryKeys: ["bars", "lgbt"],
       visibility: "public" as const,
     },
     {
@@ -555,7 +622,7 @@ async function main() {
       address: "599 Johnson Ave, Brooklyn, NY 11237",
       city: "Brooklyn",
       state: "NY",
-      categories: ["clubs", "concerts"],
+      categoryKeys: ["clubs", "concerts"],
       visibility: "public" as const,
     },
     {
@@ -572,7 +639,7 @@ async function main() {
       address: "98 Meserole Ave, Brooklyn, NY 11222",
       city: "Brooklyn",
       state: "NY",
-      categories: ["clubs", "lgbt"],
+      categoryKeys: ["clubs", "lgbt"],
       visibility: "public" as const,
     },
 
@@ -593,7 +660,7 @@ async function main() {
       address: "599 Johnson Ave, Brooklyn, NY 11237",
       city: "Brooklyn",
       state: "NY",
-      categories: ["social", "clubs"],
+      categoryKeys: ["social", "clubs"],
       visibility: "public" as const,
     },
     {
@@ -610,7 +677,7 @@ async function main() {
       address: "98 Meserole Ave, Brooklyn, NY 11222",
       city: "Brooklyn",
       state: "NY",
-      categories: ["clubs", "lgbt"],
+      categoryKeys: ["clubs", "lgbt"],
       visibility: "public" as const,
     },
 
@@ -629,7 +696,7 @@ async function main() {
       address: "599 Johnson Ave, Brooklyn, NY 11237",
       city: "Brooklyn",
       state: "NY",
-      categories: ["concerts"],
+      categoryKeys: ["concerts"],
       visibility: "public" as const,
     },
     {
@@ -646,7 +713,7 @@ async function main() {
       address: "98 Meserole Ave, Brooklyn, NY 11222",
       city: "Brooklyn",
       state: "NY",
-      categories: ["bars"],
+      categoryKeys: ["bars"],
       visibility: "public" as const,
     },
   ];
@@ -662,9 +729,62 @@ async function main() {
 
   const createdEvents = await db
     .insert(events)
-    .values(eventData)
+    .values(eventData.map(({ categoryKeys: _categoryKeys, ...event }) => event) as any)
     .onConflictDoNothing()
     .returning();
+
+  const allEventCategoryKeys = Array.from(
+    new Set(
+      eventData.flatMap((event) =>
+        Array.isArray((event as any).categoryKeys)
+          ? ((event as any).categoryKeys as string[])
+          : []
+      )
+    )
+  );
+
+  if (allEventCategoryKeys.length > 0 && createdEvents.length > 0) {
+    const categoryRows = await db
+      .select({ id: categories.id, key: categories.key })
+      .from(categories)
+      .where(inArray(categories.key, allEventCategoryKeys));
+
+    const categoryIdByKey = new Map(categoryRows.map((row) => [row.key, row.id]));
+
+    const toEventKey = (event: {
+      title: string;
+      startAt: Date;
+      venueName?: string | null;
+      city: string;
+      state: string;
+    }) =>
+      `${event.title}::${event.startAt.toISOString()}::${event.venueName ?? ""}::${event.city}::${event.state}`;
+
+    const categoryKeysByEventKey = new Map(
+      eventData.map((event) => [
+        toEventKey(event),
+        Array.isArray((event as any).categoryKeys)
+          ? ((event as any).categoryKeys as string[])
+          : [],
+      ])
+    );
+
+    const eventCategoryRows = createdEvents.flatMap((event) => {
+      const categoryKeys = categoryKeysByEventKey.get(toEventKey(event)) || [];
+
+      return categoryKeys
+        .map((key) => categoryIdByKey.get(key))
+        .filter((categoryId): categoryId is string => Boolean(categoryId))
+        .map((categoryId) => ({
+          eventId: event.id,
+          categoryId,
+        }));
+    });
+
+    if (eventCategoryRows.length > 0) {
+      await db.insert(eventCategories).values(eventCategoryRows).onConflictDoNothing();
+    }
+  }
 
   console.log(`✓ Created ${createdEvents.length} events`);
 

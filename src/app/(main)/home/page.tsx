@@ -68,7 +68,6 @@ import {
   ActivityFeed,
   useHasRecentActivity,
 } from "@/components/friends/activity-feed";
-import { CATEGORY_LABELS, type Category } from "@/lib/categories";
 import { useNavbarSearch } from "@/contexts/nav-search-context";
 import { getDistanceMiles, type Coordinates } from "@/lib/geo";
 import { resolveMetroArea } from "@/lib/metro-areas";
@@ -114,8 +113,8 @@ function StickyDateHeader({
       {/* Full-width sticky header */}
       <div
         className={cn(
-          "sticky top-16 z-30 w-full bg-background pb-2",
-          isHeaderSticky && "border-b"
+          "sticky top-16 z-30 w-full bg-background pb-2"
+          // isHeaderSticky && "border-b"
         )}
       >
         {/* Inner container to align text with page content */}
@@ -161,8 +160,8 @@ function StickySectionHeader({ children }: { children: React.ReactNode }) {
       <div ref={sentinelRef} className="h-0 w-full" />
       <div
         className={cn(
-          "sticky top-16 z-30 w-full bg-background pb-2",
-          isHeaderSticky && "border-b"
+          "sticky top-16 z-30 w-full bg-background pb-2"
+          // isHeaderSticky && "border-b"
         )}
       >
         <div className="container mx-auto px-4">{children}</div>
@@ -251,6 +250,14 @@ function HomePageContent() {
 
   // Get available cities
   const { data: cities } = trpc.event.getAvailableCities.useQuery();
+  const { data: activeCategories } = trpc.category.listActive.useQuery();
+  const categoryLabelMap = useMemo(
+    () =>
+      Object.fromEntries(
+        (activeCategories || []).map((category) => [category.key, category.label])
+      ),
+    [activeCategories]
+  );
 
   // Navbar search context for navbar search button
   const { setShowNavbarSearch, registerScrollToSearch } = useNavbarSearch();
@@ -581,7 +588,7 @@ function HomePageContent() {
         {/* Search and Filters */}
         <div
           className={
-            "z-[45] -mx-4 -mt-4 bg-background px-4 pb-3 pt-2 transition-shadow md:top-16 md:z-30 md:-mx-8 md:bg-background/95 md:px-8 md:backdrop-blur md:supports-[backdrop-filter]:bg-background"
+            "z-[45] -mx-4 -mt-4 bg-background px-4 pb-3 transition-shadow md:top-16 md:z-30 md:-mx-8 md:bg-background/95 md:px-8 md:backdrop-blur md:supports-[backdrop-filter]:bg-background"
           }
         >
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -906,8 +913,7 @@ function HomePageContent() {
                                           key={cat}
                                           className="rounded-full bg-primary/10 px-2 py-0.5 text-xs capitalize text-primary"
                                         >
-                                          {CATEGORY_LABELS[cat as Category] ||
-                                            cat}
+                                          {categoryLabelMap[cat] || cat}
                                         </span>
                                       ))}
                                   </div>
@@ -974,21 +980,6 @@ function HomePageContent() {
               </div>
             </CardContent>
           </Card>
-        )}
-
-        {/* Empty State - only show when not searching (search has its own empty state) */}
-        {!isSearching && !isLoading && events && events.length === 0 && (
-          <div className="py-12 text-center">
-            <CalendarIcon className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 className="mb-2 text-lg font-semibold">No events found</h3>
-            <p className="mb-4 text-muted-foreground">
-              {activeFilter === "followed" &&
-                "Start following businesses to see their events here"}
-              {activeFilter === "friends" &&
-                "Add friends and see what events they're attending"}
-              {activeFilter === "all" && "Check back later for upcoming events"}
-            </p>
-          </div>
         )}
       </div>
     </div>

@@ -150,7 +150,7 @@ export default function EditPlacePage() {
     latitude: place.latitude || null,
     longitude: place.longitude || null,
     hours: (place as any).hours || null,
-    categories: (place.categories as string[]) || [],
+    categories: place.categories || [],
   };
 
   return (

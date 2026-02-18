@@ -13,7 +13,11 @@ import {
 import { and, asc, desc, eq, gte, ilike, inArray, lt, or, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { logActivity } from "../../utils/activity-logger";
-import { filterValidCategories } from "@/lib/categories";
+import {
+  mapEventCategoryData,
+  mapPlaceCategoryData,
+  setPlaceCategoryKeys,
+} from "@/server/utils/categories";
 
 const placeTypeSchema = z.enum(["venue", "organizer"]);
 
@@ -32,11 +36,20 @@ export const placeRouter = router({
         conditions.push(eq(places.type, input.type));
       }
 
-      return await ctx.db.query.places.findMany({
+      const results = await ctx.db.query.places.findMany({
         where: conditions.length > 0 ? and(...conditions) : undefined,
         limit: 10,
         orderBy: [asc(places.name)],
+        with: {
+          categoryLinks: {
+            with: {
+              category: true,
+            },
+          },
+        },
       });
+
+      return results.map(mapPlaceCategoryData);
     }),
 
   createPlace: protectedProcedure
@@ -98,7 +111,18 @@ export const placeRouter = router({
           .onConflictDoNothing();
       }
 
-      return place;
+      const created = await ctx.db.query.places.findFirst({
+        where: eq(places.id, place.id),
+        with: {
+          categoryLinks: {
+            with: {
+              category: true,
+            },
+          },
+        },
+      });
+
+      return created ? mapPlaceCategoryData(created) : place;
     }),
 
   listPlaces: publicProcedure
@@ -153,6 +177,11 @@ export const placeRouter = router({
         with: {
           follows: true,
           members: true,
+          categoryLinks: {
+            with: {
+              category: true,
+            },
+          },
         },
       });
 
@@ -190,7 +219,7 @@ export const placeRouter = router({
       }
 
       return placesList.map((p) => ({
-        ...p,
+        ...mapPlaceCategoryData(p),
         eventCount: countMap.get(p.id) ?? 0,
       }));
     }),
@@ -205,6 +234,11 @@ export const placeRouter = router({
           members: {
             with: {
               user: true,
+            },
+          },
+          categoryLinks: {
+            with: {
+              category: true,
             },
           },
         },
@@ -231,6 +265,11 @@ export const placeRouter = router({
           venue: true,
           organizer: true,
           createdBy: true,
+          categoryLinks: {
+            with: {
+              category: true,
+            },
+          },
         },
       });
 
@@ -242,6 +281,11 @@ export const placeRouter = router({
           venue: true,
           organizer: true,
           createdBy: true,
+          categoryLinks: {
+            with: {
+              category: true,
+            },
+          },
         },
       });
 
@@ -319,14 +363,14 @@ export const placeRouter = router({
       }
 
       return {
-        ...place,
+        ...mapPlaceCategoryData(place),
         events: upcomingEvents.map((e) => ({
-          ...e,
+          ...mapEventCategoryData(e),
           userRsvp: userRsvpMap.get(e.id) || null,
           friendsGoing: attendeesMap.get(e.id) || [],
         })),
         pastEvents: pastEvents.map((e) => ({
-          ...e,
+          ...mapEventCategoryData(e),
           userRsvp: userRsvpMap.get(e.id) || null,
           friendsGoing: attendeesMap.get(e.id) || [],
         })),
@@ -338,6 +382,13 @@ export const placeRouter = router({
     .query(async ({ ctx, input }) => {
       const place = await ctx.db.query.places.findFirst({
         where: eq(places.id, input.id),
+        with: {
+          categoryLinks: {
+            with: {
+              category: true,
+            },
+          },
+        },
       });
 
       if (!place) {
@@ -347,7 +398,7 @@ export const placeRouter = router({
         });
       }
 
-      return place;
+      return mapPlaceCategoryData(place);
     }),
 
   followPlace: protectedProcedure
@@ -435,13 +486,18 @@ export const placeRouter = router({
             with: {
               follows: true,
               members: true,
+              categoryLinks: {
+                with: {
+                  category: true,
+                },
+              },
             },
           },
         },
         orderBy: [desc(placeFollows.createdAt)],
       });
 
-      let result = followedPlaces.map((f) => f.place);
+      let result = followedPlaces.map((f) => mapPlaceCategoryData(f.place));
 
       if (input?.type) {
         result = result.filter((p) => p.type === input.type);
@@ -460,13 +516,18 @@ export const placeRouter = router({
             with: {
               follows: true,
               members: true,
+              categoryLinks: {
+                with: {
+                  category: true,
+                },
+              },
             },
           },
         },
         orderBy: [desc(placeMembers.createdAt)],
       });
 
-      let result = myPlaces.map((m) => m.place);
+      let result = myPlaces.map((m) => mapPlaceCategoryData(m.place));
 
       if (input?.type) {
         result = result.filter((p) => p.type === input.type);
@@ -485,6 +546,13 @@ export const placeRouter = router({
           ),
           orderBy: [asc(events.startAt)],
           limit: 50,
+          with: {
+            categoryLinks: {
+              with: {
+                category: true,
+              },
+            },
+          },
         });
 
         // Get events where any of these places are organizers
@@ -495,6 +563,13 @@ export const placeRouter = router({
           ),
           orderBy: [asc(events.startAt)],
           limit: 50,
+          with: {
+            categoryLinks: {
+              with: {
+                category: true,
+              },
+            },
+          },
         });
 
         // Build map of place id to events
@@ -503,7 +578,7 @@ export const placeRouter = router({
             if (!upcomingEventsMap.has(event.venueId)) {
               upcomingEventsMap.set(event.venueId, []);
             }
-            upcomingEventsMap.get(event.venueId)!.push(event);
+            upcomingEventsMap.get(event.venueId)!.push(mapEventCategoryData(event));
           }
         }
 
@@ -512,7 +587,7 @@ export const placeRouter = router({
             if (!upcomingEventsMap.has(event.organizerId)) {
               upcomingEventsMap.set(event.organizerId, []);
             }
-            upcomingEventsMap.get(event.organizerId)!.push(event);
+            upcomingEventsMap.get(event.organizerId)!.push(mapEventCategoryData(event));
           }
         }
 
@@ -602,13 +677,34 @@ export const placeRouter = router({
         .update(places)
         .set({
           ...filteredUpdates,
-          categories: categories !== undefined ? filterValidCategories(categories) : undefined,
           updatedAt: new Date(),
         })
         .where(eq(places.id, placeId))
         .returning();
 
-      return updated;
+      if (categories !== undefined) {
+        await setPlaceCategoryKeys(ctx.db, placeId, categories, { activeOnly: true });
+      }
+
+      if (!updated) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Place not found",
+        });
+      }
+
+      const refreshed = await ctx.db.query.places.findFirst({
+        where: eq(places.id, placeId),
+        with: {
+          categoryLinks: {
+            with: {
+              category: true,
+            },
+          },
+        },
+      });
+
+      return refreshed ? mapPlaceCategoryData(refreshed) : updated;
     }),
 
   getPlaceMembers: protectedProcedure

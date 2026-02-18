@@ -1,18 +1,28 @@
 import { z } from "zod";
 import { router, adminProcedure } from "../init";
 import {
+  categories,
   cities,
   metroAreas,
   places,
   placeMembers,
   users,
 } from "../../db/schema";
-import { eq, and, or, ilike, desc } from "drizzle-orm";
+import { eq, and, or, ilike, desc, ne } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { filterValidCategories } from "@/lib/categories";
+import {
+  listCategoryOptions,
+  mapPlaceCategoryData,
+  setPlaceCategoryKeys,
+} from "@/server/utils/categories";
 
 const placeTypeSchema = z.enum(["venue", "organizer"]);
 const placeMemberRoleSchema = z.enum(["owner", "manager", "promoter", "staff"]);
+const categoryKeySchema = z
+  .string()
+  .min(1)
+  .max(64)
+  .regex(/^[a-z0-9-]+$/, "Key must be lowercase alphanumeric with hyphens");
 
 export const adminRouter = router({
   // ============================================================================
@@ -62,11 +72,12 @@ export const adminRouter = router({
       const { categories, ...rest } = input;
       const [place] = await ctx.db
         .insert(places)
-        .values({
-          ...rest,
-          categories: filterValidCategories(categories || []),
-        })
+        .values(rest)
         .returning();
+
+      if (categories.length > 0) {
+        await setPlaceCategoryKeys(ctx.db, place.id, categories, { activeOnly: true });
+      }
 
       if (
         input.city &&
@@ -85,7 +96,18 @@ export const adminRouter = router({
           .onConflictDoNothing();
       }
 
-      return place;
+      const created = await ctx.db.query.places.findFirst({
+        where: eq(places.id, place.id),
+        with: {
+          categoryLinks: {
+            with: {
+              category: true,
+            },
+          },
+        },
+      });
+
+      return created ? mapPlaceCategoryData(created) : place;
     }),
 
   addPlaceMember: adminProcedure
@@ -209,10 +231,109 @@ export const adminRouter = router({
         with: {
           members: true,
           follows: true,
+          categoryLinks: {
+            with: {
+              category: true,
+            },
+          },
         },
       });
 
-      return results;
+      return results.map(mapPlaceCategoryData);
+    }),
+
+  // ============================================================================
+  // CATEGORY MANAGEMENT
+  // ============================================================================
+
+  listCategories: adminProcedure.query(async ({ ctx }) => {
+    return await listCategoryOptions(ctx.db, { includeInactive: true });
+  }),
+
+  createCategory: adminProcedure
+    .input(
+      z.object({
+        key: categoryKeySchema,
+        label: z.string().min(1).max(100),
+        sortOrder: z.number().int().min(0).default(0),
+        isActive: z.boolean().default(true),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const key = input.key.trim().toLowerCase();
+      const existing = await ctx.db.query.categories.findFirst({
+        where: eq(categories.key, key),
+      });
+
+      if (existing) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "A category with this key already exists",
+        });
+      }
+
+      const [created] = await ctx.db
+        .insert(categories)
+        .values({
+          key,
+          label: input.label.trim(),
+          sortOrder: input.sortOrder,
+          isActive: input.isActive,
+        })
+        .returning();
+
+      return created;
+    }),
+
+  updateCategory: adminProcedure
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        key: categoryKeySchema.optional(),
+        label: z.string().min(1).max(100).optional(),
+        sortOrder: z.number().int().min(0).optional(),
+        isActive: z.boolean().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.db.query.categories.findFirst({
+        where: eq(categories.id, input.id),
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Category not found",
+        });
+      }
+
+      const nextKey = input.key?.trim().toLowerCase();
+      if (nextKey) {
+        const keyConflict = await ctx.db.query.categories.findFirst({
+          where: and(eq(categories.key, nextKey), ne(categories.id, input.id)),
+        });
+
+        if (keyConflict) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "Another category already uses this key",
+          });
+        }
+      }
+
+      const [updated] = await ctx.db
+        .update(categories)
+        .set({
+          key: nextKey ?? undefined,
+          label: input.label?.trim(),
+          sortOrder: input.sortOrder,
+          isActive: input.isActive,
+          updatedAt: new Date(),
+        })
+        .where(eq(categories.id, input.id))
+        .returning();
+
+      return updated;
     }),
 
   // ============================================================================

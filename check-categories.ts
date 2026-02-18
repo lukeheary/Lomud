@@ -3,7 +3,8 @@ import { drizzle } from "drizzle-orm/neon-serverless";
 import { Pool, neonConfig } from "@neondatabase/serverless";
 import ws from "ws";
 import * as schema from "./src/server/db/schema";
-import { events } from "./src/server/db/schema";
+import { categories, eventCategories, events } from "./src/server/db/schema";
+import { eq } from "drizzle-orm";
 
 neonConfig.webSocketConstructor = ws;
 
@@ -26,14 +27,19 @@ async function main() {
   // });
 
   console.log("\nChecking events...");
-  const allEvents = await db
-    .select({ title: events.title, categories: events.categories })
-    .from(events);
-  allEvents.forEach((e) => {
+  const allEvents = await db.select({ id: events.id, title: events.title }).from(events);
+
+  for (const e of allEvents) {
+    const rows = await db
+      .select({ key: categories.key })
+      .from(eventCategories)
+      .innerJoin(categories, eq(categories.id, eventCategories.categoryId))
+      .where(eq(eventCategories.eventId, e.id));
+
     console.log(
-      `Event: ${e.title}, Categories: ${JSON.stringify(e.categories)}`
+      `Event: ${e.title}, Categories: ${JSON.stringify(rows.map((row) => row.key))}`
     );
-  });
+  }
 
   await pool.end();
 }

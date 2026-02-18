@@ -22,8 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { AvatarStack } from "@/components/ui/avatar-stack";
-import { useState } from "react";
-import { CATEGORY_LABELS, type Category } from "@/lib/categories";
+import { useMemo, useState } from "react";
 
 type RsvpStatus = "going" | "interested" | "not_going";
 
@@ -80,6 +79,14 @@ export default function EventPage() {
   const { data: attendees } = trpc.event.listEventAttendees.useQuery({
     eventId,
   });
+  const { data: activeCategories } = trpc.category.listActive.useQuery();
+  const categoryLabelMap = useMemo(
+    () =>
+      Object.fromEntries(
+        (activeCategories || []).map((category) => [category.key, category.label])
+      ),
+    [activeCategories]
+  );
 
   // Check if user is admin
   const { data: adminCheck } = trpc.user.isAdmin.useQuery();
@@ -352,7 +359,7 @@ export default function EventPage() {
                   variant="secondary"
                   className="capitalize"
                 >
-                  {CATEGORY_LABELS[category as Category] || category}
+                  {categoryLabelMap[category] || category}
                 </Badge>
               ))}
             </div>

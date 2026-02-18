@@ -130,7 +130,7 @@ export default function EditEventPage() {
         title: event.title || "",
         description: event.description || "",
         coverImageUrl: event.coverImageUrl || "",
-        categories: (event.categories as string[]) || [],
+        categories: event.categories || [],
         startAt: format(new Date(event.startAt), "yyyy-MM-dd'T'HH:mm"),
         endAt: event.endAt
           ? format(new Date(event.endAt), "yyyy-MM-dd'T'HH:mm")

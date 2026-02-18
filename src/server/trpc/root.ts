@@ -4,6 +4,7 @@ import { adminRouter } from "./routers/admin";
 import { eventRouter } from "./routers/event";
 import { friendsRouter } from "./routers/friends";
 import { userRouter } from "./routers/user";
+import { categoryRouter } from "./routers/category";
 
 export const appRouter = router({
   place: placeRouter,
@@ -11,6 +12,7 @@ export const appRouter = router({
   event: eventRouter,
   friends: friendsRouter,
   user: userRouter,
+  category: categoryRouter,
 });
 
 export type AppRouter = typeof appRouter;

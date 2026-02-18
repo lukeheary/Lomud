@@ -12,13 +12,15 @@ import {
   jsonb,
   doublePrecision,
   boolean,
+  integer,
 } from "drizzle-orm/pg-core";
 
 // ============================================================================
 // ENUMS
 // ============================================================================
 
-// Categories are now stored as jsonb arrays - see src/lib/categories.ts for the list
+// Place categories are normalized via categories + place_categories tables.
+// Event categories remain jsonb string arrays for now.
 
 export const eventVisibilityEnum = pgEnum("event_visibility", [
   "public",
@@ -147,6 +149,34 @@ export const metroAreas = pgTable(
 );
 
 // ============================================================================
+// CATEGORIES TABLE
+// ============================================================================
+export const categories = pgTable(
+  "categories",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    key: varchar("key", { length: 64 }).notNull().unique(),
+    label: varchar("label", { length: 100 }).notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    keyIdx: uniqueIndex("categories_key_idx").on(table.key),
+    activeSortIdx: index("categories_active_sort_idx").on(
+      table.isActive,
+      table.sortOrder
+    ),
+  })
+);
+
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  placeCategories: many(placeCategories),
+  eventCategories: many(eventCategories),
+}));
+
+// ============================================================================
 // PLACES TABLE (unified venues + organizers)
 // ============================================================================
 export const places = pgTable(
@@ -167,7 +197,6 @@ export const places = pgTable(
     website: text("website"),
     instagram: varchar("instagram", { length: 100 }),
     hours: jsonb("hours"), // Store hours as: { monday: { open: "09:00", close: "17:00", closed: false }, ... }
-    categories: jsonb("categories").$type<string[]>().default([]),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -183,6 +212,43 @@ export const placesRelations = relations(places, ({ many }) => ({
   venueEvents: many(events, { relationName: "venueEvents" }),
   organizerEvents: many(events, { relationName: "organizerEvents" }),
   follows: many(placeFollows),
+  categoryLinks: many(placeCategories),
+}));
+
+// ============================================================================
+// PLACE CATEGORIES TABLE (many-to-many between places and categories)
+// ============================================================================
+export const placeCategories = pgTable(
+  "place_categories",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    placeId: uuid("place_id")
+      .notNull()
+      .references(() => places.id, { onDelete: "cascade" }),
+    categoryId: uuid("category_id")
+      .notNull()
+      .references(() => categories.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    placeCategoryIdx: uniqueIndex("place_categories_place_category_idx").on(
+      table.placeId,
+      table.categoryId
+    ),
+    placeIdx: index("place_categories_place_idx").on(table.placeId),
+    categoryIdx: index("place_categories_category_idx").on(table.categoryId),
+  })
+);
+
+export const placeCategoriesRelations = relations(placeCategories, ({ one }) => ({
+  place: one(places, {
+    fields: [placeCategories.placeId],
+    references: [places.id],
+  }),
+  category: one(categories, {
+    fields: [placeCategories.categoryId],
+    references: [categories.id],
+  }),
 }));
 
 // ============================================================================
@@ -310,7 +376,6 @@ export const events = pgTable(
     address: text("address"),
     city: varchar("city", { length: 100 }).notNull(),
     state: varchar("state", { length: 2 }).notNull(),
-    categories: jsonb("categories").$type<string[]>().default([]),
     visibility: eventVisibilityEnum("visibility").notNull().default("public"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -320,7 +385,6 @@ export const events = pgTable(
     organizerIdx: index("events_organizer_idx").on(table.organizerId),
     startAtIdx: index("events_start_at_idx").on(table.startAt),
     locationIdx: index("events_location_idx").on(table.city, table.state),
-    // Categories now use GIN index for jsonb array
     visibilityIdx: index("events_visibility_idx").on(table.visibility),
     // Composite index for common query pattern
     startVisibilityIdx: index("events_start_visibility_idx").on(
@@ -350,6 +414,43 @@ export const eventsRelations = relations(events, ({ one, many }) => ({
     references: [users.id],
   }),
   rsvps: many(rsvps),
+  categoryLinks: many(eventCategories),
+}));
+
+// ============================================================================
+// EVENT CATEGORIES TABLE (many-to-many between events and categories)
+// ============================================================================
+export const eventCategories = pgTable(
+  "event_categories",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    categoryId: uuid("category_id")
+      .notNull()
+      .references(() => categories.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    eventCategoryIdx: uniqueIndex("event_categories_event_category_idx").on(
+      table.eventId,
+      table.categoryId
+    ),
+    eventIdx: index("event_categories_event_idx").on(table.eventId),
+    categoryIdx: index("event_categories_category_idx").on(table.categoryId),
+  })
+);
+
+export const eventCategoriesRelations = relations(eventCategories, ({ one }) => ({
+  event: one(events, {
+    fields: [eventCategories.eventId],
+    references: [events.id],
+  }),
+  category: one(categories, {
+    fields: [eventCategories.categoryId],
+    references: [categories.id],
+  }),
 }));
 
 // ============================================================================

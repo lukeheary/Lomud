@@ -126,14 +126,14 @@ export function EventForm({
         address: venue.address || "",
         city: venue.city || "",
         state: venue.state || "",
-        categories: (venue.categories as string[]) || [],
+        categories: venue.categories || [],
         hours: (venue.hours as VenueHours) || null,
       });
       // Inherit venue categories
-      if ((venue.categories as string[])?.length > 0) {
+      if (venue.categories?.length > 0) {
         setFormData((prev) => ({
           ...prev,
-          categories: venue.categories as string[],
+          categories: venue.categories,
         }));
       }
       const startDate = getDatePart(formData.startAt);

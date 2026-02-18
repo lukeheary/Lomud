@@ -268,7 +268,7 @@ export default function AdminPlacesPage() {
             latitude: editingPlace.latitude || null,
             longitude: editingPlace.longitude || null,
             hours: editingPlace.hours || null,
-            categories: (editingPlace.categories as string[]) || [],
+            categories: editingPlace.categories || [],
           }
         : { type: activeTab };
 

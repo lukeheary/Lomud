@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Check, X, ChevronDown } from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Popover,
@@ -10,7 +10,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { CATEGORIES, CATEGORY_LABELS, type Category } from "@/lib/categories";
+import { trpc } from "@/lib/trpc";
 
 interface CategoryMultiSelectProps {
   value: string[];
@@ -26,12 +26,17 @@ export function CategoryMultiSelect({
   className,
 }: CategoryMultiSelectProps) {
   const [open, setOpen] = useState(false);
+  const { data: categoryOptions, isLoading } = trpc.category.listActive.useQuery();
 
-  const toggleCategory = (category: Category) => {
-    if (value.includes(category)) {
-      onChange(value.filter((c) => c !== category));
+  const labelMap = Object.fromEntries(
+    (categoryOptions || []).map((category) => [category.key, category.label])
+  );
+
+  const toggleCategory = (categoryKey: string) => {
+    if (value.includes(categoryKey)) {
+      onChange(value.filter((c) => c !== categoryKey));
     } else {
-      onChange([...value, category]);
+      onChange([...value, categoryKey]);
     }
   };
 
@@ -59,7 +64,7 @@ export function CategoryMultiSelect({
             ) : (
                   value.map((category) => {
                 if (!category) return null;
-                const label = CATEGORY_LABELS[category as Category];
+                const label = labelMap[category];
                 return (
                   <Badge
                     key={category}
@@ -84,18 +89,23 @@ export function CategoryMultiSelect({
       </PopoverTrigger>
       <PopoverContent className="w-[300px] p-2" align="start">
         <div className="grid gap-1">
-          {CATEGORIES.map((category) => (
+          {isLoading && (
+            <div className="px-3 py-2 text-sm text-muted-foreground">
+              Loading categories...
+            </div>
+          )}
+          {(categoryOptions || []).map((category) => (
             <button
-              key={category}
+              key={category.id}
               type="button"
-              onClick={() => toggleCategory(category)}
+              onClick={() => toggleCategory(category.key)}
               className={cn(
                 "flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-accent",
-                value.includes(category) && "bg-accent"
+                value.includes(category.key) && "bg-accent"
               )}
             >
-              <span>{CATEGORY_LABELS[category]}</span>
-              {value.includes(category) && (
+              <span>{category.label}</span>
+              {value.includes(category.key) && (
                 <Check className="h-4 w-4 text-primary" />
               )}
             </button>

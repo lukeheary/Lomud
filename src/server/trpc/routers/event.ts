@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "../init";
 import {
+  categories,
+  eventCategories,
   events,
   follows,
   friends,
@@ -16,7 +18,11 @@ import { and, desc, eq, gte, ilike, inArray, lte, or, sql } from "drizzle-orm";
 import { uploadImageFromUrl, BUCKET_NAME } from "@/lib/s3";
 import { TRPCError } from "@trpc/server";
 import { logActivity } from "../../utils/activity-logger";
-import { CATEGORIES, filterValidCategories } from "@/lib/categories";
+import {
+  filterExistingCategoryKeys,
+  mapEventCategoryData,
+  setEventCategoryKeys,
+} from "@/server/utils/categories";
 
 export const eventRouter = router({
   createEvent: protectedProcedure
@@ -90,7 +96,11 @@ export const eventRouter = router({
       }
 
       // Filter to only valid categories
-      const validCategories = filterValidCategories(input.categories || []);
+      const validCategories = await filterExistingCategoryKeys(
+        ctx.db,
+        input.categories || [],
+        { activeOnly: true }
+      );
 
       const [event] = await ctx.db
         .insert(events)
@@ -99,7 +109,6 @@ export const eventRouter = router({
           venueName: input.venueName ?? null,
           city: input.city,
           state: input.state,
-          categories: validCategories,
           startAt: input.startAt,
           visibility: input.visibility,
           createdByUserId: ctx.auth.userId,
@@ -115,6 +124,12 @@ export const eventRouter = router({
         } as any)
         .returning();
 
+      if (event && validCategories.length > 0) {
+        await setEventCategoryKeys(ctx.db, event.id, validCategories, {
+          activeOnly: true,
+        });
+      }
+
       if (event) {
         void logActivity({
           actorUserId: ctx.auth.userId,
@@ -125,7 +140,20 @@ export const eventRouter = router({
         });
       }
 
-      return event;
+      if (!event) return event;
+
+      const created = await ctx.db.query.events.findFirst({
+        where: eq(events.id, event.id),
+        with: {
+          categoryLinks: {
+            with: {
+              category: true,
+            },
+          },
+        },
+      });
+
+      return created ? mapEventCategoryData(created) : event;
     }),
 
   batchCreateEvents: adminProcedure
@@ -211,34 +239,90 @@ export const eventRouter = router({
         return { created: 0 };
       }
 
-      const values = filteredEvents.map((event) => ({
-        title: event.title,
-        description: event.description ?? null,
-        coverImageUrl: event.coverImageUrl ?? null,
-        eventUrl: event.eventUrl ?? null,
-        source: event.source ?? null,
-        externalId: event.externalId ?? null,
-        startAt: event.startAt,
-        endAt: event.endAt ?? null,
-        venueName: event.venueName ?? null,
-        address: event.address ?? null,
-        city: event.city,
-        state: event.state,
-        categories: filterValidCategories(event.categories || []),
-        visibility: event.visibility,
-        createdByUserId: ctx.auth.userId,
-        venueId: event.venueId ?? input.venueId ?? null,
-        organizerId: event.organizerId ?? input.organizerId ?? null,
-      }));
+      const allCategoryKeys = Array.from(
+        new Set(filteredEvents.flatMap((event) => event.categories || []))
+      );
+      const validBatchCategoryKeys = new Set(
+        await filterExistingCategoryKeys(ctx.db, allCategoryKeys, {
+          activeOnly: true,
+        })
+      );
+
+      const toEventKey = (event: {
+        source?: string | null;
+        externalId?: string | null;
+        title: string;
+        startAt: Date;
+        venueName?: string | null;
+        city: string;
+        state: string;
+      }) =>
+        event.source && event.externalId
+          ? `${event.source}::${event.externalId}`
+          : `${event.title}::${event.startAt.toISOString()}::${event.venueName ?? ""}::${event.city}::${event.state}`;
+
+      const values = filteredEvents.map((event) => {
+        const categoryKeys = (event.categories || []).filter((key) =>
+          validBatchCategoryKeys.has(key)
+        );
+
+        return {
+          eventKey: toEventKey(event),
+          categoryKeys,
+          data: {
+            title: event.title,
+            description: event.description ?? null,
+            coverImageUrl: event.coverImageUrl ?? null,
+            eventUrl: event.eventUrl ?? null,
+            source: event.source ?? null,
+            externalId: event.externalId ?? null,
+            startAt: event.startAt,
+            endAt: event.endAt ?? null,
+            venueName: event.venueName ?? null,
+            address: event.address ?? null,
+            city: event.city,
+            state: event.state,
+            visibility: event.visibility,
+            createdByUserId: ctx.auth.userId,
+            venueId: event.venueId ?? input.venueId ?? null,
+            organizerId: event.organizerId ?? input.organizerId ?? null,
+          },
+        };
+      });
 
       // Insert events first to get IDs
       const created = await ctx.db
         .insert(events)
-        .values(values as any)
+        .values(values.map((value) => value.data) as any)
         .onConflictDoNothing({
           target: [events.source, events.externalId],
         })
         .returning();
+
+      if (created.length > 0) {
+        const categoryKeysByEventKey = new Map(
+          values.map((value) => [value.eventKey, value.categoryKeys])
+        );
+
+        await Promise.all(
+          created.map(async (row) => {
+            const rowEventKey = toEventKey({
+              source: row.source,
+              externalId: row.externalId,
+              title: row.title,
+              startAt: row.startAt,
+              venueName: row.venueName,
+              city: row.city,
+              state: row.state,
+            });
+            const categoryKeys = categoryKeysByEventKey.get(rowEventKey) || [];
+            if (categoryKeys.length === 0) return;
+            await setEventCategoryKeys(ctx.db, row.id, categoryKeys, {
+              activeOnly: true,
+            });
+          })
+        );
+      }
 
       // Re-upload external cover images to S3 at events/{id}/coverImage.png
       const s3BucketHost = `${BUCKET_NAME}.s3`;
@@ -297,10 +381,23 @@ export const eventRouter = router({
         eq(events.visibility, "public"),
       ];
 
-      // Add category filter - check if the category is in the jsonb array
+      // Add category filter
       if (input.category) {
+        const matchingEventRows = await ctx.db
+          .select({ eventId: eventCategories.eventId })
+          .from(eventCategories)
+          .innerJoin(categories, eq(categories.id, eventCategories.categoryId))
+          .where(eq(categories.key, input.category));
+
+        if (matchingEventRows.length === 0) {
+          return [];
+        }
+
         conditions.push(
-          sql`${events.categories} @> ${JSON.stringify([input.category])}::jsonb`
+          inArray(
+            events.id,
+            matchingEventRows.map((row) => row.eventId)
+          )
         );
       }
 
@@ -484,6 +581,11 @@ export const eventRouter = router({
           venue: true,
           organizer: true,
           createdBy: true,
+          categoryLinks: {
+            with: {
+              category: true,
+            },
+          },
         },
       });
 
@@ -560,7 +662,7 @@ export const eventRouter = router({
       // Attach user RSVP and friends going to each event
 
       return eventList.map((event) => ({
-        ...event,
+        ...mapEventCategoryData(event),
         userRsvp: rsvpMap.get(event.id) || null,
         friendsGoing: attendeesMap.get(event.id) || [],
       }));
@@ -575,6 +677,11 @@ export const eventRouter = router({
           venue: true,
           organizer: true,
           createdBy: true,
+          categoryLinks: {
+            with: {
+              category: true,
+            },
+          },
         },
       });
 
@@ -597,7 +704,7 @@ export const eventRouter = router({
       }
 
       return {
-        ...event,
+        ...mapEventCategoryData(event),
         userRsvp,
       };
     }),
@@ -788,8 +895,6 @@ export const eventRouter = router({
       if (updates.address !== undefined) updateData.address = updates.address;
       if (updates.city !== undefined) updateData.city = updates.city;
       if (updates.state !== undefined) updateData.state = updates.state;
-      if (updates.categories !== undefined)
-        updateData.categories = filterValidCategories(updates.categories);
       if (updates.visibility !== undefined)
         updateData.visibility = updates.visibility;
       if (updates.venueId !== undefined)
@@ -811,7 +916,24 @@ export const eventRouter = router({
         });
       }
 
-      return updatedEvent;
+      if (updates.categories !== undefined) {
+        await setEventCategoryKeys(ctx.db, eventId, updates.categories, {
+          activeOnly: true,
+        });
+      }
+
+      const refreshed = await ctx.db.query.events.findFirst({
+        where: eq(events.id, eventId),
+        with: {
+          categoryLinks: {
+            with: {
+              category: true,
+            },
+          },
+        },
+      });
+
+      return refreshed ? mapEventCategoryData(refreshed) : updatedEvent;
     }),
 
   listPublicEventsPreview: publicProcedure
@@ -903,11 +1025,16 @@ export const eventRouter = router({
           venue: true,
           organizer: true,
           createdBy: true,
+          categoryLinks: {
+            with: {
+              category: true,
+            },
+          },
         },
       });
 
       return eventList.map((event) => ({
-        ...event,
+        ...mapEventCategoryData(event),
         userRsvp: null,
         friendsGoing: [] as never[],
       }));
@@ -1029,6 +1156,11 @@ export const eventRouter = router({
           venue: true,
           organizer: true,
           createdBy: true,
+          categoryLinks: {
+            with: {
+              category: true,
+            },
+          },
         },
       });
 
@@ -1105,7 +1237,7 @@ export const eventRouter = router({
 
       // Return events with userRsvp and friendsGoing attached
       return recentEvents.map((event) => ({
-        ...event,
+        ...mapEventCategoryData(event),
         userRsvp: rsvpMap.get(event.id) || null,
         friendsGoing: attendeesMap.get(event.id) || [],
       }));

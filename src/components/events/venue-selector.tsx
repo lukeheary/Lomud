@@ -181,7 +181,7 @@ export function VenueSelector({
                               state: v.state || "",
                               slug: v.slug,
                               instagram: v.instagram || "",
-                              categories: (v.categories as string[]) || [],
+                              categories: v.categories || [],
                               hours: (v.hours as VenueHours) || null,
                             });
                             setIsVenuePopoverOpen(false);
