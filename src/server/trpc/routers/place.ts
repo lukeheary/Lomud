@@ -4,6 +4,7 @@ import {
   cities,
   events,
   friends,
+  metroAreas,
   rsvps,
   users,
   placeFollows,
@@ -141,8 +142,71 @@ export const placeRouter = router({
       const conditions = [];
 
       if (input.type) conditions.push(eq(places.type, input.type));
-      if (input.city) conditions.push(eq(places.city, input.city));
-      if (input.state) conditions.push(eq(places.state, input.state));
+      if (input.city) {
+        // Look up metro area for coordinates and radius
+        const metro = await ctx.db.query.metroAreas.findFirst({
+          where: eq(metroAreas.name, input.city),
+        });
+
+        let originCity: { latitude: number; longitude: number } | undefined;
+        let radiusMiles = 20;
+
+        if (metro?.latitude != null && metro?.longitude != null) {
+          originCity = { latitude: metro.latitude, longitude: metro.longitude };
+          radiusMiles = metro.radiusMiles ?? 20;
+        } else {
+          // Fall back to cities table
+          const cityConditions = [eq(cities.name, input.city)];
+          if (input.state) {
+            cityConditions.push(eq(cities.state, input.state));
+          }
+          const cityRecord = await ctx.db.query.cities.findFirst({
+            where: and(...cityConditions),
+          });
+          if (cityRecord?.latitude != null && cityRecord?.longitude != null) {
+            originCity = { latitude: cityRecord.latitude, longitude: cityRecord.longitude };
+          }
+        }
+
+        if (originCity) {
+          // Use Haversine formula to find nearby places
+          const distanceSql = sql`
+            (
+              3959 * 2 * asin(
+                sqrt(
+                  pow(sin(radians(${originCity.latitude} - ${cities.latitude}) / 2), 2) +
+                  cos(radians(${originCity.latitude})) * cos(radians(${cities.latitude})) *
+                  pow(sin(radians(${originCity.longitude} - ${cities.longitude}) / 2), 2)
+                )
+              )
+            )
+          `;
+
+          const nearbyPlaceIds = await ctx.db
+            .select({ id: places.id })
+            .from(places)
+            .innerJoin(
+              cities,
+              and(eq(cities.name, places.city), eq(cities.state, places.state))
+            )
+            .where(sql`${distanceSql} <= ${radiusMiles}`);
+
+          if (nearbyPlaceIds.length === 0) {
+            return [];
+          }
+
+          conditions.push(
+            inArray(
+              places.id,
+              nearbyPlaceIds.map((row) => row.id)
+            )
+          );
+        } else {
+          // Fallback to exact match if no coordinates found
+          conditions.push(eq(places.city, input.city));
+        }
+      }
+      if (input.state && !input.city) conditions.push(eq(places.state, input.state));
       if (input.search) {
         conditions.push(ilike(places.name, `%${input.search}%`));
       }

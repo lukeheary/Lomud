@@ -3,6 +3,7 @@ import { adminProcedure, protectedProcedure, publicProcedure, router } from "../
 import {
   categories,
   eventCategories,
+  eventSeries,
   events,
   follows,
   friends,
@@ -23,6 +24,10 @@ import {
   mapEventCategoryData,
   setEventCategoryKeys,
 } from "@/server/utils/categories";
+import {
+  materializeEventSeries,
+  normalizeSeriesDaysOfWeek,
+} from "@/server/utils/event-series";
 
 export const eventRouter = router({
   createEvent: protectedProcedure
@@ -154,6 +159,159 @@ export const eventRouter = router({
       });
 
       return created ? mapEventCategoryData(created) : event;
+    }),
+
+  createRecurringEvent: protectedProcedure
+    .input(
+      z.object({
+        venueId: z.string().uuid().optional(),
+        organizerId: z.string().uuid().optional(),
+        title: z.string().min(1).max(255),
+        description: z.string().optional(),
+        coverImageUrl: z.string().url().optional(),
+        eventUrl: z.string().url().optional(),
+        source: z.string().max(50).optional(),
+        externalId: z.string().optional(),
+        startAt: z.date(),
+        endAt: z.date().optional(),
+        venueName: z.string().max(255).optional(),
+        address: z.string().optional(),
+        city: z.string().min(1).max(100),
+        state: z.string().length(2),
+        categories: z.array(z.string()).optional().default([]),
+        visibility: z.enum(["public", "private"]).default("public"),
+        recurrence: z.object({
+          frequency: z.enum(["daily", "weekly"]),
+          interval: z.number().int().min(1).max(12).default(1),
+          daysOfWeek: z.array(z.number().int().min(0).max(6)).optional(),
+          untilDate: z.date().optional(),
+        }),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const user = await ctx.db.query.users.findFirst({
+        where: eq(users.id, ctx.auth.userId),
+      });
+      const isAdmin = user?.role === "admin";
+
+      if (input.venueId && !isAdmin) {
+        const isMember = await ctx.db.query.placeMembers.findFirst({
+          where: and(
+            eq(placeMembers.userId, ctx.auth.userId),
+            eq(placeMembers.placeId, input.venueId)
+          ),
+        });
+
+        if (!isMember) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You are not a member of this venue",
+          });
+        }
+      }
+
+      if (input.organizerId && !isAdmin) {
+        const isMember = await ctx.db.query.placeMembers.findFirst({
+          where: and(
+            eq(placeMembers.userId, ctx.auth.userId),
+            eq(placeMembers.placeId, input.organizerId)
+          ),
+        });
+
+        if (!isMember) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You are not a member of this organizer",
+          });
+        }
+      }
+
+      if (input.endAt && input.startAt >= input.endAt) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "End time must be after start time",
+        });
+      }
+
+      if (input.recurrence.untilDate && input.recurrence.untilDate < input.startAt) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Series end date must be after the first event date",
+        });
+      }
+
+      const validCategories = await filterExistingCategoryKeys(
+        ctx.db,
+        input.categories || [],
+        { activeOnly: true }
+      );
+
+      const durationMinutes = input.endAt
+        ? Math.floor((input.endAt.getTime() - input.startAt.getTime()) / 60000)
+        : null;
+
+      const normalizedDaysOfWeek = normalizeSeriesDaysOfWeek(
+        input.recurrence.frequency,
+        input.recurrence.daysOfWeek,
+        input.startAt
+      );
+
+      const [series] = await ctx.db
+        .insert(eventSeries)
+        .values({
+          title: input.title,
+          description: input.description ?? null,
+          coverImageUrl: input.coverImageUrl ?? null,
+          eventUrl: input.eventUrl ?? null,
+          source: input.source ?? null,
+          externalId: input.externalId ?? null,
+          startAt: input.startAt,
+          durationMinutes,
+          venueName: input.venueName ?? null,
+          address: input.address ?? null,
+          city: input.city,
+          state: input.state,
+          categories: validCategories,
+          visibility: input.visibility,
+          frequency: input.recurrence.frequency,
+          interval: input.recurrence.interval,
+          daysOfWeek: normalizedDaysOfWeek,
+          untilDate: input.recurrence.untilDate ?? null,
+          venueId: input.venueId ?? null,
+          organizerId: input.organizerId ?? null,
+          createdByUserId: ctx.auth.userId,
+        })
+        .returning({ id: eventSeries.id });
+
+      if (!series) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create recurring event series",
+        });
+      }
+
+      const generated = await materializeEventSeries(ctx.db, {
+        seriesIds: [series.id],
+      });
+
+      if (generated.firstCreatedEventId) {
+        void logActivity({
+          actorUserId: ctx.auth.userId,
+          type: "created_event",
+          entityType: "event",
+          entityId: generated.firstCreatedEventId,
+          metadata: {
+            recurring: true,
+            seriesId: series.id,
+          },
+        });
+      }
+
+      return {
+        seriesId: series.id,
+        createdEvents: generated.createdEvents,
+        firstEventId: generated.firstCreatedEventId,
+      };
     }),
 
   batchCreateEvents: adminProcedure

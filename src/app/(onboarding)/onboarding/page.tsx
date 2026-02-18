@@ -231,7 +231,7 @@ export default function OnboardingPage() {
             />
             {!formData.avatarImageUrl && (
               <p className="mt-2 text-xs text-muted-foreground">
-                Optional: You can use your generated avatar
+                Optional: You can always upload a profile picture later
               </p>
             )}
           </div>
@@ -255,7 +255,7 @@ export default function OnboardingPage() {
                 maxLength={20}
               />
               <p className="text-xs text-muted-foreground">
-                3-20 characters, letters, numbers, and underscores only
+                This will be used as your username so your friends can find you
               </p>
             </div>
 

@@ -14,12 +14,19 @@ import { trpc } from "@/lib/trpc";
 import { SearchInput } from "@/components/ui/search-input";
 import { useNavbarSearch } from "@/contexts/nav-search-context";
 import { Card, CardContent } from "@/components/ui/card";
-import { Building, Building2, CalendarDays, MapPin, Loader2 } from "lucide-react";
+import {
+  Building,
+  Building2,
+  CalendarDays,
+  MapPin,
+  Loader2,
+} from "lucide-react";
 import { useQueryState } from "nuqs";
 import { ResponsiveSelect } from "@/components/ui/responsive-select";
 import { getDistanceMiles, type Coordinates } from "@/lib/geo";
 import { resolveMetroArea } from "@/lib/metro-areas";
 import { cn } from "@/lib/utils";
+import { StickySearchBar } from "@/components/ui/sticky-search-bar";
 
 type FilterType = "all" | "venues" | "organizers" | "following";
 
@@ -253,11 +260,10 @@ function PlacesPageContent() {
   return (
     <div className="container mx-auto pt-4">
       {/* Sticky sentinel for intersection observer */}
-      <div ref={stickySentinelRef} className="h-0" />
+      <div ref={stickySentinelRef} className="h-px w-full" />
 
       {/* Search and Filters */}
-      <div className="z-[45] -mx-4 -mt-4 bg-background px-4 pb-3 pt-2 transition-shadow md:top-16 md:z-30 md:-mx-8 md:bg-background/95 md:px-8 md:backdrop-blur md:supports-[backdrop-filter]:bg-background">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <StickySearchBar>
           <Suspense fallback={null}>
             <SearchInput
               ref={searchInputRef}
@@ -301,8 +307,7 @@ function PlacesPageContent() {
               className="w-48 grow"
             />
           </div>
-        </div>
-      </div>
+      </StickySearchBar>
 
       {/* Loading State */}
       {(isLoading || !isReady) && <PlaceSkeletonGrid />}
@@ -350,13 +355,18 @@ function PlacesPageContent() {
                           </span>
                         </div>
                       )}
-                      <div className={cn(
-                        "flex items-center gap-1.5 text-sm",
-                        item.eventCount === 0 ? "text-muted-foreground/40" : "text-muted-foreground"
-                      )}>
+                      <div
+                        className={cn(
+                          "flex items-center gap-1.5 text-sm",
+                          item.eventCount === 0
+                            ? "text-muted-foreground/40"
+                            : "text-muted-foreground"
+                        )}
+                      >
                         <CalendarDays className="h-3.5 w-3.5" />
                         <span>
-                          {item.eventCount} upcoming {item.eventCount === 1 ? "event" : "events"}
+                          {item.eventCount} upcoming{" "}
+                          {item.eventCount === 1 ? "event" : "events"}
                         </span>
                       </div>
                     </div>

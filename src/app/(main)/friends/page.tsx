@@ -5,16 +5,12 @@ import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 import { SearchInput } from "@/components/ui/search-input";
 import { useNavbarSearch } from "@/contexts/nav-search-context";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Users,
-  Mail,
   Loader2,
   ChevronRight,
   UserPlus,
-  Check,
   X,
 } from "lucide-react";
 import { ActivityFeed } from "@/components/friends/activity-feed";
@@ -22,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryState } from "nuqs";
 import pluralize from "pluralize";
 import { UserList } from "@/components/user-list";
+import { StickySearchBar } from "@/components/ui/sticky-search-bar";
 
 function FriendsPageContent() {
   const { toast } = useToast();
@@ -173,71 +170,49 @@ function FriendsPageContent() {
   return (
     <div className="container mx-auto pt-4">
       {/* Sticky sentinel for intersection observer */}
-      <div ref={stickySentinelRef} className="h-0" />
+      <div ref={stickySentinelRef} className="h-px w-full" />
 
-      <div className="z-[45] -mx-4 -mt-4 bg-background px-4 pb-3 pt-2 transition-shadow md:top-16 md:z-30 md:-mx-8 md:bg-background/95 md:px-8 md:backdrop-blur md:supports-[backdrop-filter]:bg-background">
-        <div className="flex flex-col gap-2 md:flex-row md:items-center">
-          <div className="flex-1">
-            <Suspense fallback={null}>
-              <SearchInput
-                ref={searchInputRef}
-                placeholder="Search friends or find new people..."
-                value={searchQuery}
-                onChange={setSearchQuery}
-                onFocus={() => setIsSearchMode(true)}
-                showBack={isSearchMode}
-                onBack={handleExitSearch}
-                className="w-full"
-              />
-            </Suspense>
-          </div>
+      <StickySearchBar>
+          <Suspense fallback={null}>
+            <SearchInput
+              ref={searchInputRef}
+              placeholder="Search friends or find new people..."
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onFocus={() => setIsSearchMode(true)}
+              showBack={isSearchMode}
+              onBack={handleExitSearch}
+              className="w-full"
+            />
+          </Suspense>
 
           {!isSearchMode && (
-            <div className="grid grid-cols-2 gap-2 md:flex md:w-auto">
+            <div className="flex shrink-0 gap-2">
               <Link href="/friends/list" className="md:w-32 lg:w-40">
-                <Card className="cursor-pointer rounded-full bg-muted transition-colors hover:bg-muted/80">
-                  <CardContent className="flex h-12 items-center justify-between px-4 py-0">
-                    <div className="flex items-center gap-2">
-                      <p className="flex flex-row items-center gap-1.5 text-base font-medium lg:text-lg">
-                        <span>{acceptedFriends.length}</span>
-                        <span className={"text-sm text-muted-foreground"}>
-                          {pluralize("Friend", acceptedFriends.length)}
-                        </span>
-                      </p>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground lg:h-5 lg:w-5" />
-                  </CardContent>
-                </Card>
+                <div className="flex h-12 cursor-pointer items-center justify-between rounded-full bg-muted px-4 transition-colors hover:bg-muted/80">
+                  <p className="flex flex-row items-center gap-1.5 text-base font-medium lg:text-lg">
+                    <span>{acceptedFriends.length}</span>
+                    <span className={"text-sm text-muted-foreground"}>
+                      {pluralize("Friend", acceptedFriends.length)}
+                    </span>
+                  </p>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground lg:h-5 lg:w-5" />
+                </div>
               </Link>
               <Link href="/friends/requests" className="md:w-32 lg:w-40">
-                <Card className="cursor-pointer rounded-full bg-muted transition-colors hover:bg-muted/80">
-                  <CardContent className="flex h-12 items-center justify-between px-4 py-0">
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1.5">
-                        <p className="flex flex-row items-center gap-1.5 text-base font-medium lg:text-lg">
-                          <span>{receivedRequests.length}</span>
-                          <span className={"text-sm text-muted-foreground"}>
-                            {pluralize("Request", receivedRequests.length)}
-                          </span>
-                        </p>
-                        {/*{receivedRequests.length > 0 && (*/}
-                        {/*  <Badge*/}
-                        {/*    variant="default"*/}
-                        {/*    className="px-1 py-0 text-[10px] md:text-xs"*/}
-                        {/*  >*/}
-                        {/*    New*/}
-                        {/*  </Badge>*/}
-                        {/*)}*/}
-                      </div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground lg:h-5 lg:w-5" />
-                  </CardContent>
-                </Card>
+                <div className="flex h-12 cursor-pointer items-center justify-between rounded-full bg-muted px-4 transition-colors hover:bg-muted/80">
+                  <p className="flex flex-row items-center gap-1.5 text-base font-medium lg:text-lg">
+                    <span>{receivedRequests.length}</span>
+                    <span className={"text-sm text-muted-foreground"}>
+                      {pluralize("Request", receivedRequests.length)}
+                    </span>
+                  </p>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground lg:h-5 lg:w-5" />
+                </div>
               </Link>
             </div>
           )}
-        </div>
-      </div>
+      </StickySearchBar>
 
       {isSearchMode ? (
         // Search Mode View

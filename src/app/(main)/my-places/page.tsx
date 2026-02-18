@@ -10,6 +10,7 @@ import {
   Calendar,
   Users as UsersIcon,
   Loader2,
+  Repeat,
 } from "lucide-react";
 import pluralize from "pluralize";
 import Link from "next/link";
@@ -36,6 +37,15 @@ export default function MyPlacesPage() {
 
   return (
     <div className="container mx-auto space-y-4 py-8">
+      {/*<div className="flex justify-end">*/}
+      {/*  <Link href="/event/new?recurring=true">*/}
+      {/*    <Button>*/}
+      {/*      <Repeat className="mr-2 h-4 w-4" />*/}
+      {/*      Create New Recurring Event*/}
+      {/*    </Button>*/}
+      {/*  </Link>*/}
+      {/*</div>*/}
+
       {/* Venues Section */}
       {showVenuesSection && (
         <div className="space-y-4">

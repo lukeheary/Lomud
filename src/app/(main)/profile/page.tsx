@@ -386,10 +386,10 @@ export default function ProfilePage() {
 
   return (
     <div className="container mx-auto max-w-2xl space-y-6 py-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Profile</h1>
-        {/*<UserButton afterSignOutUrl="/sign-in" />*/}
-      </div>
+      {/*<div className="flex items-center justify-between">*/}
+      {/*  <h1 className="text-3xl font-bold">Profile</h1>*/}
+      {/*  /!*<UserButton afterSignOutUrl="/sign-in" />*!/*/}
+      {/*</div>*/}
 
       <Card>
         <CardHeader>
@@ -420,26 +420,28 @@ export default function ProfilePage() {
 
           {/* Form Fields */}
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">First Name</Label>
-              <Input
-                id="firstName"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                // disabled={!isEditing}
-                placeholder="Enter your first name"
-              />
-            </div>
+            <div className={"flex flex-col gap-2 md:flex-row"}>
+              <div className="w-full space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  // disabled={!isEditing}
+                  placeholder="Enter your first name"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="lastName">Last Name</Label>
-              <Input
-                id="lastName"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                // disabled={!isEditing}
-                placeholder="Enter your last name"
-              />
+              <div className="w-full space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  // disabled={!isEditing}
+                  placeholder="Enter your last name"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">

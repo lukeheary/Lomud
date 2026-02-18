@@ -14,6 +14,7 @@ import {
   Users as UsersIcon,
   Search,
   Calendar,
+  Repeat,
 } from "lucide-react";
 import { EventForm } from "@/components/events/event-form";
 import {
@@ -24,7 +25,13 @@ import {
 import { PlaceMembersManager } from "@/components/places/place-members-manager";
 import { BackButtonHeader } from "@/components/shared/back-button-header";
 
-type ViewMode = "list" | "create" | "edit" | "members" | "create-event";
+type ViewMode =
+  | "list"
+  | "create"
+  | "edit"
+  | "members"
+  | "create-event"
+  | "create-recurring-event";
 
 export default function AdminPlacesPage() {
   const { toast } = useToast();
@@ -121,6 +128,11 @@ export default function AdminPlacesPage() {
     setViewMode("create-event");
   };
 
+  const handleCreateRecurringEvent = (placeId: string) => {
+    setSelectedPlace(placeId);
+    setViewMode("create-recurring-event");
+  };
+
   const handleCreate = () => {
     setViewMode("create");
   };
@@ -166,13 +178,26 @@ export default function AdminPlacesPage() {
             title={activeTab === "venue" ? "Venues" : "Organizers"}
             className="min-w-0"
           />
-          <Button onClick={handleCreate}>
-            <Plus className="mr-2 h-4 w-4" />
-            <span className="sm:hidden">Add</span>
-            <span className="hidden sm:inline">
-              Add {activeTab === "venue" ? "Venue" : "Organizer"}
-            </span>
-          </Button>
+          <div className="flex items-center gap-2">
+            {/*<Button*/}
+            {/*  variant="outline"*/}
+            {/*  onClick={() => {*/}
+            {/*    setSelectedPlace("");*/}
+            {/*    setViewMode("create-recurring-event");*/}
+            {/*  }}*/}
+            {/*>*/}
+            {/*  <Repeat className="mr-2 h-4 w-4" />*/}
+            {/*  <span className="hidden sm:inline">Create New Recurring Event</span>*/}
+            {/*  <span className="sm:hidden">Recurring</span>*/}
+            {/*</Button>*/}
+            <Button onClick={handleCreate}>
+              <Plus className="mr-2 h-4 w-4" />
+              <span className="sm:hidden">Add</span>
+              <span className="hidden sm:inline">
+                Add {activeTab === "venue" ? "Venue" : "Organizer"}
+              </span>
+            </Button>
+          </div>
         </div>
 
         <div className="relative">
@@ -219,6 +244,14 @@ export default function AdminPlacesPage() {
                   >
                     <Calendar className="mr-2 h-4 w-4" />
                     Add Event
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleCreateRecurringEvent(place.id)}
+                  >
+                    <Repeat className="mr-2 h-4 w-4" />
+                    Add Recurring
                   </Button>
                   <Button
                     variant="outline"
@@ -322,19 +355,24 @@ export default function AdminPlacesPage() {
   }
 
   // Create Event View
-  if (viewMode === "create-event") {
+  if (viewMode === "create-event" || viewMode === "create-recurring-event") {
     const currentPlace = places?.find((p) => p.id === selectedPlace);
+    const isRecurring = viewMode === "create-recurring-event";
 
     return (
       <div className="space-y-6">
-        <BackButtonHeader onBack={handleBack} title="Create Event" />
+        <BackButtonHeader
+          onBack={handleBack}
+          title={isRecurring ? "Create Recurring Event" : "Create Event"}
+        />
 
         <EventForm
           venueId={currentPlace?.type === "venue" ? selectedPlace : undefined}
           organizerId={
             currentPlace?.type === "organizer" ? selectedPlace : undefined
           }
-          onSuccess={(eventId: string) => {
+          isRecurringDefault={isRecurring}
+          onSuccess={() => {
             utils.admin.listAllPlaces.invalidate();
             handleBack();
           }}

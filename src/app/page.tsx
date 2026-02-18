@@ -88,9 +88,9 @@ export default async function LandingPage() {
       <LandingPageRedirect />
       <div className="flex min-h-screen flex-col overflow-x-hidden">
         {/* Navigation */}
-        <header className="sticky top-0 z-50 border-b bg-background">
+        <header className="sticky top-0 z-50 bg-background">
           <div className="container mx-auto flex h-16 items-center justify-between px-4">
-            <div className="flex items-center gap-2 text-3xl font-black tracking-wide">
+            <div className="flex items-center gap-2 text-4xl font-black tracking-wide">
               <span className={truculenta.className}>WIG</span>
             </div>
             <div className="flex items-center gap-2">
@@ -98,7 +98,7 @@ export default async function LandingPage() {
                 <Button variant="ghost">Sign In</Button>
               </Link>
               <Link href="/sign-up">
-                <Button className="bg-[#7cc3ff]">Sign Up</Button>
+                <Button>Sign Up</Button>
               </Link>
             </div>
           </div>
@@ -106,7 +106,7 @@ export default async function LandingPage() {
 
         <main className="flex-1">
           {/* Hero Section - Centered */}
-          <section className="container mx-auto px-4 pt-28 md:pt-40">
+          <section className="container mx-auto px-4 pt-28">
             <div className="mx-auto max-w-4xl text-center">
               <h1 className="text-5xl font-bold leading-[0.95] tracking-tight md:text-6xl lg:text-8xl">
                 <span className={truculenta.className}>
@@ -122,21 +122,19 @@ export default async function LandingPage() {
 
               <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
                 <Link href="/sign-up">
-                  <Button size="lg" className="bg-[#7cc3ff]">
-                    Get Started
-                  </Button>
+                  <Button size="lg">Get Started</Button>
                 </Link>
-                <Link href="/sign-in">
-                  <Button size="lg" variant="outline">
-                    Sign In
-                  </Button>
-                </Link>
+                {/*<Link href="/sign-in">*/}
+                {/*  <Button size="lg" variant="outline">*/}
+                {/*    Sign In*/}
+                {/*  </Button>*/}
+                {/*</Link>*/}
               </div>
             </div>
           </section>
 
           {/* Mock Events Preview - Same width as /home */}
-          <section className="container mx-auto px-4 pt-20">
+          <section className="container mx-auto px-4 pt-12">
             <div className="relative">
               {/* Subtle glow effects */}
               <div className="pointer-events-none absolute -left-20 top-10 h-60 w-60 rounded-full bg-[#7cc3ff]/20 blur-3xl" />
@@ -159,14 +157,6 @@ export default async function LandingPage() {
                           alt={event.title}
                           className="h-full w-full object-cover"
                         />
-                        {/* Avatar stack on image - Desktop only */}
-                        <div className="absolute bottom-3 right-3 hidden md:block">
-                          <AvatarStack
-                            users={event.avatars}
-                            maxDisplay={5}
-                            size="md"
-                          />
-                        </div>
                       </div>
 
                       {/* Event Info - right on mobile, below on desktop */}
@@ -182,8 +172,8 @@ export default async function LandingPage() {
                         </div>
                       </div>
 
-                      {/* Avatar stack - Mobile only, bottom right */}
-                      <div className="absolute bottom-1 right-1 md:hidden">
+                      {/* Avatar stack - bottom right of card */}
+                      <div className="absolute bottom-2 right-2">
                         <AvatarStack
                           users={event.avatars}
                           maxDisplay={3}
@@ -237,7 +227,7 @@ export default async function LandingPage() {
           </section>
 
           {/* Live Events Preview */}
-          <section className="container mx-auto px-4 pb-10 md:pb-24">
+          <section className="container mx-auto px-4 pb-10 md:pb-16">
             <LandingEventsPreview />
           </section>
 
@@ -253,9 +243,7 @@ export default async function LandingPage() {
 
               <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
                 <Link href="/sign-up">
-                  <Button size="lg" className="bg-[#7cc3ff]">
-                    Get Started
-                  </Button>
+                  <Button size="lg">Get Started</Button>
                 </Link>
                 <Link href="/sign-in">
                   <Button size="lg" variant="outline">

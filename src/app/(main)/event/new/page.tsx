@@ -12,16 +12,25 @@ function NewEventPageContent() {
 
   const venueId = searchParams.get("venueId") || undefined;
   const organizerId = searchParams.get("organizerId") || undefined;
+  const isRecurring = searchParams.get("recurring") === "true";
 
   return (
     <div className="container mx-auto max-w-2xl space-y-6 py-8">
-      <BackButtonHeader backHref="/home" title="Create Event" />
+      <BackButtonHeader
+        backHref="/home"
+        title={isRecurring ? "Create Recurring Event" : "Create Event"}
+      />
 
       <EventForm
         venueId={venueId}
         organizerId={organizerId}
+        isRecurringDefault={isRecurring}
         onSuccess={(eventId) => {
-          router.push(`/event/${eventId}`);
+          if (eventId) {
+            router.push(`/event/${eventId}`);
+            return;
+          }
+          router.push("/home");
         }}
         onCancel={() => router.back()}
       />

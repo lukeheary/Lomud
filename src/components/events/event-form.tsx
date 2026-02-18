@@ -1,31 +1,42 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { addDays } from "date-fns";
+import { Loader2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { useToast } from "@/hooks/use-toast";
+import { CategoryMultiSelect } from "@/components/category-multi-select";
+import { VenueSelector, VenueData } from "@/components/events/venue-selector";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { S3Uploader } from "@/components/ui/s3-uploader";
-import { VenueSelector, VenueData } from "@/components/events/venue-selector";
-import { CategoryMultiSelect } from "@/components/category-multi-select";
-import { DatePicker } from "@/components/ui/date-picker";
-import { addDays } from "date-fns";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { VenueHours } from "@/components/venue-hours-editor";
 
 interface EventFormProps {
   venueId?: string;
   organizerId?: string;
-  onSuccess?: (eventId: string) => void;
+  isRecurringDefault?: boolean;
+  onSuccess?: (eventId?: string) => void;
   onCancel?: () => void;
 }
+
+const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function EventForm({
   venueId,
   organizerId,
+  isRecurringDefault = false,
   onSuccess,
   onCancel,
 }: EventFormProps) {
@@ -44,6 +55,13 @@ export function EventForm({
     state: "",
   });
 
+  const [recurrenceData, setRecurrenceData] = useState({
+    frequency: "weekly" as "daily" | "weekly",
+    interval: 1,
+    daysOfWeek: [] as number[],
+    untilDate: "",
+  });
+
   const [selectedVenue, setSelectedVenue] = useState<VenueData | null>(null);
   const [isCreatingNewVenue, setIsCreatingNewVenue] = useState(false);
   const lastAutoAppliedKeyRef = useRef<string | null>(null);
@@ -53,10 +71,7 @@ export function EventForm({
   const buildDateTime = (date: string, time: string) =>
     date ? `${date}T${time}` : "";
 
-  const getVenueDayHours = (
-    dateString: string,
-    hours?: VenueHours | null
-  ) => {
+  const getVenueDayHours = (dateString: string, hours?: VenueHours | null) => {
     if (!dateString || !hours) return null;
     const dayIndex = new Date(`${dateString}T00:00`).getDay();
     const dayKeys: (keyof VenueHours)[] = [
@@ -96,18 +111,14 @@ export function EventForm({
       (endHour === startHour && endMinute <= startMinute);
 
     const endDateString = isOvernight
-      ? addDays(new Date(`${dateString}T00:00`), 1)
-          .toISOString()
-          .slice(0, 10)
+      ? addDays(new Date(`${dateString}T00:00`), 1).toISOString().slice(0, 10)
       : dateString;
 
-    setFormData((prev) => {
-      return {
-        ...prev,
-        startAt: buildDateTime(dateString, dayHours.open),
-        endAt: buildDateTime(endDateString, dayHours.close),
-      };
-    });
+    setFormData((prev) => ({
+      ...prev,
+      startAt: buildDateTime(dateString, dayHours.open),
+      endAt: buildDateTime(endDateString, dayHours.close),
+    }));
 
     lastAutoAppliedKeyRef.current = autoKey;
   };
@@ -129,23 +140,38 @@ export function EventForm({
         categories: venue.categories || [],
         hours: (venue.hours as VenueHours) || null,
       });
-      // Inherit venue categories
+
       if (venue.categories?.length > 0) {
         setFormData((prev) => ({
           ...prev,
           categories: venue.categories,
         }));
       }
+
       const startDate = getDatePart(formData.startAt);
       if (startDate) {
-        applyVenueHoursToDate(
-          startDate,
-          venue.hours as VenueHours,
-          venue.id
-        );
+        applyVenueHoursToDate(startDate, venue.hours as VenueHours, venue.id);
       }
     }
   }, [venue]);
+
+  useEffect(() => {
+    if (!isRecurringDefault || recurrenceData.frequency !== "weekly") return;
+    if (recurrenceData.daysOfWeek.length > 0) return;
+    const startDate = getDatePart(formData.startAt);
+    if (!startDate) return;
+
+    const weekday = new Date(`${startDate}T00:00`).getDay();
+    setRecurrenceData((prev) => ({
+      ...prev,
+      daysOfWeek: [weekday],
+    }));
+  }, [
+    isRecurringDefault,
+    recurrenceData.frequency,
+    recurrenceData.daysOfWeek.length,
+    formData.startAt,
+  ]);
 
   const createVenueMutation = trpc.place.createPlace.useMutation();
 
@@ -156,6 +182,26 @@ export function EventForm({
         description: "Event created successfully",
       });
       onSuccess?.(data.id);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const createRecurringMutation = trpc.event.createRecurringEvent.useMutation({
+    onSuccess: (data) => {
+      toast({
+        title: "Success",
+        description:
+          data.createdEvents > 0
+            ? `Recurring series created with ${data.createdEvents} upcoming events`
+            : "Recurring series created",
+      });
+      onSuccess?.(data.firstEventId ?? undefined);
     },
     onError: (error) => {
       toast({
@@ -178,7 +224,6 @@ export function EventForm({
       return;
     }
 
-    // Validate dates
     const startDate = new Date(formData.startAt);
     const endDate = formData.endAt ? new Date(formData.endAt) : null;
 
@@ -191,9 +236,31 @@ export function EventForm({
       return;
     }
 
+    if (isRecurringDefault) {
+      if (recurrenceData.frequency === "weekly" && recurrenceData.daysOfWeek.length === 0) {
+        toast({
+          title: "Validation Error",
+          description: "Select at least one weekday for a weekly recurrence",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (recurrenceData.untilDate) {
+        const untilDate = new Date(`${recurrenceData.untilDate}T23:59:59`);
+        if (untilDate < startDate) {
+          toast({
+            title: "Validation Error",
+            description: "Series end date must be on or after the start date",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+    }
+
     let finalVenueId = venueId || selectedVenue?.id;
 
-    // If creating a new venue, do that first
     if (isCreatingNewVenue && selectedVenue) {
       try {
         const newVenue = await createVenueMutation.mutateAsync({
@@ -226,7 +293,7 @@ export function EventForm({
       return;
     }
 
-    createMutation.mutate({
+    const payload = {
       venueId: finalVenueId,
       organizerId,
       title: formData.title,
@@ -239,24 +306,43 @@ export function EventForm({
       address: selectedVenue?.address || formData.address || undefined,
       city: selectedVenue?.city || formData.city,
       state: selectedVenue?.state || formData.state,
-    });
+    };
+
+    if (isRecurringDefault) {
+      createRecurringMutation.mutate({
+        ...payload,
+        recurrence: {
+          frequency: recurrenceData.frequency,
+          interval: recurrenceData.interval,
+          daysOfWeek:
+            recurrenceData.frequency === "weekly"
+              ? recurrenceData.daysOfWeek
+              : undefined,
+          untilDate: recurrenceData.untilDate
+            ? new Date(`${recurrenceData.untilDate}T23:59:59`)
+            : undefined,
+        },
+      });
+      return;
+    }
+
+    createMutation.mutate(payload);
   };
 
-  // When a venue is selected, inherit its categories
-  const handleVenueSelect = (venue: VenueData | null) => {
-    setSelectedVenue(venue);
-    if (venue?.categories && venue.categories.length > 0) {
+  const handleVenueSelect = (nextVenue: VenueData | null) => {
+    setSelectedVenue(nextVenue);
+    if (nextVenue?.categories && nextVenue.categories.length > 0) {
       setFormData((prev) => ({
         ...prev,
-        categories: venue.categories || [],
+        categories: nextVenue.categories || [],
       }));
     }
     const startDate = getDatePart(formData.startAt);
     if (startDate) {
       applyVenueHoursToDate(
         startDate,
-        venue?.hours || null,
-        venue?.id || venue?.name
+        nextVenue?.hours || null,
+        nextVenue?.id || nextVenue?.name
       );
     }
   };
@@ -265,6 +351,16 @@ export function EventForm({
     if (!date) {
       setFormData((prev) => ({ ...prev, startAt: "" }));
       return;
+    }
+
+    if (isRecurringDefault && recurrenceData.frequency === "weekly") {
+      const weekday = new Date(`${date}T00:00`).getDay();
+      if (recurrenceData.daysOfWeek.length === 0) {
+        setRecurrenceData((prev) => ({
+          ...prev,
+          daysOfWeek: [weekday],
+        }));
+      }
     }
 
     const venueHours = selectedVenue?.hours || (venue?.hours as VenueHours);
@@ -280,9 +376,7 @@ export function EventForm({
       const nextStartAt = buildDateTime(date, startTime);
       const endDate = getDatePart(prev.endAt);
       const endTime = getTimePart(prev.endAt);
-      const nextEndAt = endDate
-        ? buildDateTime(date, endTime || "23:00")
-        : prev.endAt;
+      const nextEndAt = endDate ? buildDateTime(date, endTime || "23:00") : prev.endAt;
       return {
         ...prev,
         startAt: nextStartAt,
@@ -306,10 +400,7 @@ export function EventForm({
       return;
     }
     setFormData((prev) => {
-      const time =
-        getTimePart(prev.endAt) ||
-        getTimePart(prev.startAt) ||
-        "23:00";
+      const time = getTimePart(prev.endAt) || getTimePart(prev.startAt) || "23:00";
       return {
         ...prev,
         endAt: buildDateTime(date, time),
@@ -326,6 +417,23 @@ export function EventForm({
     }));
   };
 
+  const toggleWeekday = (dayIndex: number) => {
+    setRecurrenceData((prev) => {
+      const exists = prev.daysOfWeek.includes(dayIndex);
+      return {
+        ...prev,
+        daysOfWeek: exists
+          ? prev.daysOfWeek.filter((day) => day !== dayIndex)
+          : [...prev.daysOfWeek, dayIndex].sort((a, b) => a - b),
+      };
+    });
+  };
+
+  const isSubmitting =
+    createMutation.isPending ||
+    createRecurringMutation.isPending ||
+    createVenueMutation.isPending;
+
   if (venueId && isLoadingVenue) {
     return (
       <div className="flex justify-center py-24">
@@ -336,7 +444,6 @@ export function EventForm({
 
   return (
     <>
-      {/* Venue Details - Hidden if venueId is provided */}
       {!venueId && (
         <VenueSelector
           selectedVenue={selectedVenue}
@@ -349,7 +456,7 @@ export function EventForm({
       <Card>
         <CardHeader>
           <CardTitle>
-            Event Details
+            {isRecurringDefault ? "Recurring Event Details" : "Event Details"}
             {venue && (
               <span className="ml-2 text-sm font-normal text-muted-foreground">
                 at {venue.name}
@@ -359,7 +466,6 @@ export function EventForm({
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Event Image */}
             <div className="space-y-2">
               <Label htmlFor="image">Event Image</Label>
               <S3Uploader
@@ -375,7 +481,6 @@ export function EventForm({
               />
             </div>
 
-            {/* Title */}
             <div className="space-y-2">
               <Label htmlFor="title">
                 Event Title <span className="text-destructive">*</span>
@@ -383,15 +488,12 @@ export function EventForm({
               <Input
                 id="title"
                 value={formData.title}
-                onChange={(e) =>
-                  setFormData({ ...formData, title: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="Summer Music Festival"
                 required
               />
             </div>
 
-            {/* Description */}
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
@@ -405,19 +507,15 @@ export function EventForm({
               />
             </div>
 
-            {/* Categories */}
             <div className="space-y-2">
               <Label htmlFor="categories">Categories</Label>
               <CategoryMultiSelect
                 value={formData.categories}
-                onChange={(categories) =>
-                  setFormData({ ...formData, categories })
-                }
+                onChange={(categories) => setFormData({ ...formData, categories })}
                 placeholder="Select categories..."
               />
             </div>
 
-            {/* Date & Time */}
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>
@@ -463,18 +561,99 @@ export function EventForm({
               </div>
             </div>
 
-            {/* Action Buttons */}
+            {isRecurringDefault && (
+              <div className="space-y-4 rounded-xl border p-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Repeat</Label>
+                    <Select
+                      value={recurrenceData.frequency}
+                      onValueChange={(value) => {
+                        const nextFrequency = value as "daily" | "weekly";
+                        setRecurrenceData((prev) => ({
+                          ...prev,
+                          frequency: nextFrequency,
+                          daysOfWeek:
+                            nextFrequency === "weekly" ? prev.daysOfWeek : [],
+                        }));
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="daily">Daily</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Every</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={12}
+                      value={recurrenceData.interval}
+                      onChange={(e) =>
+                        setRecurrenceData((prev) => ({
+                          ...prev,
+                          interval: Math.min(
+                            12,
+                            Math.max(1, Number(e.target.value) || 1)
+                          ),
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+
+                {recurrenceData.frequency === "weekly" && (
+                  <div className="space-y-2">
+                    <Label>Days of week</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {WEEKDAY_LABELS.map((label, index) => {
+                        const selected = recurrenceData.daysOfWeek.includes(index);
+                        return (
+                          <Button
+                            key={label}
+                            type="button"
+                            variant={selected ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => toggleWeekday(index)}
+                          >
+                            {label}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label>End Date (optional)</Label>
+                  <DatePicker
+                    value={recurrenceData.untilDate}
+                    onChange={(value) =>
+                      setRecurrenceData((prev) => ({
+                        ...prev,
+                        untilDate: value,
+                      }))
+                    }
+                    placeholder="No end date"
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="flex justify-between gap-2">
               {onCancel && (
                 <Button type="button" variant="outline" onClick={onCancel}>
                   Cancel
                 </Button>
               )}
-              <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                Create Event
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isRecurringDefault ? "Create Recurring Event" : "Create Event"}
               </Button>
             </div>
           </form>

@@ -71,6 +71,7 @@ import {
 import { useNavbarSearch } from "@/contexts/nav-search-context";
 import { getDistanceMiles, type Coordinates } from "@/lib/geo";
 import { resolveMetroArea } from "@/lib/metro-areas";
+import { StickySearchBar } from "@/components/ui/sticky-search-bar";
 
 type ViewMode = "week" | "month";
 
@@ -254,7 +255,10 @@ function HomePageContent() {
   const categoryLabelMap = useMemo(
     () =>
       Object.fromEntries(
-        (activeCategories || []).map((category) => [category.key, category.label])
+        (activeCategories || []).map((category) => [
+          category.key,
+          category.label,
+        ])
       ),
     [activeCategories]
   );
@@ -586,12 +590,7 @@ function HomePageContent() {
         <div ref={stickySentinelRef} className="h-px w-full" />
 
         {/* Search and Filters */}
-        <div
-          className={
-            "z-[45] -mx-4 -mt-4 bg-background px-4 pb-3 transition-shadow md:top-16 md:z-30 md:-mx-8 md:bg-background/95 md:px-8 md:backdrop-blur md:supports-[backdrop-filter]:bg-background"
-          }
-        >
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <StickySearchBar>
             {/* Search Input */}
             <div className="flex w-full flex-row">
               <Suspense fallback={null}>
@@ -685,8 +684,7 @@ function HomePageContent() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+        </StickySearchBar>
 
         {/*  <Tabs*/}
         {/*    value={viewMode}*/}
@@ -788,7 +786,7 @@ function HomePageContent() {
             const dayEvents = eventsByDay[dateKey] || [];
             const isToday = isSameDay(date, new Date());
             const currentHour = new Date().getHours();
-            const isEvening = currentHour >= 18;
+            const isEvening = currentHour >= 17;
 
             // Format the date header - use Today/Tonight for current day
             const dateHeader = isToday

@@ -64,6 +64,11 @@ export const placeMemberRoleEnum = pgEnum("place_member_role", [
   "staff",
 ]);
 
+export const recurrenceFrequencyEnum = pgEnum("recurrence_frequency", [
+  "daily",
+  "weekly",
+]);
+
 // ============================================================================
 // USERS TABLE
 // ============================================================================
@@ -97,6 +102,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   placeMembers: many(placeMembers),
   placeFollows: many(placeFollows),
   rsvps: many(rsvps),
+  eventSeries: many(eventSeries),
   sentFriendRequests: many(friends, { relationName: "sentRequests" }),
   receivedFriendRequests: many(friends, { relationName: "receivedRequests" }),
   activities: many(activityEvents),
@@ -211,6 +217,10 @@ export const placesRelations = relations(places, ({ many }) => ({
   members: many(placeMembers),
   venueEvents: many(events, { relationName: "venueEvents" }),
   organizerEvents: many(events, { relationName: "organizerEvents" }),
+  venueEventSeries: many(eventSeries, { relationName: "venueEventSeries" }),
+  organizerEventSeries: many(eventSeries, {
+    relationName: "organizerEventSeries",
+  }),
   follows: many(placeFollows),
   categoryLinks: many(placeCategories),
 }));
@@ -349,6 +359,72 @@ export const followsRelations = relations(follows, ({ one }) => ({
 }));
 
 // ============================================================================
+// EVENT SERIES TABLE
+// ============================================================================
+export const eventSeries = pgTable(
+  "event_series",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    venueId: uuid("venue_id").references(() => places.id, {
+      onDelete: "set null",
+    }),
+    organizerId: uuid("organizer_id").references(() => places.id, {
+      onDelete: "set null",
+    }),
+    createdByUserId: text("created_by_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+    coverImageUrl: text("cover_image_url"),
+    eventUrl: text("event_url"),
+    source: varchar("source", { length: 50 }),
+    externalId: text("external_id"),
+    startAt: timestamp("start_at").notNull(),
+    durationMinutes: integer("duration_minutes"),
+    venueName: varchar("venue_name", { length: 255 }),
+    address: text("address"),
+    city: varchar("city", { length: 100 }).notNull(),
+    state: varchar("state", { length: 2 }).notNull(),
+    categories: jsonb("categories").$type<string[]>().notNull().default([]),
+    visibility: eventVisibilityEnum("visibility").notNull().default("public"),
+    frequency: recurrenceFrequencyEnum("frequency").notNull(),
+    interval: integer("interval").notNull().default(1),
+    daysOfWeek: jsonb("days_of_week").$type<number[]>(),
+    untilDate: timestamp("until_date"),
+    isActive: boolean("is_active").notNull().default(true),
+    lastGeneratedAt: timestamp("last_generated_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    venueIdx: index("event_series_venue_idx").on(table.venueId),
+    organizerIdx: index("event_series_organizer_idx").on(table.organizerId),
+    startAtIdx: index("event_series_start_at_idx").on(table.startAt),
+    activeIdx: index("event_series_active_idx").on(table.isActive),
+    locationIdx: index("event_series_location_idx").on(table.city, table.state),
+  })
+);
+
+export const eventSeriesRelations = relations(eventSeries, ({ one, many }) => ({
+  venue: one(places, {
+    fields: [eventSeries.venueId],
+    references: [places.id],
+    relationName: "venueEventSeries",
+  }),
+  organizer: one(places, {
+    fields: [eventSeries.organizerId],
+    references: [places.id],
+    relationName: "organizerEventSeries",
+  }),
+  createdBy: one(users, {
+    fields: [eventSeries.createdByUserId],
+    references: [users.id],
+  }),
+  events: many(events),
+}));
+
+// ============================================================================
 // EVENTS TABLE
 // ============================================================================
 export const events = pgTable(
@@ -370,6 +446,9 @@ export const events = pgTable(
     eventUrl: text("event_url"),
     source: varchar("source", { length: 50 }),
     externalId: text("external_id"),
+    seriesId: uuid("series_id").references(() => eventSeries.id, {
+      onDelete: "set null",
+    }),
     startAt: timestamp("start_at").notNull(),
     endAt: timestamp("end_at"),
     venueName: varchar("venue_name", { length: 255 }),
@@ -383,6 +462,11 @@ export const events = pgTable(
   (table) => ({
     venueIdx: index("events_venue_idx").on(table.venueId),
     organizerIdx: index("events_organizer_idx").on(table.organizerId),
+    seriesIdx: index("events_series_idx").on(table.seriesId),
+    seriesStartAtUniqueIdx: uniqueIndex("events_series_start_at_unique_idx").on(
+      table.seriesId,
+      table.startAt
+    ),
     startAtIdx: index("events_start_at_idx").on(table.startAt),
     locationIdx: index("events_location_idx").on(table.city, table.state),
     visibilityIdx: index("events_visibility_idx").on(table.visibility),
@@ -412,6 +496,10 @@ export const eventsRelations = relations(events, ({ one, many }) => ({
   createdBy: one(users, {
     fields: [events.createdByUserId],
     references: [users.id],
+  }),
+  series: one(eventSeries, {
+    fields: [events.seriesId],
+    references: [eventSeries.id],
   }),
   rsvps: many(rsvps),
   categoryLinks: many(eventCategories),

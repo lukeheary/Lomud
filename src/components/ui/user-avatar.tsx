@@ -17,9 +17,11 @@ export function UserAvatar({
   className,
   size = 256,
 }: UserAvatarProps) {
-  // Filter out Clerk default images
+  // Filter out Clerk default and OAuth proxy images so Facehash is used instead
   const isDefaultImage =
-    src?.includes("default-user-image") || src?.includes("gravatar.com/avatar");
+    src?.includes("default-user-image") ||
+    src?.includes("gravatar.com/avatar") ||
+    src?.includes("img.clerk.com");
   const avatarSrc = isDefaultImage ? undefined : src || undefined;
 
   return (

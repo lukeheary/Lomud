@@ -148,6 +148,13 @@
       "when": 1771258200000,
       "tag": "0020_add_event_categories",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1771410000000,
+      "tag": "0021_add_event_series",
+      "breakpoints": true
     }
   ]
 }

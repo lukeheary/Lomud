@@ -39,12 +39,13 @@ import {
   useNavbarSearch,
 } from "@/contexts/nav-search-context";
 import { cn } from "@/lib/utils";
-import { VisuallyHidden } from "radix-ui";
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 
 function MainLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { signOut } = useClerk();
+  const [hasMounted, setHasMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data: adminCheck } = trpc.user.isAdmin.useQuery();
   const isAdmin = adminCheck?.isAdmin ?? false;
@@ -52,9 +53,17 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
   const { data: user } = trpc.user.getCurrentUser.useQuery();
   const { data: hasVenues } = trpc.user.hasVenues.useQuery();
   const { data: hasOrganizers } = trpc.user.hasOrganizers.useQuery();
-  const { data: pendingRequests } = trpc.friends.listFriends.useQuery({
-    statusFilter: "pending",
-  });
+
+  // Redirect to onboarding if user hasn't completed it
+  useEffect(() => {
+    if (user?.isOnboarding) {
+      router.push("/onboarding");
+    }
+  }, [user?.isOnboarding, router]);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   const { showNavbarSearch, scrollToSearchAndFocus } = useNavbarSearch();
 
@@ -175,59 +184,65 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                 <Search className="h-6 w-6" />
               </Button>
             </div>
-            <NotificationsBell />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <UserAvatar
-                    src={user?.avatarImageUrl}
-                    name={user?.firstName}
-                    className="h-8 w-8"
-                  />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem asChild>
-                  <Link
-                    href="/profile"
-                    className="flex cursor-pointer items-center gap-4"
-                  >
-                    <User className="h-4 w-4" />
-                    My Profile
-                  </Link>
-                </DropdownMenuItem>
-                {(hasVenues || hasOrganizers) && (
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href="/my-places"
-                      className="flex cursor-pointer items-center gap-4"
+            {hasMounted ? (
+              <>
+                <NotificationsBell />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="rounded-full">
+                      <UserAvatar
+                        src={user?.avatarImageUrl}
+                        name={user?.firstName}
+                        className="h-8 w-8"
+                      />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem asChild>
+                      <Link
+                        href="/profile"
+                        className="flex cursor-pointer items-center gap-4"
+                      >
+                        <User className="h-4 w-4" />
+                        My Profile
+                      </Link>
+                    </DropdownMenuItem>
+                    {(hasVenues || hasOrganizers) && (
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href="/my-places"
+                          className="flex cursor-pointer items-center gap-4"
+                        >
+                          <Building className="h-4 w-4" />
+                          My Places
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    {isAdmin && (
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href="/admin"
+                          className="flex cursor-pointer items-center gap-4"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Admin Settings
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={handleSignOut}
+                      className="cursor-pointer gap-4 text-red-500"
                     >
-                      <Building className="h-4 w-4" />
-                      My Places
-                    </Link>
-                  </DropdownMenuItem>
-                )}
-                {isAdmin && (
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href="/admin"
-                      className="flex cursor-pointer items-center gap-4"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Admin Settings
-                    </Link>
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={handleSignOut}
-                  className="cursor-pointer gap-4 text-red-500"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <div className="h-10 w-20" aria-hidden="true" />
+            )}
           </div>
 
           {/* Mobile Right Menu - Bell and Menu */}
@@ -250,118 +265,123 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                 <Search className="h-5 w-5" />
               </Button>
             </div>
-            <NotificationsBell />
+
+            {hasMounted && <NotificationsBell />}
 
             {/* Mobile Menu */}
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-5" />
-                </Button>
-              </SheetTrigger>
-              <VisuallyHidden.Root>
-                <SheetTitle></SheetTitle>
-              </VisuallyHidden.Root>
-              <SheetContent
-                side="right"
-                className="w-[300px] px-4 sm:w-[400px]"
-              >
-                <SheetHeader></SheetHeader>
-                <nav className="mt-8 flex flex-col gap-2">
-                  <Link href="/home" onClick={closeMobileMenu}>
-                    <Button
-                      variant="ghost"
-                      className={`w-full justify-start px-4 text-base ${isHome ? "text-foreground" : "text-muted-foreground"}`}
-                      size="lg"
-                    >
-                      <Home className="mr-3 h-5 w-5" />
-                      Home
-                    </Button>
-                  </Link>
-
-                  <Link href="/venues-and-organizers" onClick={closeMobileMenu}>
-                    <Button
-                      variant="ghost"
-                      className={`w-full justify-start px-4 text-base ${isPlaces ? "text-foreground" : "text-muted-foreground"}`}
-                      size="lg"
-                    >
-                      <MapPin className="mr-3 h-5 w-5" />
-                      Venues & Organizers
-                    </Button>
-                  </Link>
-                  <Link href="/friends" onClick={closeMobileMenu}>
-                    <Button
-                      variant="ghost"
-                      className={`w-full justify-start px-4 text-base ${isFriends ? "text-foreground" : "text-muted-foreground"}`}
-                      size="lg"
-                    >
-                      <Users className="mr-3 h-5 w-5" />
-                      Friends
-                      {/*{receivedRequestsCount > 0 && (*/}
-                      {/*  <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] text-primary-foreground">*/}
-                      {/*    {receivedRequestsCount}*/}
-                      {/*  </span>*/}
-                      {/*)}*/}
-                    </Button>
-                  </Link>
-
-                  <div className="mt-4 flex flex-col gap-2 border-t pt-4">
-                    <Link href="/profile" onClick={closeMobileMenu}>
+            {hasMounted ? (
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Menu className="h-5" />
+                  </Button>
+                </SheetTrigger>
+                <VisuallyHidden.Root>
+                  <SheetTitle></SheetTitle>
+                </VisuallyHidden.Root>
+                <SheetContent
+                  side="right"
+                  className="w-[300px] px-4 sm:w-[400px]"
+                >
+                  <SheetHeader></SheetHeader>
+                  <nav className="mt-8 flex flex-col gap-2">
+                    <Link href="/home" onClick={closeMobileMenu}>
                       <Button
                         variant="ghost"
-                        className={`w-full justify-start px-4 text-base ${isProfile ? "text-foreground" : "text-muted-foreground"}`}
+                        className={`w-full justify-start px-4 text-base ${isHome ? "text-foreground" : "text-muted-foreground"}`}
                         size="lg"
                       >
-                        <div className="mr-3 h-5 w-5 shrink-0">
-                          <UserAvatar
-                            src={user?.avatarImageUrl}
-                            name={user?.firstName}
-                            className="h-full w-full"
-                          />
-                        </div>
-                        My Profile
+                        <Home className="mr-3 h-5 w-5" />
+                        Home
                       </Button>
                     </Link>
-                    {(hasVenues || hasOrganizers) && (
-                      <Link href="/my-places" onClick={closeMobileMenu}>
+
+                    <Link href="/venues-and-organizers" onClick={closeMobileMenu}>
+                      <Button
+                        variant="ghost"
+                        className={`w-full justify-start px-4 text-base ${isPlaces ? "text-foreground" : "text-muted-foreground"}`}
+                        size="lg"
+                      >
+                        <MapPin className="mr-3 h-5 w-5" />
+                        Venues & Organizers
+                      </Button>
+                    </Link>
+                    <Link href="/friends" onClick={closeMobileMenu}>
+                      <Button
+                        variant="ghost"
+                        className={`w-full justify-start px-4 text-base ${isFriends ? "text-foreground" : "text-muted-foreground"}`}
+                        size="lg"
+                      >
+                        <Users className="mr-3 h-5 w-5" />
+                        Friends
+                        {/*{receivedRequestsCount > 0 && (*/}
+                        {/*  <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] text-primary-foreground">*/}
+                        {/*    {receivedRequestsCount}*/}
+                        {/*  </span>*/}
+                        {/*)}*/}
+                      </Button>
+                    </Link>
+
+                    <div className="mt-4 flex flex-col gap-2 border-t pt-4">
+                      <Link href="/profile" onClick={closeMobileMenu}>
                         <Button
                           variant="ghost"
-                          className={`w-full justify-start px-4 text-base ${isMyPlaces ? "text-foreground" : "text-muted-foreground"}`}
+                          className={`w-full justify-start px-4 text-base ${isProfile ? "text-foreground" : "text-muted-foreground"}`}
                           size="lg"
                         >
-                          <Building className="mr-3 h-5 w-5" />
-                          My Places
+                          <div className="mr-3 h-5 w-5 shrink-0">
+                            <UserAvatar
+                              src={user?.avatarImageUrl}
+                              name={user?.firstName}
+                              className="h-full w-full"
+                            />
+                          </div>
+                          My Profile
                         </Button>
                       </Link>
-                    )}
-                    {isAdmin && (
-                      <Link href="/admin" onClick={closeMobileMenu}>
-                        <Button
-                          variant="ghost"
-                          className={`w-full justify-start px-4 text-base ${isAdminPage ? "text-foreground" : "text-muted-foreground"}`}
-                          size="lg"
-                        >
-                          <Plus className="mr-3 h-5 w-5" />
-                          Admin Settings
-                        </Button>
-                      </Link>
-                    )}
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start px-4 text-base text-red-500"
-                      size="lg"
-                      onClick={() => {
-                        closeMobileMenu();
-                        handleSignOut();
-                      }}
-                    >
-                      <LogOut className="mr-3 h-5 w-5" />
-                      Logout
-                    </Button>
-                  </div>
-                </nav>
-              </SheetContent>
-            </Sheet>
+                      {(hasVenues || hasOrganizers) && (
+                        <Link href="/my-places" onClick={closeMobileMenu}>
+                          <Button
+                            variant="ghost"
+                            className={`w-full justify-start px-4 text-base ${isMyPlaces ? "text-foreground" : "text-muted-foreground"}`}
+                            size="lg"
+                          >
+                            <Building className="mr-3 h-5 w-5" />
+                            My Places
+                          </Button>
+                        </Link>
+                      )}
+                      {isAdmin && (
+                        <Link href="/admin" onClick={closeMobileMenu}>
+                          <Button
+                            variant="ghost"
+                            className={`w-full justify-start px-4 text-base ${isAdminPage ? "text-foreground" : "text-muted-foreground"}`}
+                            size="lg"
+                          >
+                            <Plus className="mr-3 h-5 w-5" />
+                            Admin Settings
+                          </Button>
+                        </Link>
+                      )}
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start px-4 text-base text-red-500"
+                        size="lg"
+                        onClick={() => {
+                          closeMobileMenu();
+                          handleSignOut();
+                        }}
+                      >
+                        <LogOut className="mr-3 h-5 w-5" />
+                        Logout
+                      </Button>
+                    </div>
+                  </nav>
+                </SheetContent>
+              </Sheet>
+            ) : (
+              <div className="h-10 w-10" aria-hidden="true" />
+            )}
           </div>
         </div>
       </header>

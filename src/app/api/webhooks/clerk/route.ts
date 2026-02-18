@@ -48,10 +48,11 @@ export async function POST(req: Request) {
     const { id, email_addresses, username, first_name, last_name, image_url } =
       evt.data;
     
-    // Check if the user has a real image (Clerk default images should be ignored)
+    // Check if the user has a real image (Clerk default and OAuth proxy images should be ignored)
     // @ts-ignore - has_image might not be in the typings but is in the payload
     const hasRealImage = evt.data.has_image === true;
-    const finalImageUrl = hasRealImage ? image_url : null;
+    const isClerkProxyImage = image_url?.includes("img.clerk.com") || image_url?.includes("oauth_google") || image_url?.includes("oauth_");
+    const finalImageUrl = hasRealImage && !isClerkProxyImage ? image_url : null;
 
     // For new users, use a temporary username that will be updated during onboarding
     // For existing users being updated, preserve their current username
