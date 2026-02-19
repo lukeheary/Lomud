@@ -83,7 +83,7 @@ function ActivityItem({ activity }: ActivityItemProps) {
             >
               {entityName}
             </Link>
-            {activity.event?.venueName && (
+            {activity.event?.venue?.name && (
               <>
                 {" "}
                 at{" "}
@@ -92,11 +92,11 @@ function ActivityItem({ activity }: ActivityItemProps) {
                     href={`/venue/${activity.event.venue.slug}`}
                     className="font-medium text-primary hover:underline"
                   >
-                    {activity.event.venueName}
+                    {activity.event.venue?.name}
                   </Link>
                 ) : (
                   <span className="font-medium text-foreground">
-                    {activity.event.venueName}
+                    {activity.event.venue?.name}
                   </span>
                 )}
               </>
@@ -120,7 +120,7 @@ function ActivityItem({ activity }: ActivityItemProps) {
             >
               {entityName}
             </Link>
-            {activity.event?.venueName && (
+            {activity.event?.venue?.name && (
               <>
                 {" "}
                 at{" "}
@@ -129,11 +129,11 @@ function ActivityItem({ activity }: ActivityItemProps) {
                     href={`/venue/${activity.event.venue.slug}`}
                     className="font-medium text-primary hover:underline"
                   >
-                    {activity.event.venueName}
+                    {activity.event.venue?.name}
                   </Link>
                 ) : (
                   <span className="font-medium text-foreground">
-                    {activity.event.venueName}
+                    {activity.event.venue?.name}
                   </span>
                 )}
               </>
@@ -182,7 +182,7 @@ function ActivityItem({ activity }: ActivityItemProps) {
             >
               {entityName}
             </Link>
-            {activity.event?.venueName && (
+            {activity.event?.venue?.name && (
               <>
                 {" "}
                 at{" "}
@@ -191,11 +191,11 @@ function ActivityItem({ activity }: ActivityItemProps) {
                     href={`/venue/${activity.event.venue.slug}`}
                     className="font-medium text-primary hover:underline"
                   >
-                    {activity.event.venueName}
+                    {activity.event.venue?.name}
                   </Link>
                 ) : (
                   <span className="font-medium text-foreground">
-                    {activity.event.venueName}
+                    {activity.event.venue?.name}
                   </span>
                 )}
               </>

@@ -169,6 +169,20 @@
       "when": 1771473611404,
       "tag": "0023_partner_rsvp_mirroring",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1771560000000,
+      "tag": "0024_drop_event_venue_name",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1771561000000,
+      "tag": "0025_drop_event_series_venue_name",
+      "breakpoints": true
     }
   ]
 }

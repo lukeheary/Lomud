@@ -259,16 +259,19 @@ export const placeCategories = pgTable(
   })
 );
 
-export const placeCategoriesRelations = relations(placeCategories, ({ one }) => ({
-  place: one(places, {
-    fields: [placeCategories.placeId],
-    references: [places.id],
-  }),
-  category: one(categories, {
-    fields: [placeCategories.categoryId],
-    references: [categories.id],
-  }),
-}));
+export const placeCategoriesRelations = relations(
+  placeCategories,
+  ({ one }) => ({
+    place: one(places, {
+      fields: [placeCategories.placeId],
+      references: [places.id],
+    }),
+    category: one(categories, {
+      fields: [placeCategories.categoryId],
+      references: [categories.id],
+    }),
+  })
+);
 
 // ============================================================================
 // PLACE MEMBERS TABLE
@@ -391,7 +394,6 @@ export const eventSeries = pgTable(
     externalId: text("external_id"),
     startAt: timestamp("start_at").notNull(),
     durationMinutes: integer("duration_minutes"),
-    venueName: varchar("venue_name", { length: 255 }),
     address: text("address"),
     city: varchar("city", { length: 100 }).notNull(),
     state: varchar("state", { length: 2 }).notNull(),
@@ -460,7 +462,6 @@ export const events = pgTable(
     }),
     startAt: timestamp("start_at").notNull(),
     endAt: timestamp("end_at"),
-    venueName: varchar("venue_name", { length: 255 }),
     address: text("address"),
     city: varchar("city", { length: 100 }).notNull(),
     state: varchar("state", { length: 2 }).notNull(),
@@ -539,16 +540,19 @@ export const eventCategories = pgTable(
   })
 );
 
-export const eventCategoriesRelations = relations(eventCategories, ({ one }) => ({
-  event: one(events, {
-    fields: [eventCategories.eventId],
-    references: [events.id],
-  }),
-  category: one(categories, {
-    fields: [eventCategories.categoryId],
-    references: [categories.id],
-  }),
-}));
+export const eventCategoriesRelations = relations(
+  eventCategories,
+  ({ one }) => ({
+    event: one(events, {
+      fields: [eventCategories.eventId],
+      references: [events.id],
+    }),
+    category: one(categories, {
+      fields: [eventCategories.categoryId],
+      references: [categories.id],
+    }),
+  })
+);
 
 // ============================================================================
 // RSVPS TABLE
@@ -707,9 +711,13 @@ export const userPartners = pgTable(
   },
   (table) => ({
     // Each user can only be a requester once (one partner at a time)
-    requesterIdx: uniqueIndex("user_partners_requester_idx").on(table.requesterId),
+    requesterIdx: uniqueIndex("user_partners_requester_idx").on(
+      table.requesterId
+    ),
     // Each user can only be a recipient once (one partner at a time)
-    recipientIdx: uniqueIndex("user_partners_recipient_idx").on(table.recipientId),
+    recipientIdx: uniqueIndex("user_partners_recipient_idx").on(
+      table.recipientId
+    ),
   })
 );
 

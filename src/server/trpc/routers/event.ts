@@ -44,7 +44,6 @@ export const eventRouter = router({
         externalId: z.string().optional(),
         startAt: z.date(),
         endAt: z.date().optional(),
-        venueName: z.string().max(255).optional(),
         address: z.string().optional(),
         city: z.string().min(1).max(100),
         state: z.string().length(2),
@@ -112,7 +111,6 @@ export const eventRouter = router({
         .insert(events)
         .values({
           title: input.title,
-          venueName: input.venueName ?? null,
           city: input.city,
           state: input.state,
           startAt: input.startAt,
@@ -175,7 +173,6 @@ export const eventRouter = router({
         externalId: z.string().optional(),
         startAt: z.date(),
         endAt: z.date().optional(),
-        venueName: z.string().max(255).optional(),
         address: z.string().optional(),
         city: z.string().min(1).max(100),
         state: z.string().length(2),
@@ -268,7 +265,6 @@ export const eventRouter = router({
           externalId: input.externalId ?? null,
           startAt: input.startAt,
           durationMinutes,
-          venueName: input.venueName ?? null,
           address: input.address ?? null,
           city: input.city,
           state: input.state,
@@ -330,7 +326,6 @@ export const eventRouter = router({
             externalId: z.string().optional(),
             startAt: z.date(),
             endAt: z.date().optional(),
-            venueName: z.string().max(255).optional(),
             address: z.string().optional(),
             city: z.string().min(1).max(100),
             state: z.string().length(2),
@@ -412,13 +407,12 @@ export const eventRouter = router({
         externalId?: string | null;
         title: string;
         startAt: Date;
-        venueName?: string | null;
         city: string;
         state: string;
       }) =>
         event.source && event.externalId
           ? `${event.source}::${event.externalId}`
-          : `${event.title}::${event.startAt.toISOString()}::${event.venueName ?? ""}::${event.city}::${event.state}`;
+          : `${event.title}::${event.startAt.toISOString()}::${event.city}::${event.state}`;
 
       const values = filteredEvents.map((event) => {
         const categoryKeys = (event.categories || []).filter((key) =>
@@ -437,7 +431,6 @@ export const eventRouter = router({
             externalId: event.externalId ?? null,
             startAt: event.startAt,
             endAt: event.endAt ?? null,
-            venueName: event.venueName ?? null,
             address: event.address ?? null,
             city: event.city,
             state: event.state,
@@ -470,7 +463,6 @@ export const eventRouter = router({
               externalId: row.externalId,
               title: row.title,
               startAt: row.startAt,
-              venueName: row.venueName,
               city: row.city,
               state: row.state,
             });
@@ -642,12 +634,7 @@ export const eventRouter = router({
 
       // Add search filter
       if (input.search) {
-        conditions.push(
-          or(
-            ilike(events.title, `%${input.search}%`),
-            ilike(events.venueName, `%${input.search}%`)
-          )!
-        );
+        conditions.push(ilike(events.title, `%${input.search}%`));
       }
 
       // Filter by followed places (venues and organizers)
@@ -1075,7 +1062,6 @@ export const eventRouter = router({
         externalId: z.string().optional(),
         startAt: z.date().optional(),
         endAt: z.date().optional(),
-        venueName: z.string().max(255).optional(),
         address: z.string().optional(),
         city: z.string().min(1).max(100).optional(),
         state: z.string().length(2).optional(),
@@ -1143,8 +1129,6 @@ export const eventRouter = router({
         updateData.externalId = updates.externalId;
       if (updates.startAt !== undefined) updateData.startAt = updates.startAt;
       if (updates.endAt !== undefined) updateData.endAt = updates.endAt;
-      if (updates.venueName !== undefined)
-        updateData.venueName = updates.venueName;
       if (updates.address !== undefined) updateData.address = updates.address;
       if (updates.city !== undefined) updateData.city = updates.city;
       if (updates.state !== undefined) updateData.state = updates.state;
@@ -1262,12 +1246,7 @@ export const eventRouter = router({
       }
 
       if (input.search) {
-        conditions.push(
-          or(
-            ilike(events.title, `%${input.search}%`),
-            ilike(events.venueName, `%${input.search}%`)
-          )!
-        );
+        conditions.push(ilike(events.title, `%${input.search}%`));
       }
 
       const eventList = await ctx.db.query.events.findMany({

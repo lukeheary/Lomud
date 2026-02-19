@@ -422,7 +422,6 @@ export default function ScrapePoshPage() {
       externalId: event.externalId ?? undefined,
       startAt: new Date(event.startAt),
       endAt: event.endAt ? new Date(event.endAt) : undefined,
-      venueName: event.venueName,
       address: event.address,
       city: event.city,
       state: event.state,

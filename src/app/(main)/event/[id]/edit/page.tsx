@@ -40,7 +40,6 @@ export default function EditEventPage() {
     categories: [] as string[],
     startAt: "",
     endAt: "",
-    venueName: "",
     address: "",
     city: "",
     state: "",
@@ -135,14 +134,13 @@ export default function EditEventPage() {
         endAt: event.endAt
           ? format(new Date(event.endAt), "yyyy-MM-dd'T'HH:mm")
           : "",
-        venueName: event.venueName || "",
         address: event.address || "",
         city: event.city || "",
         state: event.state || "",
       });
       setSelectedVenue({
         id: event.venueId || undefined,
-        name: event.venueName || "",
+        name: event.venue?.name || "",
         address: event.address || "",
         city: event.city || "",
         state: event.state || "",
@@ -226,7 +224,6 @@ export default function EditEventPage() {
         categories: formData.categories,
         startAt: startDate,
         endAt: endDate || undefined,
-        venueName: selectedVenue?.name || formData.venueName,
         address: selectedVenue?.address || formData.address || undefined,
         city: selectedVenue?.city || formData.city,
         state: selectedVenue?.state || formData.state,

@@ -326,17 +326,13 @@ export default function EventPage() {
               <h1 className="text-3xl font-bold md:text-4xl">{event.title}</h1>
             </div>
 
-            {event.venueName && (
+            {event.venue?.name && (
               <Link
                 className="mt-1 flex w-fit items-center gap-2 text-lg transition-colors hover:underline"
                 href={`/venue/${event.venue?.slug}`}
               >
                 <MapPin className="h-4 w-4" />
-                {event.venue?.slug ? (
-                  <span className="">{event.venueName}</span>
-                ) : (
-                  <span className="">{event.venueName}</span>
-                )}
+                <span className="">{event.venue.name}</span>
               </Link>
             )}
 

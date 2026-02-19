@@ -765,7 +765,7 @@ function HomePageContent() {
       </div>
 
       {/* Friend Activity Feed - only show if there's activity and not in search mode */}
-      {!isSearchMode && hasRecentActivity && isCurrentWeek && (
+      {!isSearchMode && !showSkeletons && hasRecentActivity && isCurrentWeek && (
         <div className="mb-4">
           <StickySectionHeader>
             <div className="flex items-center gap-1 pb-1 md:pb-2">
@@ -944,13 +944,13 @@ function HomePageContent() {
                                 </div>
 
                                 {/* Location */}
-                                {(event.venueName || event.city) && (
+                                {(event.venue?.name || event.city) && (
                                   <div className="flex items-start gap-2 text-sm">
                                     <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
                                     <div>
-                                      {event.venueName && (
+                                      {event.venue?.name && (
                                         <div className="font-medium">
-                                          {event.venueName}
+                                          {event.venue.name}
                                         </div>
                                       )}
                                       <div className="text-muted-foreground">
@@ -960,9 +960,9 @@ function HomePageContent() {
                                   </div>
                                 )}
 
-                                {event.venue && (
+                                {event.organizer && (
                                   <div className="border-t pt-2 text-xs text-muted-foreground">
-                                    Hosted by {event.venue.name}
+                                    Hosted by {event.organizer.name}
                                   </div>
                                 )}
 

@@ -192,9 +192,9 @@ export default function ManagePlacePage() {
                             "EEE, MMM d · h:mm a"
                           )}
                         </p>
-                        {event.venueName && (
+                        {event.venue?.name && (
                           <p className="hidden truncate text-sm text-muted-foreground sm:block">
-                            {event.venueName}
+                            {event.venue.name}
                           </p>
                         )}
                       </div>

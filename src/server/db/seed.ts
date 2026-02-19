@@ -442,7 +442,6 @@ async function main() {
       avatarImageUrl: null,
       startAt: daysFromTodayAt(2, 23, 0),
       endAt: hoursAfter(daysFromTodayAt(2, 23, 0), 5),
-      venueName: "Bijou Boston",
       address: "51 Stuart St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
@@ -459,7 +458,6 @@ async function main() {
       avatarImageUrl: null,
       startAt: daysFromTodayAt(6, 21, 0),
       endAt: hoursAfter(daysFromTodayAt(6, 21, 0), 4),
-      venueName: "The Middlesex Lounge",
       address: "14 Massachusetts Ave, Cambridge, MA 02139",
       city: "Cambridge",
       state: "MA",
@@ -478,7 +476,6 @@ async function main() {
       avatarImageUrl: null,
       startAt: daysFromTodayAt(3, 22, 0),
       endAt: hoursAfter(daysFromTodayAt(3, 22, 0), 3.5),
-      venueName: "Bijou Boston",
       address: "51 Stuart St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
@@ -497,7 +494,6 @@ async function main() {
       avatarImageUrl: null,
       startAt: daysFromTodayAt(1, 16, 0),
       endAt: hoursAfter(daysFromTodayAt(1, 16, 0), 4),
-      venueName: "The Middlesex Lounge",
       address: "14 Massachusetts Ave, Cambridge, MA 02139",
       city: "Cambridge",
       state: "MA",
@@ -514,7 +510,6 @@ async function main() {
       avatarImageUrl: null,
       startAt: daysFromTodayAt(2, 22, 30),
       endAt: hoursAfter(daysFromTodayAt(2, 22, 30), 4),
-      venueName: "Bijou Boston",
       address: "51 Stuart St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
@@ -531,7 +526,6 @@ async function main() {
       avatarImageUrl: null,
       startAt: daysFromTodayAt(4, 23, 0),
       endAt: hoursAfter(daysFromTodayAt(4, 23, 0), 4),
-      venueName: "The Middlesex Lounge",
       address: "14 Massachusetts Ave, Cambridge, MA 02139",
       city: "Cambridge",
       state: "MA",
@@ -548,7 +542,6 @@ async function main() {
       avatarImageUrl: null,
       startAt: daysFromTodayAt(5, 22, 0),
       endAt: hoursAfter(daysFromTodayAt(5, 22, 0), 5),
-      venueName: "Bijou Boston",
       address: "51 Stuart St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
@@ -565,7 +558,6 @@ async function main() {
       avatarImageUrl: null,
       startAt: daysFromTodayAt(7, 19, 0),
       endAt: hoursAfter(daysFromTodayAt(7, 19, 0), 4),
-      venueName: "The Middlesex Lounge",
       address: "14 Massachusetts Ave, Cambridge, MA 02139",
       city: "Cambridge",
       state: "MA",
@@ -584,7 +576,6 @@ async function main() {
       avatarImageUrl: null,
       startAt: daysFromTodayAt(0, 18, 0),
       endAt: hoursAfter(daysFromTodayAt(0, 18, 0), 3),
-      venueName: "Bijou Boston",
       address: "51 Stuart St, Boston, MA 02116",
       city: "Boston",
       state: "MA",
@@ -601,7 +592,6 @@ async function main() {
       avatarImageUrl: null,
       startAt: daysFromTodayAt(0, 19, 30),
       endAt: hoursAfter(daysFromTodayAt(0, 19, 30), 4),
-      venueName: "The Middlesex Lounge",
       address: "14 Massachusetts Ave, Cambridge, MA 02139",
       city: "Cambridge",
       state: "MA",
@@ -618,7 +608,6 @@ async function main() {
       avatarImageUrl: null,
       startAt: daysFromTodayAt(0, 20, 0),
       endAt: hoursAfter(daysFromTodayAt(0, 20, 0), 6),
-      venueName: "Elsewhere",
       address: "599 Johnson Ave, Brooklyn, NY 11237",
       city: "Brooklyn",
       state: "NY",
@@ -635,7 +624,6 @@ async function main() {
       avatarImageUrl: null,
       startAt: daysFromTodayAt(0, 23, 0),
       endAt: hoursAfter(daysFromTodayAt(0, 23, 0), 5),
-      venueName: "Good Room",
       address: "98 Meserole Ave, Brooklyn, NY 11222",
       city: "Brooklyn",
       state: "NY",
@@ -656,7 +644,6 @@ async function main() {
       avatarImageUrl: null,
       startAt: daysFromTodayAt(2, 17, 30),
       endAt: hoursAfter(daysFromTodayAt(1, 17, 30), 4),
-      venueName: "Elsewhere (Rooftop)",
       address: "599 Johnson Ave, Brooklyn, NY 11237",
       city: "Brooklyn",
       state: "NY",
@@ -673,7 +660,6 @@ async function main() {
       avatarImageUrl: null,
       startAt: daysFromTodayAt(2, 23, 30),
       endAt: hoursAfter(daysFromTodayAt(2, 23, 30), 6),
-      venueName: "Good Room",
       address: "98 Meserole Ave, Brooklyn, NY 11222",
       city: "Brooklyn",
       state: "NY",
@@ -692,7 +678,6 @@ async function main() {
       avatarImageUrl: null,
       startAt: daysFromTodayAt(0, 16, 0),
       endAt: hoursAfter(daysFromTodayAt(1, 16, 0), 1.5),
-      venueName: "Elsewhere (Rooftop)",
       address: "599 Johnson Ave, Brooklyn, NY 11237",
       city: "Brooklyn",
       state: "NY",
@@ -709,7 +694,6 @@ async function main() {
       avatarImageUrl: null,
       startAt: daysFromTodayAt(2, 20, 0),
       endAt: hoursAfter(daysFromTodayAt(2, 20, 0), 3),
-      venueName: "Good Room (Front Bar)",
       address: "98 Meserole Ave, Brooklyn, NY 11222",
       city: "Brooklyn",
       state: "NY",
@@ -754,11 +738,10 @@ async function main() {
     const toEventKey = (event: {
       title: string;
       startAt: Date;
-      venueName?: string | null;
       city: string;
       state: string;
     }) =>
-      `${event.title}::${event.startAt.toISOString()}::${event.venueName ?? ""}::${event.city}::${event.state}`;
+      `${event.title}::${event.startAt.toISOString()}::${event.city}::${event.state}`;
 
     const categoryKeysByEventKey = new Map(
       eventData.map((event) => [

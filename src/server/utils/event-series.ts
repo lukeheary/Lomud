@@ -225,7 +225,6 @@ export async function materializeEventSeries(
           durationMinutes == null
             ? null
             : new Date(startAt.getTime() + durationMinutes * 60 * 1000),
-        venueName: series.venueName,
         address: series.address,
         city: series.city,
         state: series.state,
