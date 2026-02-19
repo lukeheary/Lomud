@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/sheet";
 import { useClerk } from "@clerk/nextjs";
 import { NotificationsBell } from "@/components/notifications-bell";
-import { truculenta } from "@/lib/fonts";
+import { WigLogo } from "@/components/ui/wig-logo";
 import {
   NavbarSearchProvider,
   useNavbarSearch,
@@ -111,12 +111,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
         <div className="container mx-auto flex h-14 items-center md:h-16">
           {/* Left Side - Logo */}
           <div className="flex items-center">
-            <Link
-              href="/home"
-              className="flex items-center gap-2 text-4xl font-black tracking-wide"
-            >
-              <span className={truculenta.className}>WIG</span>
-            </Link>
+            <WigLogo />
           </div>
 
           {/* Center - Desktop Navigation */}

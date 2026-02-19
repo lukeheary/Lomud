@@ -72,6 +72,7 @@ import { useNavbarSearch } from "@/contexts/nav-search-context";
 import { getDistanceMiles, type Coordinates } from "@/lib/geo";
 import { resolveMetroArea } from "@/lib/metro-areas";
 import { StickySearchBar } from "@/components/ui/sticky-search-bar";
+import { StickySectionHeader } from "@/components/ui/sticky-section-header";
 
 type ViewMode = "week" | "month";
 
@@ -82,100 +83,12 @@ function StickyDateHeader({
   dateHeader: string;
   isToday: boolean;
 }) {
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const [isHeaderSticky, setIsHeaderSticky] = useState(false);
-
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        // When the sentinel goes above the nav (64px), the header is sticking
-        setIsHeaderSticky(!entry.isIntersecting);
-      },
-      {
-        rootMargin: "-65px 0px 0px 0px",
-        threshold: 0,
-      }
-    );
-
-    observer.observe(sentinel);
-
-    return () => {
-      observer.unobserve(sentinel);
-    };
-  }, []);
-
   return (
-    <>
-      {/* Sentinel to detect when header starts sticking */}
-      <div ref={sentinelRef} className="h-0 w-full" />
-      {/* Full-width sticky header */}
-      <div
-        className={cn(
-          "sticky top-14 z-30 w-full md:top-16"
-          // isHeaderSticky && "border-b"
-        )}
-      >
-        {/* Inner container to align text with page content */}
-        <div className="container mx-auto flex flex-row px-4">
-          <div
-            className={cn(
-              "w-fit bg-background pr-0.5 text-xl font-semibold",
-              isToday && "text-primary"
-            )}
-          >
-            {dateHeader}
-          </div>
-
-          <img src={"/svg/header-corner.svg"} alt="corner" />
-        </div>
-      </div>
-    </>
-  );
-}
-
-function StickySectionHeader({ children }: { children: React.ReactNode }) {
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const [isHeaderSticky, setIsHeaderSticky] = useState(false);
-
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsHeaderSticky(!entry.isIntersecting);
-      },
-      {
-        rootMargin: "-65px 0px 0px 0px",
-        threshold: 0,
-      }
-    );
-
-    observer.observe(sentinel);
-
-    return () => {
-      observer.unobserve(sentinel);
-    };
-  }, []);
-
-  return (
-    <>
-      <div ref={sentinelRef} className="h-0 w-full" />
-      <div
-        className={cn(
-          "sticky top-14 z-30 w-full md:top-16"
-          // isHeaderSticky && "border-b"
-        )}
-      >
-        <div className="container mx-auto flex flex-row px-4">
-          <div className="w-fit bg-background pr-0.5">{children}</div>
-          <img src={"/svg/header-corner.svg"} alt="corner" />
-        </div>
-      </div>
-    </>
+    <StickySectionHeader>
+      <span className={cn("text-xl font-semibold", isToday && "text-primary")}>
+        {dateHeader}
+      </span>
+    </StickySectionHeader>
   );
 }
 
@@ -693,25 +606,6 @@ function HomePageContent() {
             </div>
           </div>
         </StickySearchBar>
-
-        {/*  <Tabs*/}
-        {/*    value={viewMode}*/}
-        {/*    onValueChange={(value) => setViewMode(value as ViewMode)}*/}
-        {/*  >*/}
-        {/*    <TabsList>*/}
-        {/*      <TabsTrigger value="week">Week</TabsTrigger>*/}
-        {/*      <TabsTrigger value="month">Month</TabsTrigger>*/}
-        {/*    </TabsList>*/}
-        {/*  </Tabs>*/}
-        {/*</div>*/}
-
-        {/* Loading Indicator */}
-        {/*{isFetching && (*/}
-        {/*  <div className="absolute right-0 top-0 flex items-center gap-2 p-4 md:relative md:p-0 md:pt-4">*/}
-        {/*    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />*/}
-        {/*    <span className="text-sm text-muted-foreground">Updating events...</span>*/}
-        {/*  </div>*/}
-        {/*)}*/}
 
         {/* Initial / Transition Loading State */}
         {showSkeletons && (

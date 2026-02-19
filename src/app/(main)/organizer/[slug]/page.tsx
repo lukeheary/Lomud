@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useRef, useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -25,52 +25,7 @@ import { VenueHoursDisplay } from "@/components/venue-hours-display";
 import { VenueHours } from "@/components/venue-hours-editor";
 import pluralize from "pluralize";
 import { cn } from "@/lib/utils";
-
-function StickyHeader({ title }: { title: string }) {
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const [isHeaderSticky, setIsHeaderSticky] = useState(false);
-
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        // When the sentinel goes above the nav (64px), the header is sticking
-        setIsHeaderSticky(!entry.isIntersecting);
-      },
-      {
-        rootMargin: "-65px 0px 0px 0px",
-        threshold: 0,
-      }
-    );
-
-    observer.observe(sentinel);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-
-  return (
-    <>
-      <div ref={sentinelRef} className="h-0 w-full" />
-      <div
-        className={cn(
-          "sticky top-14 z-30 w-full md:top-16"
-          // isHeaderSticky && "border-b"
-        )}
-      >
-        <div className="container mx-auto flex flex-row px-4">
-          <div className="w-fit bg-background pr-0.5 text-xl font-semibold">
-            {title}
-          </div>
-          <img src={"/svg/header-corner.svg"} alt="corner" />
-        </div>
-      </div>
-    </>
-  );
-}
+import { StickySectionHeader } from "@/components/ui/sticky-section-header";
 
 export default function PlacePage() {
   const params = useParams();
@@ -405,7 +360,7 @@ export default function PlacePage() {
       </div>
 
       <div className="pt-8">
-        <StickyHeader title="Upcoming Events" />
+        <StickySectionHeader><span className="text-xl font-semibold">Upcoming Events</span></StickySectionHeader>
         <div className="container mx-auto">
           {place.events && place.events.length > 0 ? (
             <EventCardGrid
@@ -426,7 +381,7 @@ export default function PlacePage() {
       {/* Previous Events */}
       {place.pastEvents && (place.pastEvents as any[]).length > 0 && (
         <div className="pt-8">
-          <StickyHeader title="Past Events" />
+          <StickySectionHeader><span className="text-xl font-semibold">Past Events</span></StickySectionHeader>
           <div className="container mx-auto">
             <EventCardGrid
               events={place.pastEvents as any}

@@ -1,0 +1,50 @@
+"use client";
+
+import { useRef, useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
+
+interface StickySectionHeaderProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+export function StickySectionHeader({
+  children,
+  className,
+}: StickySectionHeaderProps) {
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const [, setIsSticky] = useState(false);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsSticky(!entry.isIntersecting);
+      },
+      {
+        rootMargin: "-65px 0px 0px 0px",
+        threshold: 0,
+      }
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.unobserve(sentinel);
+    };
+  }, []);
+
+  return (
+    <>
+      <div ref={sentinelRef} className="h-0 w-full" />
+      <div className={cn("sticky top-14 z-30 w-full md:top-16", className)}>
+        <div className="container mx-auto flex flex-row px-4">
+          <div className="w-fit bg-background pr-0.5">{children}</div>
+          <img src={"/svg/header-corner.svg"} alt="" aria-hidden />
+        </div>
+      </div>
+    </>
+  );
+}

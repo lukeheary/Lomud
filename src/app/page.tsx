@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { AvatarStack } from "@/components/ui/avatar-stack";
 import { Card } from "@/components/ui/card";
 import { truculenta } from "@/lib/fonts";
+import { WigLogo } from "@/components/ui/wig-logo";
 import { LandingPageRedirect } from "@/components/landing-page-redirect";
 import { LandingEventsPreview } from "@/components/landing/landing-events-preview";
 
@@ -90,9 +91,7 @@ export default async function LandingPage() {
         {/* Navigation */}
         <header className="sticky top-0 z-50 bg-background">
           <div className="container mx-auto flex h-14 items-center justify-between px-4 md:h-16">
-            <div className="flex items-center gap-2 text-4xl font-black tracking-wide">
-              <span className={truculenta.className}>WIG</span>
-            </div>
+            <WigLogo asLink={false} />
             <div className="flex items-center gap-2">
               <Link href="/sign-in">
                 <Button variant="ghost">Sign In</Button>
