@@ -57,12 +57,20 @@ function StickyHeader({ title }: { title: string }) {
       <div ref={sentinelRef} className="h-0 w-full" />
       <div
         className={cn(
-          "sticky top-16 z-30 w-full bg-background pb-2"
+          "sticky top-16 z-30 w-full pb-2"
           // isHeaderSticky && "border-b"
         )}
       >
-        <div className="container mx-auto">
-          <div className="text-xl font-semibold">{title}</div>
+        <div className="container mx-auto flex flex-row px-4">
+          <div className="w-fit bg-background pr-0.5 text-xl font-semibold">
+            {title}
+          </div>
+          <div
+            className="h-[36px] w-8 bg-background"
+            style={{
+              clipPath: "polygon(0 0, 100% 0, 0 100%)",
+            }}
+          />
         </div>
       </div>
     </>

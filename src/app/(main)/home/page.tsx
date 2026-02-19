@@ -122,7 +122,7 @@ function StickyDateHeader({
         <div className="container mx-auto flex flex-row px-4">
           <div
             className={cn(
-              "w-fit bg-background pb-1 text-xl font-semibold",
+              "w-fit bg-background pr-0.5 text-xl font-semibold",
               isToday && "text-primary"
             )}
           >
@@ -130,7 +130,7 @@ function StickyDateHeader({
           </div>
 
           <div
-            className="h-[32px] w-8 bg-background"
+            className="h-[36px] w-8 bg-background"
             style={{
               clipPath: "polygon(0 0, 100% 0, 0 100%)",
             }}
@@ -171,11 +171,19 @@ function StickySectionHeader({ children }: { children: React.ReactNode }) {
       <div ref={sentinelRef} className="h-0 w-full" />
       <div
         className={cn(
-          "sticky top-16 z-30 w-full bg-background pb-2"
+          "sticky top-16 z-30 w-full pb-2"
           // isHeaderSticky && "border-b"
         )}
       >
-        <div className="container mx-auto px-4">{children}</div>
+        <div className="container mx-auto flex flex-row px-4">
+          <div className="w-fit bg-background pr-0.5">{children}</div>
+          <div
+            className="h-[36px] w-8 bg-background"
+            style={{
+              clipPath: "polygon(0 0, 100% 0, 0 100%)",
+            }}
+          />
+        </div>
       </div>
     </>
   );
