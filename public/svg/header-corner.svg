@@ -1,15 +1,17 @@
-<svg width="23" height="36" viewBox="0 0 23 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g clip-path="url(#clip0_74_245)">
-<ellipse cx="5" cy="9.5" rx="7" ry="11.5" fill="#121214"/>
-<ellipse cx="4.5" cy="4" rx="9.5" ry="6" fill="#121214"/>
-<ellipse cx="8" cy="-1" rx="9" ry="6" fill="#121214"/>
-<ellipse cx="0.5" cy="19" rx="10.5" ry="16" fill="#121214"/>
-<ellipse cx="12.5" cy="-4" rx="9.5" ry="6" fill="#121214"/>
-<path d="M-2.5 35.5C-2.5 35.5 0.974471 36.3943 5.49999 33C13.8829 26.7125 7.87998 8.62359 16 1.99999C20.2867 -1.49675 29.5 -1 29.5 -1" stroke="#121214"/>
+<svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_75_268)">
+<path d="M-9.50001 35C-9.50001 35 -1.67103 37.6242 3 34C11.43 27.4592 11.2167 8.72565 19.5 2C23.2439 -1.03987 29.5 -1.50001 29.5 -1.50001" stroke="#121214"/>
+<ellipse cy="18" rx="8" ry="17" fill="#121214"/>
+<ellipse cx="2" cy="16" rx="8" ry="17" fill="#121214"/>
+<ellipse cx="4" cy="11" rx="8" ry="17" fill="#121214"/>
+<ellipse cx="7" cy="3" rx="8" ry="17" fill="#121214"/>
+<ellipse cx="8" cy="3" rx="8" ry="9" fill="#121214"/>
+<ellipse cx="11" cy="-1" rx="8" ry="9" fill="#121214"/>
+<ellipse cx="16" cy="-6" rx="8" ry="9" fill="#121214"/>
 </g>
 <defs>
-<clipPath id="clip0_74_245">
-<rect width="23" height="36" fill="white"/>
+<clipPath id="clip0_75_268">
+<rect width="36" height="36" fill="white"/>
 </clipPath>
 </defs>
 </svg>
