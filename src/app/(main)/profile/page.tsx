@@ -25,6 +25,12 @@ export default function ProfilePage() {
     isLoading,
     isError,
   } = trpc.user.getCurrentUser.useQuery();
+  const { data: myPartner } = trpc.partners.getMyPartner.useQuery();
+  const { data: pendingPartnerRequests } =
+    trpc.partners.getPendingPartnerRequests.useQuery();
+  const { data: acceptedFriends } = trpc.friends.listFriends.useQuery({
+    statusFilter: "accepted",
+  });
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -41,6 +47,7 @@ export default function ProfilePage() {
   const [emailStep, setEmailStep] = useState<"idle" | "code">("idle");
   const [pendingEmail, setPendingEmail] = useState<any>(null);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const [partnerSearch, setPartnerSearch] = useState("");
 
   const createEmailAddress = useReverification((email: string) =>
     clerkUser?.createEmailAddress({ email })
@@ -178,6 +185,81 @@ export default function ProfilePage() {
         description: "Your email has been updated successfully",
       });
       utils.user.getCurrentUser.invalidate();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const invalidatePartnerQueries = () => {
+    utils.partners.getMyPartner.invalidate();
+    utils.partners.getPendingPartnerRequests.invalidate();
+    utils.friends.listFriends.invalidate();
+  };
+
+  const sendPartnerRequestMutation = trpc.partners.sendPartnerRequest.useMutation({
+    onSuccess: () => {
+      toast({
+        title: "Partner request sent",
+        description: "Your partner request has been sent",
+      });
+      setPartnerSearch("");
+      invalidatePartnerQueries();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const acceptPartnerRequestMutation =
+    trpc.partners.acceptPartnerRequest.useMutation({
+      onSuccess: () => {
+        toast({
+          title: "Partner request accepted",
+          description: "Your partner has been set",
+        });
+        invalidatePartnerQueries();
+      },
+      onError: (error) => {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      },
+    });
+
+  const declinePartnerRequestMutation =
+    trpc.partners.declinePartnerRequest.useMutation({
+      onSuccess: () => {
+        toast({
+          title: "Partner request removed",
+        });
+        invalidatePartnerQueries();
+      },
+      onError: (error) => {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      },
+    });
+
+  const removePartnerMutation = trpc.partners.removePartner.useMutation({
+    onSuccess: () => {
+      toast({
+        title: "Partner removed",
+      });
+      invalidatePartnerQueries();
     },
     onError: (error) => {
       toast({
@@ -383,6 +465,42 @@ export default function ProfilePage() {
       </div>
     );
   }
+
+  const partnerMutationsBusy =
+    sendPartnerRequestMutation.isPending ||
+    acceptPartnerRequestMutation.isPending ||
+    declinePartnerRequestMutation.isPending ||
+    removePartnerMutation.isPending;
+
+  const pendingSentRelationship =
+    myPartner?.status === "pending" && myPartner.isRequester ? myPartner : null;
+  const pendingReceivedRelationship =
+    myPartner?.status === "pending" && !myPartner.isRequester
+      ? myPartner
+      : pendingPartnerRequests?.[0]
+        ? {
+            id: pendingPartnerRequests[0].id,
+            partner: pendingPartnerRequests[0].partner,
+            status: pendingPartnerRequests[0].status,
+            isRequester: false,
+          }
+        : null;
+  const acceptedRelationship = myPartner?.status === "accepted" ? myPartner : null;
+
+  const acceptedFriendCandidates = (acceptedFriends || [])
+    .map((friendship) => friendship.friend)
+    .filter((friend): friend is NonNullable<typeof friend> => Boolean(friend));
+  const filteredPartnerCandidates = acceptedFriendCandidates.filter((friend) => {
+    const fullName = `${friend.firstName || ""} ${friend.lastName || ""}`
+      .trim()
+      .toLowerCase();
+    const query = partnerSearch.trim().toLowerCase();
+    return (
+      query.length === 0 ||
+      fullName.includes(query) ||
+      (friend.username || "").toLowerCase().includes(query)
+    );
+  });
 
   return (
     <div className="container mx-auto max-w-2xl space-y-6 py-8">
@@ -637,6 +755,173 @@ export default function ProfilePage() {
             </>
             {/*)}*/}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Partner</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {acceptedRelationship ? (
+            <>
+              <div className="flex items-center gap-3 rounded-lg border p-3">
+                <UserAvatar
+                  src={acceptedRelationship.partner.avatarImageUrl}
+                  name={acceptedRelationship.partner.firstName}
+                  className="h-12 w-12"
+                />
+                <div>
+                  <p className="font-medium">
+                    {acceptedRelationship.partner.firstName}{" "}
+                    {acceptedRelationship.partner.lastName}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    @{acceptedRelationship.partner.username}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (
+                    !window.confirm(
+                      `Remove ${acceptedRelationship.partner.firstName} as your partner?`
+                    )
+                  ) {
+                    return;
+                  }
+                  removePartnerMutation.mutate();
+                }}
+                disabled={partnerMutationsBusy}
+              >
+                {removePartnerMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Remove Partner
+              </Button>
+            </>
+          ) : pendingSentRelationship ? (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Partner request pending, waiting for{" "}
+                <span className="font-medium text-foreground">
+                  {pendingSentRelationship.partner.firstName}
+                </span>{" "}
+                to accept.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() =>
+                  declinePartnerRequestMutation.mutate({
+                    partnerId: pendingSentRelationship.id,
+                  })
+                }
+                disabled={partnerMutationsBusy}
+              >
+                {declinePartnerRequestMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Cancel Request
+              </Button>
+            </>
+          ) : pendingReceivedRelationship ? (
+            <>
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">
+                  {pendingReceivedRelationship.partner.firstName}
+                </span>{" "}
+                sent you a partner request.
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() =>
+                    acceptPartnerRequestMutation.mutate({
+                      partnerId: pendingReceivedRelationship.id,
+                    })
+                  }
+                  disabled={partnerMutationsBusy}
+                >
+                  {acceptPartnerRequestMutation.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Accept
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    declinePartnerRequestMutation.mutate({
+                      partnerId: pendingReceivedRelationship.id,
+                    })
+                  }
+                  disabled={partnerMutationsBusy}
+                >
+                  {declinePartnerRequestMutation.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Decline
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="partner-search">Choose from your friends</Label>
+                <Input
+                  id="partner-search"
+                  value={partnerSearch}
+                  onChange={(event) => setPartnerSearch(event.target.value)}
+                  placeholder="Search accepted friends..."
+                />
+              </div>
+              {acceptedFriendCandidates.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  You need an accepted friend before you can choose a partner.
+                </p>
+              ) : filteredPartnerCandidates.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No friends found.</p>
+              ) : (
+                <div className="space-y-2">
+                  {filteredPartnerCandidates.slice(0, 6).map((friend) => (
+                    <div
+                      key={friend.id}
+                      className="flex items-center justify-between rounded-lg border p-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        <UserAvatar
+                          src={friend.avatarImageUrl}
+                          name={friend.firstName}
+                          className="h-10 w-10"
+                        />
+                        <div>
+                          <p className="font-medium">
+                            {friend.firstName} {friend.lastName}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            @{friend.username}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          sendPartnerRequestMutation.mutate({
+                            recipientId: friend.id,
+                          })
+                        }
+                        disabled={partnerMutationsBusy}
+                      >
+                        {sendPartnerRequestMutation.isPending && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Send Request
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
 

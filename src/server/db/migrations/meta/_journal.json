@@ -155,6 +155,20 @@
       "when": 1771410000000,
       "tag": "0021_add_event_series",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1771472562360,
+      "tag": "0022_user_partners",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1771473611404,
+      "tag": "0023_partner_rsvp_mirroring",
+      "breakpoints": true
     }
   ]
 }

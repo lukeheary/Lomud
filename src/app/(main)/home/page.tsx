@@ -114,17 +114,27 @@ function StickyDateHeader({
       {/* Full-width sticky header */}
       <div
         className={cn(
-          "sticky top-16 z-30 w-full bg-background pb-2"
+          "sticky top-16 z-30 w-full pb-2"
           // isHeaderSticky && "border-b"
         )}
       >
         {/* Inner container to align text with page content */}
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto flex flex-row px-4">
           <div
-            className={cn("text-xl font-semibold", isToday && "text-primary")}
+            className={cn(
+              "w-fit bg-background pb-1 text-xl font-semibold",
+              isToday && "text-primary"
+            )}
           >
             {dateHeader}
           </div>
+
+          <div
+            className="h-[32px] w-8 bg-background"
+            style={{
+              clipPath: "polygon(0 0, 100% 0, 0 100%)",
+            }}
+          />
         </div>
       </div>
     </>
@@ -591,99 +601,99 @@ function HomePageContent() {
 
         {/* Search and Filters */}
         <StickySearchBar>
-            {/* Search Input */}
-            <div className="flex w-full flex-row">
-              <Suspense fallback={null}>
-                <SearchInput
-                  ref={searchInputRef}
-                  placeholder="Search events..."
-                  value={searchQuery}
-                  onChange={setSearchQuery}
-                  onFocus={() => setIsSearchMode(true)}
-                  showBack={isSearchMode}
-                  onBack={handleExitSearch}
-                  className="w-full"
-                />
-              </Suspense>
-              <div
-                className={cn(
-                  "shrink-0 overflow-hidden transition-all duration-200 ease-out md:hidden",
-                  isSearchMode ? "ml-0 w-0 opacity-0" : "ml-2 opacity-100"
-                )}
-              >
-                <div className="flex h-12 items-center overflow-hidden rounded-full border border-input bg-background shadow-sm">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-full w-10 rounded-none border-r bg-muted px-0"
-                    onClick={handlePrevious}
-                    disabled={isCurrentWeek}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-full w-10 rounded-none bg-muted px-0 focus:bg-muted/80"
-                    onClick={handleNext}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
+          {/* Search Input */}
+          <div className="flex w-full flex-row">
+            <Suspense fallback={null}>
+              <SearchInput
+                ref={searchInputRef}
+                placeholder="Search events..."
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onFocus={() => setIsSearchMode(true)}
+                showBack={isSearchMode}
+                onBack={handleExitSearch}
+                className="w-full"
+              />
+            </Suspense>
+            <div
+              className={cn(
+                "shrink-0 overflow-hidden transition-all duration-200 ease-out md:hidden",
+                isSearchMode ? "ml-0 w-0 opacity-0" : "ml-2 opacity-100"
+              )}
+            >
+              <div className="flex h-12 items-center overflow-hidden rounded-full border border-input bg-background shadow-sm">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-full w-10 rounded-none border-r bg-muted px-0"
+                  onClick={handlePrevious}
+                  disabled={isCurrentWeek}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-full w-10 rounded-none bg-muted px-0 focus:bg-muted/80"
+                  onClick={handleNext}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
             </div>
+          </div>
 
-            <div className="flex w-full gap-2 sm:w-fit">
-              {/* City Filter */}
-              <ResponsiveSelect
-                value={effectiveCity ?? "all"}
-                onValueChange={setSelectedCity}
-                options={[
-                  { value: "all", label: "All Cities" },
-                  ...(cities?.map((city) => ({
-                    value: city.city,
-                    label: `${city.city}, ${city.state}`,
-                  })) || []),
-                ]}
-                placeholder="Select city"
-                title="Select City"
-                className="flex-1 shrink-0 sm:w-[200px]"
-              />
+          <div className="flex w-full gap-2 sm:w-fit">
+            {/* City Filter */}
+            <ResponsiveSelect
+              value={effectiveCity ?? "all"}
+              onValueChange={setSelectedCity}
+              options={[
+                { value: "all", label: "All Cities" },
+                ...(cities?.map((city) => ({
+                  value: city.city,
+                  label: `${city.city}, ${city.state}`,
+                })) || []),
+              ]}
+              placeholder="Select city"
+              title="Select City"
+              className="flex-1 shrink-0 sm:w-[200px]"
+            />
 
-              <EventFilterSelect
-                value={activeFilter}
-                onValueChange={setActiveFilter}
-                className="w-[160px] shrink-0"
-              />
+            <EventFilterSelect
+              value={activeFilter}
+              onValueChange={setActiveFilter}
+              className="w-[160px] shrink-0"
+            />
 
-              {/* Navigation Controls - fixed width wrapper for smooth transition */}
-              <div
-                className={cn(
-                  "hidden shrink-0 overflow-hidden transition-all duration-200 ease-out md:block",
-                  isSearchMode ? "w-0 opacity-0" : "w-[82px] opacity-100"
-                )}
-              >
-                <div className="flex h-12 items-center overflow-hidden rounded-full border border-input bg-background shadow-sm">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-full w-10 shrink-0 rounded-none border-r bg-muted px-0 hover:bg-muted/60"
-                    onClick={handlePrevious}
-                    disabled={isCurrentWeek}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-full w-10 shrink-0 rounded-none bg-muted px-0 hover:bg-muted/80"
-                    onClick={handleNext}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
+            {/* Navigation Controls - fixed width wrapper for smooth transition */}
+            <div
+              className={cn(
+                "hidden shrink-0 overflow-hidden transition-all duration-200 ease-out md:block",
+                isSearchMode ? "w-0 opacity-0" : "w-[82px] opacity-100"
+              )}
+            >
+              <div className="flex h-12 items-center overflow-hidden rounded-full border border-input bg-background shadow-sm">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-full w-10 shrink-0 rounded-none border-r bg-muted px-0 hover:bg-muted/60"
+                  onClick={handlePrevious}
+                  disabled={isCurrentWeek}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-full w-10 shrink-0 rounded-none bg-muted px-0 hover:bg-muted/80"
+                  onClick={handleNext}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
             </div>
+          </div>
         </StickySearchBar>
 
         {/*  <Tabs*/}

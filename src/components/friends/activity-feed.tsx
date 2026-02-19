@@ -54,6 +54,14 @@ function ActivityItem({ activity }: ActivityItemProps) {
         {actor.firstName} {actor.lastName}
       </span>
     );
+    const subjectName = activity.partnerFirstName ? (
+      <span className="font-medium text-foreground">
+        {actor.firstName} and {activity.partnerFirstName}
+      </span>
+    ) : (
+      actorName
+    );
+    const isPluralSubject = Boolean(activity.partnerFirstName);
 
     const entityName =
       activity.event?.title ||
@@ -67,7 +75,8 @@ function ActivityItem({ activity }: ActivityItemProps) {
       case "rsvp_going":
         return (
           <>
-            {actorName} {isEventPast ? "went to" : "is going to"}{" "}
+            {subjectName}{" "}
+            {isEventPast ? "went to" : isPluralSubject ? "are going to" : "is going to"}{" "}
             <Link
               href={`/event/${entityId}`}
               className="font-medium text-primary hover:underline"
@@ -97,7 +106,14 @@ function ActivityItem({ activity }: ActivityItemProps) {
       case "rsvp_interested":
         return (
           <>
-            {actorName} {isEventPast ? "was interested in" : "is interested in"}{" "}
+            {subjectName}{" "}
+            {isEventPast
+              ? isPluralSubject
+                ? "were interested in"
+                : "was interested in"
+              : isPluralSubject
+                ? "are interested in"
+                : "is interested in"}{" "}
             <Link
               href={`/event/${entityId}`}
               className="font-medium text-primary hover:underline"

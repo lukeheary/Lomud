@@ -7,6 +7,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Calendar,
   MapPin,
@@ -22,7 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { AvatarStack } from "@/components/ui/avatar-stack";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type RsvpStatus = "going" | "interested" | "not_going";
 
@@ -94,6 +95,8 @@ export default function EventPage() {
 
   // Get current user
   const { data: currentUser } = trpc.user.getCurrentUser.useQuery();
+  const { data: myPartner } = trpc.partners.getMyPartner.useQuery();
+  const [includePartner, setIncludePartner] = useState(true);
 
   // RSVP mutation
   const rsvpMutation = trpc.event.setRsvpStatus.useMutation({
@@ -132,12 +135,26 @@ export default function EventPage() {
     },
   });
 
+  useEffect(() => {
+    setIncludePartner(true);
+  }, [eventId, myPartner?.partner?.id, myPartner?.status]);
+
+  const hasActivePartner = myPartner?.status === "accepted";
+  const goingLabel =
+    hasActivePartner && includePartner ? "We're Going" : "I'm Going";
+  const interestedLabel =
+    hasActivePartner && includePartner ? "We're Interested" : "Interested";
+
   const handleRsvp = (status: RsvpStatus) => {
     // If clicking the same status button again, remove the RSVP
     if (event?.userRsvp?.status === status) {
       deleteRsvpMutation.mutate({ eventId });
     } else {
-      rsvpMutation.mutate({ eventId, status });
+      rsvpMutation.mutate({
+        eventId,
+        status,
+        includePartner: hasActivePartner && includePartner,
+      });
     }
   };
 
@@ -379,7 +396,7 @@ export default function EventPage() {
                   rsvpMutation.isPending || deleteRsvpMutation.isPending
                 }
               >
-                Interested
+                {interestedLabel}
               </Button>
               <Button
                 variant={
@@ -396,9 +413,24 @@ export default function EventPage() {
                   rsvpMutation.isPending || deleteRsvpMutation.isPending
                 }
               >
-                {event.userRsvp?.status === "going" ? "Going" : "I'm Going"}
+                {event.userRsvp?.status === "going" ? "Going" : goingLabel}
               </Button>
             </div>
+            {hasActivePartner && (
+              <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
+                <Checkbox
+                  id="include-partner"
+                  checked={includePartner}
+                  onCheckedChange={(checked) => setIncludePartner(checked === true)}
+                  disabled={
+                    rsvpMutation.isPending || deleteRsvpMutation.isPending
+                  }
+                />
+                <label htmlFor="include-partner" className="cursor-pointer">
+                  Include {myPartner.partner.firstName}
+                </label>
+              </div>
+            )}
 
             {/*<Separator />*/}
 

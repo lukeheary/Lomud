@@ -69,6 +69,11 @@ export const recurrenceFrequencyEnum = pgEnum("recurrence_frequency", [
   "weekly",
 ]);
 
+export const partnerStatusEnum = pgEnum("partner_status", [
+  "pending",
+  "accepted",
+]);
+
 // ============================================================================
 // USERS TABLE
 // ============================================================================
@@ -105,6 +110,10 @@ export const usersRelations = relations(users, ({ many }) => ({
   eventSeries: many(eventSeries),
   sentFriendRequests: many(friends, { relationName: "sentRequests" }),
   receivedFriendRequests: many(friends, { relationName: "receivedRequests" }),
+  sentPartnerRequests: many(userPartners, { relationName: "partnerRequests" }),
+  receivedPartnerRequests: many(userPartners, {
+    relationName: "partnerReceipts",
+  }),
   activities: many(activityEvents),
 }));
 
@@ -554,6 +563,10 @@ export const rsvps = pgTable(
     eventId: uuid("event_id")
       .notNull()
       .references(() => events.id, { onDelete: "cascade" }),
+    partnerRsvpByUserId: text("partner_rsvp_by_user_id").references(
+      () => users.id,
+      { onDelete: "set null" }
+    ),
     status: rsvpStatusEnum("status").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -568,6 +581,9 @@ export const rsvps = pgTable(
       table.status
     ),
     userIdx: index("rsvps_user_idx").on(table.userId),
+    partnerRsvpByUserIdx: index("rsvps_partner_rsvp_by_user_idx").on(
+      table.partnerRsvpByUserId
+    ),
   })
 );
 
@@ -669,5 +685,43 @@ export const activityEventsRelations = relations(activityEvents, ({ one }) => ({
   place: one(places, {
     fields: [activityEvents.entityId],
     references: [places.id],
+  }),
+}));
+
+// ============================================================================
+// USER PARTNERS TABLE
+// ============================================================================
+export const userPartners = pgTable(
+  "user_partners",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    requesterId: text("requester_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    recipientId: text("recipient_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    status: partnerStatusEnum("status").notNull().default("pending"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    // Each user can only be a requester once (one partner at a time)
+    requesterIdx: uniqueIndex("user_partners_requester_idx").on(table.requesterId),
+    // Each user can only be a recipient once (one partner at a time)
+    recipientIdx: uniqueIndex("user_partners_recipient_idx").on(table.recipientId),
+  })
+);
+
+export const userPartnersRelations = relations(userPartners, ({ one }) => ({
+  requester: one(users, {
+    fields: [userPartners.requesterId],
+    references: [users.id],
+    relationName: "partnerRequests",
+  }),
+  recipient: one(users, {
+    fields: [userPartners.recipientId],
+    references: [users.id],
+    relationName: "partnerReceipts",
   }),
 }));

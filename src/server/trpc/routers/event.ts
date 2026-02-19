@@ -13,6 +13,7 @@ import {
   cities,
   metroAreas,
   rsvps,
+  userPartners,
   users,
 } from "../../db/schema";
 import { and, desc, eq, gte, ilike, inArray, lte, or, sql } from "drizzle-orm";
@@ -872,6 +873,7 @@ export const eventRouter = router({
       z.object({
         eventId: z.string().uuid(),
         status: z.enum(["going", "interested", "not_going"]),
+        includePartner: z.boolean().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -887,6 +889,26 @@ export const eventRouter = router({
         });
       }
 
+      const partnerRelationship = await ctx.db.query.userPartners.findFirst({
+        where: and(
+          eq(userPartners.status, "accepted"),
+          or(
+            eq(userPartners.requesterId, ctx.auth.userId),
+            eq(userPartners.recipientId, ctx.auth.userId)
+          )
+        ),
+      });
+
+      const partnerUserId = partnerRelationship
+        ? partnerRelationship.requesterId === ctx.auth.userId
+          ? partnerRelationship.recipientId
+          : partnerRelationship.requesterId
+        : null;
+      const shouldMirrorPartnerRsvp =
+        Boolean(partnerUserId) &&
+        input.includePartner === true &&
+        (input.status === "going" || input.status === "interested");
+
       // Upsert RSVP
       const [rsvp] = await ctx.db
         .insert(rsvps)
@@ -894,15 +916,59 @@ export const eventRouter = router({
           userId: ctx.auth.userId,
           eventId: input.eventId,
           status: input.status,
+          partnerRsvpByUserId: null,
         })
         .onConflictDoUpdate({
           target: [rsvps.userId, rsvps.eventId],
           set: {
             status: input.status,
+            partnerRsvpByUserId: null,
             updatedAt: new Date(),
           },
         })
         .returning();
+
+      if (partnerUserId) {
+        if (shouldMirrorPartnerRsvp) {
+          const existingPartnerRsvp = await ctx.db.query.rsvps.findFirst({
+            where: and(
+              eq(rsvps.userId, partnerUserId),
+              eq(rsvps.eventId, input.eventId)
+            ),
+          });
+
+          const canWriteMirroredRsvp =
+            !existingPartnerRsvp ||
+            existingPartnerRsvp.partnerRsvpByUserId === ctx.auth.userId;
+
+          if (canWriteMirroredRsvp) {
+            await ctx.db
+              .insert(rsvps)
+              .values({
+                userId: partnerUserId,
+                eventId: input.eventId,
+                status: input.status,
+                partnerRsvpByUserId: ctx.auth.userId,
+              })
+              .onConflictDoUpdate({
+                target: [rsvps.userId, rsvps.eventId],
+                set: {
+                  status: input.status,
+                  partnerRsvpByUserId: ctx.auth.userId,
+                  updatedAt: new Date(),
+                },
+              });
+          }
+        } else {
+          await ctx.db.delete(rsvps).where(
+            and(
+              eq(rsvps.userId, partnerUserId),
+              eq(rsvps.eventId, input.eventId),
+              eq(rsvps.partnerRsvpByUserId, ctx.auth.userId)
+            )
+          );
+        }
+      }
 
       if (rsvp && (input.status === "going" || input.status === "interested")) {
         void logActivity({
@@ -910,7 +976,10 @@ export const eventRouter = router({
           type: input.status === "going" ? "rsvp_going" : "rsvp_interested",
           entityType: "event",
           entityId: input.eventId,
-          metadata: { status: input.status },
+          metadata: {
+            status: input.status,
+            includePartner: shouldMirrorPartnerRsvp,
+          },
         });
       }
 
@@ -920,6 +989,22 @@ export const eventRouter = router({
   deleteRsvp: protectedProcedure
     .input(z.object({ eventId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
+      const partnerRelationship = await ctx.db.query.userPartners.findFirst({
+        where: and(
+          eq(userPartners.status, "accepted"),
+          or(
+            eq(userPartners.requesterId, ctx.auth.userId),
+            eq(userPartners.recipientId, ctx.auth.userId)
+          )
+        ),
+      });
+
+      const partnerUserId = partnerRelationship
+        ? partnerRelationship.requesterId === ctx.auth.userId
+          ? partnerRelationship.recipientId
+          : partnerRelationship.requesterId
+        : null;
+
       await ctx.db
         .delete(rsvps)
         .where(
@@ -928,6 +1013,16 @@ export const eventRouter = router({
             eq(rsvps.userId, ctx.auth.userId)
           )
         );
+
+      if (partnerUserId) {
+        await ctx.db.delete(rsvps).where(
+          and(
+            eq(rsvps.eventId, input.eventId),
+            eq(rsvps.userId, partnerUserId),
+            eq(rsvps.partnerRsvpByUserId, ctx.auth.userId)
+          )
+        );
+      }
 
       return { success: true };
     }),

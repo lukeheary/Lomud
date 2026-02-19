@@ -3,6 +3,7 @@ import { placeRouter } from "./routers/place";
 import { adminRouter } from "./routers/admin";
 import { eventRouter } from "./routers/event";
 import { friendsRouter } from "./routers/friends";
+import { partnersRouter } from "./routers/partners";
 import { userRouter } from "./routers/user";
 import { categoryRouter } from "./routers/category";
 
@@ -11,6 +12,7 @@ export const appRouter = router({
   admin: adminRouter,
   event: eventRouter,
   friends: friendsRouter,
+  partners: partnersRouter,
   user: userRouter,
   category: categoryRouter,
 });

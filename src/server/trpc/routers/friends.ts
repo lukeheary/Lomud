@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { router, protectedProcedure } from "../init";
-import { users, friends, activityEvents } from "../../db/schema";
+import { users, friends, activityEvents, userPartners } from "../../db/schema";
 import { eq, and, or, ne, like, sql, inArray, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
@@ -366,6 +366,74 @@ export const friendsRouter = router({
         },
       });
 
-      return activities;
+      const actorIdsWithPartnerIncluded = [
+        ...new Set(
+          activities
+            .filter(
+              (activity) =>
+                (activity.type === "rsvp_going" ||
+                  activity.type === "rsvp_interested") &&
+                ((activity.metadata as { includePartner?: boolean } | null)
+                  ?.includePartner === true)
+            )
+            .map((activity) => activity.actorUserId)
+        ),
+      ];
+
+      if (actorIdsWithPartnerIncluded.length === 0) {
+        return activities;
+      }
+
+      const actorIdSet = new Set(actorIdsWithPartnerIncluded);
+      const partnerRelationships = await ctx.db.query.userPartners.findMany({
+        where: and(
+          eq(userPartners.status, "accepted"),
+          or(
+            inArray(userPartners.requesterId, actorIdsWithPartnerIncluded),
+            inArray(userPartners.recipientId, actorIdsWithPartnerIncluded)
+          )
+        ),
+        with: {
+          requester: true,
+          recipient: true,
+        },
+      });
+
+      const partnerFirstNameByActorId = new Map<string, string>();
+      for (const relationship of partnerRelationships) {
+        if (actorIdSet.has(relationship.requesterId) && relationship.recipient) {
+          partnerFirstNameByActorId.set(
+            relationship.requesterId,
+            relationship.recipient.firstName || "their partner"
+          );
+        }
+
+        if (actorIdSet.has(relationship.recipientId) && relationship.requester) {
+          partnerFirstNameByActorId.set(
+            relationship.recipientId,
+            relationship.requester.firstName || "their partner"
+          );
+        }
+      }
+
+      return activities.map((activity) => {
+        const includePartner =
+          (activity.metadata as { includePartner?: boolean } | null)
+            ?.includePartner === true;
+        const isPartnerEligibleType =
+          activity.type === "rsvp_going" || activity.type === "rsvp_interested";
+        const partnerFirstName = partnerFirstNameByActorId.get(
+          activity.actorUserId
+        );
+
+        if (!includePartner || !isPartnerEligibleType || !partnerFirstName) {
+          return activity;
+        }
+
+        return {
+          ...activity,
+          partnerFirstName,
+        };
+      });
     }),
 });
