@@ -108,7 +108,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
               : "border-border bg-background"
         )}
       >
-        <div className="container mx-auto flex h-16 items-center">
+        <div className="container mx-auto flex h-14 items-center md:h-16">
           {/* Left Side - Logo */}
           <div className="flex items-center">
             <Link
@@ -189,7 +189,11 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                 <NotificationsBell />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="rounded-full"
+                    >
                       <UserAvatar
                         src={user?.avatarImageUrl}
                         name={user?.firstName}
@@ -296,7 +300,10 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                       </Button>
                     </Link>
 
-                    <Link href="/venues-and-organizers" onClick={closeMobileMenu}>
+                    <Link
+                      href="/venues-and-organizers"
+                      onClick={closeMobileMenu}
+                    >
                       <Button
                         variant="ghost"
                         className={`w-full justify-start px-4 text-base ${isPlaces ? "text-foreground" : "text-muted-foreground"}`}

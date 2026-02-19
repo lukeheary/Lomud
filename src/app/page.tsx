@@ -89,7 +89,7 @@ export default async function LandingPage() {
       <div className="flex min-h-screen flex-col overflow-x-hidden">
         {/* Navigation */}
         <header className="sticky top-0 z-50 bg-background">
-          <div className="container mx-auto flex h-16 items-center justify-between px-4">
+          <div className="container mx-auto flex h-14 items-center justify-between px-4 md:h-16">
             <div className="flex items-center gap-2 text-4xl font-black tracking-wide">
               <span className={truculenta.className}>WIG</span>
             </div>

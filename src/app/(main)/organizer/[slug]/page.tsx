@@ -57,7 +57,7 @@ function StickyHeader({ title }: { title: string }) {
       <div ref={sentinelRef} className="h-0 w-full" />
       <div
         className={cn(
-          "sticky top-16 z-30 w-full"
+          "sticky top-14 z-30 w-full md:top-16"
           // isHeaderSticky && "border-b"
         )}
       >

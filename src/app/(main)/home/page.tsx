@@ -114,7 +114,7 @@ function StickyDateHeader({
       {/* Full-width sticky header */}
       <div
         className={cn(
-          "sticky top-16 z-30 w-full"
+          "sticky top-14 z-30 w-full md:top-16"
           // isHeaderSticky && "border-b"
         )}
       >
@@ -166,7 +166,7 @@ function StickySectionHeader({ children }: { children: React.ReactNode }) {
       <div ref={sentinelRef} className="h-0 w-full" />
       <div
         className={cn(
-          "sticky top-16 z-30 w-full"
+          "sticky top-14 z-30 w-full md:top-16"
           // isHeaderSticky && "border-b"
         )}
       >
@@ -765,26 +765,29 @@ function HomePageContent() {
       </div>
 
       {/* Friend Activity Feed - only show if there's activity and not in search mode */}
-      {!isSearchMode && !showSkeletons && hasRecentActivity && isCurrentWeek && (
-        <div className="mb-4">
-          <StickySectionHeader>
-            <div className="flex items-center gap-1 pb-1 md:pb-2">
-              <Link
-                href="/friends"
-                className="flex items-center gap-1 transition-colors hover:text-primary"
-              >
-                <h1 className="text-xl font-bold tracking-tight">
-                  Recent Activity
-                </h1>
-                <ChevronRight className="h-4 w-4" />
-              </Link>
+      {!isSearchMode &&
+        !showSkeletons &&
+        hasRecentActivity &&
+        isCurrentWeek && (
+          <div className="mb-4">
+            <StickySectionHeader>
+              <div className="flex items-center gap-1 pb-1 md:pb-2">
+                <Link
+                  href="/friends"
+                  className="flex items-center gap-1 transition-colors hover:text-primary"
+                >
+                  <h1 className="text-xl font-bold tracking-tight">
+                    Recent Activity
+                  </h1>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </StickySectionHeader>
+            <div className="container mx-auto px-4">
+              <ActivityFeed limit={3} hideWhenEmpty hidePastEvents />
             </div>
-          </StickySectionHeader>
-          <div className="container mx-auto px-4">
-            <ActivityFeed limit={3} hideWhenEmpty hidePastEvents />
           </div>
-        </div>
-      )}
+        )}
 
       {/* Week View - outside container for full-width sticky headers */}
       {!isSearchMode && viewMode === "week" && events && !showSkeletons && (
