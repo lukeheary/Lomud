@@ -65,12 +65,7 @@ function StickyHeader({ title }: { title: string }) {
           <div className="w-fit bg-background pr-0.5 text-xl font-semibold">
             {title}
           </div>
-          <div
-            className="h-[36px] w-8 bg-background"
-            style={{
-              clipPath: "polygon(0 0, 100% 0, 0 100%)",
-            }}
-          />
+          <img src={"/svg/header-corner.svg"} alt="corner" />
         </div>
       </div>
     </>

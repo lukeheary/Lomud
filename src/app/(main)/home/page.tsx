@@ -129,12 +129,7 @@ function StickyDateHeader({
             {dateHeader}
           </div>
 
-          <div
-            className="h-[36px] w-8 bg-background"
-            style={{
-              clipPath: "polygon(0 0, 100% 0, 0 100%)",
-            }}
-          />
+          <img src={"/svg/header-corner.svg"} alt="corner" />
         </div>
       </div>
     </>
@@ -177,12 +172,7 @@ function StickySectionHeader({ children }: { children: React.ReactNode }) {
       >
         <div className="container mx-auto flex flex-row px-4">
           <div className="w-fit bg-background pr-0.5">{children}</div>
-          <div
-            className="h-[36px] w-8 bg-background"
-            style={{
-              clipPath: "polygon(0 0, 100% 0, 0 100%)",
-            }}
-          />
+          <img src={"/svg/header-corner.svg"} alt="corner" />
         </div>
       </div>
     </>
