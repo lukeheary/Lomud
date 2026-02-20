@@ -687,7 +687,13 @@ function HomePageContent() {
             const dateKey = format(date, "yyyy-MM-dd");
             const dayEvents = eventsByDay[dateKey] || [];
             const isToday = isSameDay(date, new Date());
-            const dateHeader = format(date, "EEE, MMM d");
+            const currentHour = new Date().getHours();
+            const isEvening = currentHour >= 17;
+            const dateHeader = isToday
+              ? isEvening
+                ? "Tonight"
+                : "Today"
+              : format(date, "EEE, MMM d");
 
             return (
               <div key={dateKey}>
