@@ -110,7 +110,6 @@ export const users = pgTable(
 );
 
 export const usersRelations = relations(users, ({ many }) => ({
-  follows: many(follows),
   placeMembers: many(placeMembers),
   placeFollows: many(placeFollows),
   rsvps: many(rsvps),
@@ -379,30 +378,6 @@ export const placeFollowsRelations = relations(placeFollows, ({ one }) => ({
   place: one(places, {
     fields: [placeFollows.placeId],
     references: [places.id],
-  }),
-}));
-
-// ============================================================================
-// FOLLOWS TABLE
-// ============================================================================
-export const follows = pgTable(
-  "follows",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-  },
-  (table) => ({
-    userIdx: index("follows_user_idx").on(table.userId),
-  })
-);
-
-export const followsRelations = relations(follows, ({ one }) => ({
-  user: one(users, {
-    fields: [follows.userId],
-    references: [users.id],
   }),
 }));
 

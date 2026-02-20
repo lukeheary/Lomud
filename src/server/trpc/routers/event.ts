@@ -5,7 +5,6 @@ import {
   eventCategories,
   eventSeries,
   events,
-  follows,
   friends,
   placeFollows,
   placeMembers,
@@ -649,9 +648,6 @@ export const eventRouter = router({
 
       // Filter by followed places (venues and organizers)
       if (input.followedOnly) {
-        const userBusinessFollows = await ctx.db.query.follows.findMany({
-          where: eq(follows.userId, ctx.auth.userId),
-        });
         const userPlaceFollows = await ctx.db.query.placeFollows.findMany({
           where: eq(placeFollows.userId, ctx.auth.userId),
         });
