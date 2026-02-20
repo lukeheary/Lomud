@@ -675,7 +675,10 @@ export const placeRouter = router({
           .string()
           .min(3)
           .max(100)
-          .regex(/^[a-z0-9-]+$/)
+          .regex(
+            /^[a-z0-9_-]+$/,
+            "Slug must be lowercase alphanumeric with hyphens and underscores"
+          )
           .optional(),
         name: z.string().min(1).max(255).optional(),
         description: z.string().optional(),

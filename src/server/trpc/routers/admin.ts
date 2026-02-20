@@ -6,6 +6,7 @@ import {
   metroAreas,
   places,
   placeMembers,
+  scrapers,
   users,
 } from "../../db/schema";
 import { eq, and, or, ilike, desc, ne } from "drizzle-orm";
@@ -18,6 +19,7 @@ import {
 
 const placeTypeSchema = z.enum(["venue", "organizer"]);
 const placeMemberRoleSchema = z.enum(["owner", "manager", "promoter", "staff"]);
+const scraperTypeSchema = z.enum(["dice", "posh", "clubcafe", "ticketmaster"]);
 const categoryKeySchema = z
   .string()
   .min(1)
@@ -231,6 +233,7 @@ export const adminRouter = router({
         with: {
           members: true,
           follows: true,
+          scraperConfigs: true,
           categoryLinks: {
             with: {
               category: true,
@@ -240,6 +243,154 @@ export const adminRouter = router({
       });
 
       return results.map(mapPlaceCategoryData);
+    }),
+
+  // ============================================================================
+  // SCRAPER MANAGEMENT
+  // ============================================================================
+
+  listScrapers: adminProcedure
+    .input(
+      z
+        .object({
+          placeId: z.string().uuid().optional(),
+          scraper: scraperTypeSchema.optional(),
+          search: z.string().optional(),
+        })
+        .optional()
+    )
+    .query(async ({ ctx, input }) => {
+      const conditions = [];
+
+      if (input?.placeId) {
+        conditions.push(eq(scrapers.placeId, input.placeId));
+      }
+
+      if (input?.scraper) {
+        conditions.push(eq(scrapers.scraper, input.scraper));
+      }
+
+      if (input?.search) {
+        conditions.push(ilike(scrapers.searchString, `%${input.search}%`));
+      }
+
+      const rows = await ctx.db.query.scrapers.findMany({
+        where: conditions.length > 0 ? and(...conditions) : undefined,
+        with: {
+          place: true,
+        },
+        orderBy: [desc(scrapers.updatedAt)],
+      });
+
+      if (!input?.search) {
+        return rows;
+      }
+
+      const lower = input.search.toLowerCase();
+      return rows.filter(
+        (row) =>
+          row.searchString.toLowerCase().includes(lower) ||
+          row.place.name.toLowerCase().includes(lower)
+      );
+    }),
+
+  getScraperForPlace: adminProcedure
+    .input(z.object({ placeId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      return await ctx.db.query.scrapers.findFirst({
+        where: eq(scrapers.placeId, input.placeId),
+        with: {
+          place: true,
+        },
+      });
+    }),
+
+  upsertPlaceScraper: adminProcedure
+    .input(
+      z.object({
+        placeId: z.string().uuid(),
+        scraper: scraperTypeSchema.optional().nullable(),
+        searchString: z.string().optional().nullable(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const place = await ctx.db.query.places.findFirst({
+        where: eq(places.id, input.placeId),
+      });
+
+      if (!place) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Place not found",
+        });
+      }
+
+      const trimmedSearchString = input.searchString?.trim() ?? "";
+      const shouldClear = !input.scraper || trimmedSearchString.length === 0;
+
+      if (shouldClear) {
+        await ctx.db
+          .delete(scrapers)
+          .where(eq(scrapers.placeId, input.placeId))
+          .returning();
+
+        return { success: true, scraper: null };
+      }
+
+      const scraper = input.scraper;
+      if (!scraper) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Scraper type is required",
+        });
+      }
+
+      const existing = await ctx.db.query.scrapers.findFirst({
+        where: eq(scrapers.placeId, input.placeId),
+      });
+
+      if (existing) {
+        const [updated] = await ctx.db
+          .update(scrapers)
+          .set({
+            scraper,
+            searchString: trimmedSearchString,
+            updatedAt: new Date(),
+          })
+          .where(eq(scrapers.id, existing.id))
+          .returning();
+
+        return { success: true, scraper: updated };
+      }
+
+      const [created] = await ctx.db
+        .insert(scrapers)
+        .values({
+          placeId: input.placeId,
+          scraper,
+          searchString: trimmedSearchString,
+        })
+        .returning();
+
+      return { success: true, scraper: created };
+    }),
+
+  deleteScraper: adminProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const result = await ctx.db
+        .delete(scrapers)
+        .where(eq(scrapers.id, input.id))
+        .returning();
+
+      if (result.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Scraper not found",
+        });
+      }
+
+      return { success: true };
     }),
 
   // ============================================================================

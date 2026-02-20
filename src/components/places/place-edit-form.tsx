@@ -6,6 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Building, Building2, Loader2 } from "lucide-react";
 import { S3Uploader } from "@/components/ui/s3-uploader";
 import { GooglePlacesAutocomplete } from "@/components/google-places-autocomplete";
@@ -17,6 +24,7 @@ import {
 } from "@/components/venue-hours-editor";
 
 export type PlaceType = "venue" | "organizer";
+export type ScraperType = "dice" | "posh" | "clubcafe" | "ticketmaster";
 
 export interface PlaceFormData {
   type: PlaceType;
@@ -34,6 +42,8 @@ export interface PlaceFormData {
   longitude: number | null;
   hours: VenueHours | null;
   categories: string[];
+  scraper: ScraperType | null;
+  scraperSearchString: string;
 }
 
 interface PlaceEditFormProps {
@@ -45,6 +55,7 @@ interface PlaceEditFormProps {
   onCancel: () => void;
   isSubmitting: boolean;
   showCard?: boolean;
+  showScraperFields?: boolean;
 }
 
 const emptyFormData: PlaceFormData = {
@@ -63,6 +74,8 @@ const emptyFormData: PlaceFormData = {
   longitude: null,
   hours: null,
   categories: [],
+  scraper: null,
+  scraperSearchString: "",
 };
 
 export function PlaceEditForm({
@@ -74,6 +87,7 @@ export function PlaceEditForm({
   onCancel,
   isSubmitting,
   showCard = true,
+  showScraperFields = false,
 }: PlaceEditFormProps) {
   const initialDataVersion = useMemo(
     () =>
@@ -93,6 +107,8 @@ export function PlaceEditForm({
         longitude: initialData?.longitude ?? null,
         hours: initialData?.hours ?? null,
         categories: initialData?.categories ?? [],
+        scraper: initialData?.scraper ?? null,
+        scraperSearchString: initialData?.scraperSearchString ?? "",
       }),
     [initialData, placeType]
   );
@@ -258,7 +274,10 @@ export function PlaceEditForm({
   const isFormValid =
     formData.slug &&
     formData.name &&
-    (!isVenue || (formData.city && formData.state));
+    (!isVenue || (formData.city && formData.state)) &&
+    (!showScraperFields ||
+      !formData.scraper ||
+      formData.scraperSearchString.trim().length > 0);
 
   const formContent = (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -457,6 +476,61 @@ export function PlaceEditForm({
             />
           </div>
         </>
+      )}
+
+      {showScraperFields && (
+        <div className="space-y-3 rounded-md border p-3">
+          <p className="text-sm font-medium">Scraper (Optional)</p>
+          <div>
+            <Label>Scraper Type</Label>
+            <Select
+              value={formData.scraper ?? "none"}
+              onValueChange={(value) =>
+                setFormData({
+                  ...formData,
+                  scraper: value === "none" ? null : (value as ScraperType),
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="No scraper" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No scraper</SelectItem>
+                <SelectItem value="dice">Dice.fm</SelectItem>
+                <SelectItem value="posh">Posh</SelectItem>
+                <SelectItem value="clubcafe">Club Cafe</SelectItem>
+                <SelectItem value="ticketmaster">Ticketmaster</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {formData.scraper && (
+            <div>
+              <Label htmlFor="place-scraper-search-string">Search String</Label>
+              <Input
+                id="place-scraper-search-string"
+                value={formData.scraperSearchString}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    scraperSearchString: e.target.value,
+                  })
+                }
+                placeholder={
+                  formData.scraper === "ticketmaster"
+                    ? "Venue/organizer name (e.g. Big Night Live)"
+                    : formData.scraper === "posh"
+                      ? "Posh event or group URL(s)"
+                      : "Scraper URL"
+                }
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Use a URL for URL-based scrapers, or plain text for text-based
+                scrapers.
+              </p>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Submit Buttons */}

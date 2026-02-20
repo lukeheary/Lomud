@@ -74,6 +74,13 @@ export const partnerStatusEnum = pgEnum("partner_status", [
   "accepted",
 ]);
 
+export const scraperTypeEnum = pgEnum("scraper_type", [
+  "dice",
+  "posh",
+  "clubcafe",
+  "ticketmaster",
+]);
+
 // ============================================================================
 // USERS TABLE
 // ============================================================================
@@ -232,6 +239,35 @@ export const placesRelations = relations(places, ({ many }) => ({
   }),
   follows: many(placeFollows),
   categoryLinks: many(placeCategories),
+  scraperConfigs: many(scrapers),
+}));
+
+// ============================================================================
+// SCRAPERS TABLE
+// ============================================================================
+export const scrapers = pgTable(
+  "scrapers",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    placeId: uuid("place_id")
+      .notNull()
+      .references(() => places.id, { onDelete: "cascade" }),
+    scraper: scraperTypeEnum("scraper").notNull(),
+    searchString: text("search_string").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    placeIdx: uniqueIndex("scrapers_place_idx").on(table.placeId),
+    scraperIdx: index("scrapers_scraper_idx").on(table.scraper),
+  })
+);
+
+export const scrapersRelations = relations(scrapers, ({ one }) => ({
+  place: one(places, {
+    fields: [scrapers.placeId],
+    references: [places.id],
+  }),
 }));
 
 // ============================================================================

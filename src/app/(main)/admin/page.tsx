@@ -120,35 +120,11 @@ export default function AdminPage() {
             <CardTitle>Scrapers</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-2">
-            <Link href="/admin/scrape-dice">
+            <Link href="/admin/scrapers">
               <Card className="p-4 hover:bg-accent">
                 <div className="flex items-center gap-3">
                   <Download className="h-4 w-4" />
-                  <div className="text-sm font-medium">Dice.fm Scraper</div>
-                </div>
-              </Card>
-            </Link>
-            <Link href="/admin/scrape-posh">
-              <Card className="p-4 hover:bg-accent">
-                <div className="flex items-center gap-3">
-                  <Download className="h-4 w-4" />
-                  <div className="text-sm font-medium">Posh Scraper</div>
-                </div>
-              </Card>
-            </Link>
-            <Link href="/admin/scrape-clubcafe">
-              <Card className="p-4 hover:bg-accent">
-                <div className="flex items-center gap-3">
-                  <Download className="h-4 w-4" />
-                  <div className="text-sm font-medium">Club Cafe Scraper</div>
-                </div>
-              </Card>
-            </Link>
-            <Link href="/admin/scrape-ticketmaster">
-              <Card className="p-4 hover:bg-accent">
-                <div className="flex items-center gap-3">
-                  <Download className="h-4 w-4" />
-                  <div className="text-sm font-medium">Ticketmaster Scraper</div>
+                  <div className="text-sm font-medium">Run Scrapers</div>
                 </div>
               </Card>
             </Link>

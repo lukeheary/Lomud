@@ -183,6 +183,13 @@
       "when": 1771561000000,
       "tag": "0025_drop_event_series_venue_name",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1771600000000,
+      "tag": "0026_add_scrapers",
+      "breakpoints": true
     }
   ]
 }

@@ -70,42 +70,9 @@ export default function AdminPlacesPage() {
   });
 
   // Mutations
-  const createPlaceMutation = trpc.admin.createPlace.useMutation({
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: `${activeTab === "venue" ? "Venue" : "Organizer"} created successfully`,
-      });
-      setViewMode("list");
-      utils.admin.listAllPlaces.invalidate();
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updatePlaceMutation = trpc.place.updatePlace.useMutation({
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: `${activeTab === "venue" ? "Venue" : "Organizer"} updated successfully`,
-      });
-      setEditingPlace(null);
-      setViewMode("list");
-      utils.admin.listAllPlaces.invalidate();
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+  const createPlaceMutation = trpc.admin.createPlace.useMutation();
+  const updatePlaceMutation = trpc.place.updatePlace.useMutation();
+  const upsertPlaceScraperMutation = trpc.admin.upsertPlaceScraper.useMutation();
 
   const handleEdit = (place: any) => {
     setEditingPlace(place);
@@ -137,23 +104,88 @@ export default function AdminPlacesPage() {
     setViewMode("create");
   };
 
-  const handleCreateSubmit = (formData: PlaceFormData) => {
-    createPlaceMutation.mutate({
-      ...formData,
-      latitude: formData.latitude ?? undefined,
-      longitude: formData.longitude ?? undefined,
-    });
+  const handleCreateSubmit = async (formData: PlaceFormData) => {
+    try {
+      const { scraper, scraperSearchString, ...placeData } = formData;
+
+      const createdPlace = await createPlaceMutation.mutateAsync({
+        ...placeData,
+        latitude: placeData.latitude ?? undefined,
+        longitude: placeData.longitude ?? undefined,
+      });
+
+      let scraperWarning: string | null = null;
+      try {
+        await upsertPlaceScraperMutation.mutateAsync({
+          placeId: createdPlace.id,
+          scraper,
+          searchString: scraperSearchString,
+        });
+      } catch (error) {
+        scraperWarning =
+          error instanceof Error ? error.message : "Failed to save scraper";
+      }
+
+      toast({
+        title: "Success",
+        description: scraperWarning
+          ? `Venue created, but scraper setup failed: ${scraperWarning}`
+          : `${activeTab === "venue" ? "Venue" : "Organizer"} created successfully`,
+      });
+      setViewMode("list");
+      await utils.admin.listAllPlaces.invalidate();
+      await utils.admin.listScrapers.invalidate();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Create failed",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleEditSubmit = (formData: PlaceFormData) => {
+  const handleEditSubmit = async (formData: PlaceFormData) => {
     if (!editingPlace) return;
 
-    updatePlaceMutation.mutate({
-      placeId: editingPlace.id,
-      ...formData,
-      latitude: formData.latitude ?? undefined,
-      longitude: formData.longitude ?? undefined,
-    });
+    try {
+      const { scraper, scraperSearchString, ...placeData } = formData;
+
+      await updatePlaceMutation.mutateAsync({
+        placeId: editingPlace.id,
+        ...placeData,
+        latitude: placeData.latitude ?? undefined,
+        longitude: placeData.longitude ?? undefined,
+      });
+
+      let scraperWarning: string | null = null;
+      try {
+        await upsertPlaceScraperMutation.mutateAsync({
+          placeId: editingPlace.id,
+          scraper,
+          searchString: scraperSearchString,
+        });
+      } catch (error) {
+        scraperWarning =
+          error instanceof Error ? error.message : "Failed to save scraper";
+      }
+
+      toast({
+        title: "Success",
+        description: scraperWarning
+          ? `Venue updated, but scraper setup failed: ${scraperWarning}`
+          : `${activeTab === "venue" ? "Venue" : "Organizer"} updated successfully`,
+      });
+      setEditingPlace(null);
+      setViewMode("list");
+      await utils.admin.listAllPlaces.invalidate();
+      await utils.admin.listScrapers.invalidate();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Update failed",
+        variant: "destructive",
+      });
+    }
   };
 
   // Filter places by search query
@@ -302,6 +334,9 @@ export default function AdminPlacesPage() {
             longitude: editingPlace.longitude || null,
             hours: editingPlace.hours || null,
             categories: editingPlace.categories || [],
+            scraper: editingPlace.scraperConfigs?.[0]?.scraper ?? null,
+            scraperSearchString:
+              editingPlace.scraperConfigs?.[0]?.searchString ?? "",
           }
         : { type: activeTab };
 
@@ -319,12 +354,13 @@ export default function AdminPlacesPage() {
           placeType={viewMode === "edit" ? editingPlace?.type : activeTab}
           placeId={viewMode === "edit" ? editingPlace?.id : undefined}
           mode={viewMode === "edit" ? "edit" : "create"}
+          showScraperFields
           onSubmit={viewMode === "edit" ? handleEditSubmit : handleCreateSubmit}
           onCancel={handleBack}
           isSubmitting={
             viewMode === "edit"
-              ? updatePlaceMutation.isPending
-              : createPlaceMutation.isPending
+              ? updatePlaceMutation.isPending || upsertPlaceScraperMutation.isPending
+              : createPlaceMutation.isPending || upsertPlaceScraperMutation.isPending
           }
         />
       </div>
