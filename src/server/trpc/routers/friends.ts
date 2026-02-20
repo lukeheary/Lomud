@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { router, protectedProcedure } from "../init";
-import { users, friends, activityEvents, userPartners } from "../../db/schema";
+import { users, userFriends, activityEvents, userPartners } from "../../db/schema";
 import { eq, and, or, ne, like, sql, inArray, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
@@ -17,10 +17,10 @@ export const friendsRouter = router({
       const searchPattern = `%${input.query}%`;
 
       // Get existing friend connections (accepted or pending) in both directions
-      const existingFriendships = await ctx.db.query.friends.findMany({
+      const existingFriendships = await ctx.db.query.userFriends.findMany({
         where: or(
-          eq(friends.userId, ctx.auth.userId),
-          eq(friends.friendUserId, ctx.auth.userId)
+          eq(userFriends.userId, ctx.auth.userId),
+          eq(userFriends.friendUserId, ctx.auth.userId)
         ),
       });
 
@@ -78,15 +78,15 @@ export const friendsRouter = router({
       }
 
       // Check for existing friendship in BOTH directions
-      const existingFriendship = await ctx.db.query.friends.findFirst({
+      const existingFriendship = await ctx.db.query.userFriends.findFirst({
         where: or(
           and(
-            eq(friends.userId, ctx.auth.userId),
-            eq(friends.friendUserId, input.friendUserId)
+            eq(userFriends.userId, ctx.auth.userId),
+            eq(userFriends.friendUserId, input.friendUserId)
           ),
           and(
-            eq(friends.userId, input.friendUserId),
-            eq(friends.friendUserId, ctx.auth.userId)
+            eq(userFriends.userId, input.friendUserId),
+            eq(userFriends.friendUserId, ctx.auth.userId)
           )
         ),
       });
@@ -102,7 +102,7 @@ export const friendsRouter = router({
       }
 
       const [friendRequest] = await ctx.db
-        .insert(friends)
+        .insert(userFriends)
         .values({
           userId: ctx.auth.userId,
           friendUserId: input.friendUserId,
@@ -116,8 +116,8 @@ export const friendsRouter = router({
   acceptFriendRequest: protectedProcedure
     .input(z.object({ friendRequestId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      const friendRequest = await ctx.db.query.friends.findFirst({
-        where: eq(friends.id, input.friendRequestId),
+      const friendRequest = await ctx.db.query.userFriends.findFirst({
+        where: eq(userFriends.id, input.friendRequestId),
       });
 
       if (!friendRequest) {
@@ -144,12 +144,12 @@ export const friendsRouter = router({
       }
 
       const [updatedFriendship] = await ctx.db
-        .update(friends)
+        .update(userFriends)
         .set({
           status: "accepted",
           updatedAt: new Date(),
         })
-        .where(eq(friends.id, input.friendRequestId))
+        .where(eq(userFriends.id, input.friendRequestId))
         .returning();
 
       return updatedFriendship;
@@ -158,8 +158,8 @@ export const friendsRouter = router({
   rejectFriendRequest: protectedProcedure
     .input(z.object({ friendRequestId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      const friendRequest = await ctx.db.query.friends.findFirst({
-        where: eq(friends.id, input.friendRequestId),
+      const friendRequest = await ctx.db.query.userFriends.findFirst({
+        where: eq(userFriends.id, input.friendRequestId),
       });
 
       if (!friendRequest) {
@@ -180,7 +180,7 @@ export const friendsRouter = router({
         });
       }
 
-      await ctx.db.delete(friends).where(eq(friends.id, input.friendRequestId));
+      await ctx.db.delete(userFriends).where(eq(userFriends.id, input.friendRequestId));
 
       return { success: true };
     }),
@@ -194,18 +194,18 @@ export const friendsRouter = router({
     .query(async ({ ctx, input }) => {
       const conditions = [
         or(
-          eq(friends.userId, ctx.auth.userId),
-          eq(friends.friendUserId, ctx.auth.userId)
+          eq(userFriends.userId, ctx.auth.userId),
+          eq(userFriends.friendUserId, ctx.auth.userId)
         ),
       ];
 
       if (input.statusFilter) {
-        conditions.push(eq(friends.status, input.statusFilter));
+        conditions.push(eq(userFriends.status, input.statusFilter));
       }
 
-      const friendships = await ctx.db.query.friends.findMany({
+      const friendships = await ctx.db.query.userFriends.findMany({
         where: and(...conditions),
-        orderBy: [friends.createdAt],
+        orderBy: [userFriends.createdAt],
       });
 
       // Fetch user details for each friendship
@@ -234,15 +234,15 @@ export const friendsRouter = router({
   getFriendStatus: protectedProcedure
     .input(z.object({ userId: z.string() }))
     .query(async ({ ctx, input }) => {
-      const friendship = await ctx.db.query.friends.findFirst({
+      const friendship = await ctx.db.query.userFriends.findFirst({
         where: or(
           and(
-            eq(friends.userId, ctx.auth.userId),
-            eq(friends.friendUserId, input.userId)
+            eq(userFriends.userId, ctx.auth.userId),
+            eq(userFriends.friendUserId, input.userId)
           ),
           and(
-            eq(friends.userId, input.userId),
-            eq(friends.friendUserId, ctx.auth.userId)
+            eq(userFriends.userId, input.userId),
+            eq(userFriends.friendUserId, ctx.auth.userId)
           )
         ),
       });
@@ -265,12 +265,12 @@ export const friendsRouter = router({
 
   getPendingRequests: protectedProcedure.query(async ({ ctx }) => {
     // Get pending friend requests sent TO the current user
-    const pendingRequests = await ctx.db.query.friends.findMany({
+    const pendingRequests = await ctx.db.query.userFriends.findMany({
       where: and(
-        eq(friends.friendUserId, ctx.auth.userId),
-        eq(friends.status, "pending")
+        eq(userFriends.friendUserId, ctx.auth.userId),
+        eq(userFriends.status, "pending")
       ),
-      orderBy: [friends.createdAt],
+      orderBy: [userFriends.createdAt],
       with: {
         user: true, // The user who sent the request
       },
@@ -288,10 +288,10 @@ export const friendsRouter = router({
     )
     .query(async ({ ctx, input }) => {
       // Get existing friend connections (accepted or pending) in both directions
-      const existingFriendships = await ctx.db.query.friends.findMany({
+      const existingFriendships = await ctx.db.query.userFriends.findMany({
         where: or(
-          eq(friends.userId, ctx.auth.userId),
-          eq(friends.friendUserId, ctx.auth.userId)
+          eq(userFriends.userId, ctx.auth.userId),
+          eq(userFriends.friendUserId, ctx.auth.userId)
         ),
       });
 
@@ -331,13 +331,13 @@ export const friendsRouter = router({
     )
     .query(async ({ ctx, input }) => {
       // 1. Get all accepted friends
-      const userFriendships = await ctx.db.query.friends.findMany({
+      const userFriendships = await ctx.db.query.userFriends.findMany({
         where: and(
           or(
-            eq(friends.userId, ctx.auth.userId),
-            eq(friends.friendUserId, ctx.auth.userId)
+            eq(userFriends.userId, ctx.auth.userId),
+            eq(userFriends.friendUserId, ctx.auth.userId)
           ),
-          eq(friends.status, "accepted")
+          eq(userFriends.status, "accepted")
         ),
       });
 

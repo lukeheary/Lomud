@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq, or } from "drizzle-orm";
 import { z } from "zod";
-import { friends, userPartners, users } from "../../db/schema";
+import { userFriends, userPartners, users } from "../../db/schema";
 import { protectedProcedure, router } from "../init";
 
 export const partnersRouter = router({
@@ -26,19 +26,19 @@ export const partnersRouter = router({
         });
       }
 
-      const friendship = await ctx.db.query.friends.findFirst({
+      const friendship = await ctx.db.query.userFriends.findFirst({
         where: and(
           or(
             and(
-              eq(friends.userId, ctx.auth.userId),
-              eq(friends.friendUserId, input.recipientId)
+              eq(userFriends.userId, ctx.auth.userId),
+              eq(userFriends.friendUserId, input.recipientId)
             ),
             and(
-              eq(friends.userId, input.recipientId),
-              eq(friends.friendUserId, ctx.auth.userId)
+              eq(userFriends.userId, input.recipientId),
+              eq(userFriends.friendUserId, ctx.auth.userId)
             )
           ),
-          eq(friends.status, "accepted")
+          eq(userFriends.status, "accepted")
         ),
       });
 

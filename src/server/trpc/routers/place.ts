@@ -2,10 +2,10 @@ import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../init";
 import {
   cities,
+  eventRsvps,
   events,
-  friends,
   metroAreas,
-  rsvps,
+  userFriends,
   users,
   placeFollows,
   placeMembers,
@@ -385,10 +385,10 @@ export const placeRouter = router({
           ctx.db.query.users.findFirst({
             where: eq(users.id, ctx.auth.userId),
           }),
-          ctx.db.query.rsvps.findMany({
+          ctx.db.query.eventRsvps.findMany({
             where: and(
-              inArray(rsvps.eventId, allEventIds),
-              eq(rsvps.userId, ctx.auth.userId)
+              inArray(eventRsvps.eventId, allEventIds),
+              eq(eventRsvps.userId, ctx.auth.userId)
             ),
           }),
         ]);
@@ -412,26 +412,26 @@ export const placeRouter = router({
           }
         }
 
-        const userFriends = await ctx.db.query.friends.findMany({
+        const friendConnections = await ctx.db.query.userFriends.findMany({
           where: and(
             or(
-              eq(friends.userId, ctx.auth.userId),
-              eq(friends.friendUserId, ctx.auth.userId)
+              eq(userFriends.userId, ctx.auth.userId),
+              eq(userFriends.friendUserId, ctx.auth.userId)
             ),
-            eq(friends.status, "accepted")
+            eq(userFriends.status, "accepted")
           ),
         });
 
-        const friendIds = userFriends.map((f) =>
+        const friendIds = friendConnections.map((f) =>
           f.userId === ctx.auth.userId ? f.friendUserId : f.userId
         );
 
         if (friendIds.length > 0) {
-          const friendsRsvps = await ctx.db.query.rsvps.findMany({
+          const friendsRsvps = await ctx.db.query.eventRsvps.findMany({
             where: and(
-              inArray(rsvps.eventId, allEventIds),
-              inArray(rsvps.userId, friendIds),
-              eq(rsvps.status, "going")
+              inArray(eventRsvps.eventId, allEventIds),
+              inArray(eventRsvps.userId, friendIds),
+              eq(eventRsvps.status, "going")
             ),
             with: {
               user: true,

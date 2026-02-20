@@ -112,10 +112,10 @@ export const users = pgTable(
 export const usersRelations = relations(users, ({ many }) => ({
   placeMembers: many(placeMembers),
   placeFollows: many(placeFollows),
-  rsvps: many(rsvps),
+  rsvps: many(eventRsvps),
   eventSeries: many(eventSeries),
-  sentFriendRequests: many(friends, { relationName: "sentRequests" }),
-  receivedFriendRequests: many(friends, { relationName: "receivedRequests" }),
+  sentFriendRequests: many(userFriends, { relationName: "sentRequests" }),
+  receivedFriendRequests: many(userFriends, { relationName: "receivedRequests" }),
   sentPartnerRequests: many(userPartners, { relationName: "partnerRequests" }),
   receivedPartnerRequests: many(userPartners, {
     relationName: "partnerReceipts",
@@ -522,7 +522,7 @@ export const eventsRelations = relations(events, ({ one, many }) => ({
     fields: [events.seriesId],
     references: [eventSeries.id],
   }),
-  rsvps: many(rsvps),
+  rsvps: many(eventRsvps),
   categoryLinks: many(eventCategories),
 }));
 
@@ -566,10 +566,10 @@ export const eventCategoriesRelations = relations(
 );
 
 // ============================================================================
-// RSVPS TABLE
+// EVENT RSVPS TABLE
 // ============================================================================
-export const rsvps = pgTable(
-  "rsvps",
+export const eventRsvps = pgTable(
+  "event_rsvps",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     userId: text("user_id")
@@ -602,22 +602,22 @@ export const rsvps = pgTable(
   })
 );
 
-export const rsvpsRelations = relations(rsvps, ({ one }) => ({
+export const eventRsvpsRelations = relations(eventRsvps, ({ one }) => ({
   user: one(users, {
-    fields: [rsvps.userId],
+    fields: [eventRsvps.userId],
     references: [users.id],
   }),
   event: one(events, {
-    fields: [rsvps.eventId],
+    fields: [eventRsvps.eventId],
     references: [events.id],
   }),
 }));
 
 // ============================================================================
-// FRIENDS TABLE
+// USER FRIENDS TABLE
 // ============================================================================
-export const friends = pgTable(
-  "friends",
+export const userFriends = pgTable(
+  "user_friends",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     userId: text("user_id")
@@ -651,14 +651,14 @@ export const friends = pgTable(
   })
 );
 
-export const friendsRelations = relations(friends, ({ one }) => ({
+export const userFriendsRelations = relations(userFriends, ({ one }) => ({
   user: one(users, {
-    fields: [friends.userId],
+    fields: [userFriends.userId],
     references: [users.id],
     relationName: "sentRequests",
   }),
   friend: one(users, {
-    fields: [friends.friendUserId],
+    fields: [userFriends.friendUserId],
     references: [users.id],
     relationName: "receivedRequests",
   }),

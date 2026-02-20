@@ -2,16 +2,16 @@ import { z } from "zod";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "../init";
 import {
   categories,
+  eventRsvps,
   eventCategories,
   eventSeries,
   events,
-  friends,
   placeFollows,
   placeMembers,
   places,
   cities,
   metroAreas,
-  rsvps,
+  userFriends,
   userPartners,
   users,
 } from "../../db/schema";
@@ -692,20 +692,20 @@ export const eventRouter = router({
 
       // Filter by events friends are going to
       if (input.friendsGoingOnly) {
-        const userFriends = await ctx.db.query.friends.findMany({
+        const friendConnections = await ctx.db.query.userFriends.findMany({
           where: and(
-            eq(friends.userId, ctx.auth.userId),
-            eq(friends.status, "accepted")
+            eq(userFriends.userId, ctx.auth.userId),
+            eq(userFriends.status, "accepted")
           ),
         });
 
-        const friendIds = userFriends.map((f) => f.friendUserId);
+        const friendIds = friendConnections.map((f) => f.friendUserId);
 
         if (friendIds.length > 0) {
-          const friendRsvps = await ctx.db.query.rsvps.findMany({
+          const friendRsvps = await ctx.db.query.eventRsvps.findMany({
             where: and(
-              inArray(rsvps.userId, friendIds),
-              eq(rsvps.status, "going")
+              inArray(eventRsvps.userId, friendIds),
+              eq(eventRsvps.status, "going")
             ),
           });
 
@@ -745,10 +745,10 @@ export const eventRouter = router({
       const eventIds = eventList.map((e) => e.id);
       const userRsvps =
         eventIds.length > 0
-          ? await ctx.db.query.rsvps.findMany({
+          ? await ctx.db.query.eventRsvps.findMany({
             where: and(
-              eq(rsvps.userId, ctx.auth.userId),
-              inArray(rsvps.eventId, eventIds)
+              eq(eventRsvps.userId, ctx.auth.userId),
+              inArray(eventRsvps.eventId, eventIds)
             ),
           })
           : [];
@@ -757,28 +757,28 @@ export const eventRouter = router({
       const rsvpMap = new Map(userRsvps.map((r) => [r.eventId, r]));
 
       // Fetch user's friends (bidirectional - where user is either sender or receiver)
-      const userFriends = await ctx.db.query.friends.findMany({
+      const friendConnections = await ctx.db.query.userFriends.findMany({
         where: and(
           or(
-            eq(friends.userId, ctx.auth.userId),
-            eq(friends.friendUserId, ctx.auth.userId)
+            eq(userFriends.userId, ctx.auth.userId),
+            eq(userFriends.friendUserId, ctx.auth.userId)
           ),
-          eq(friends.status, "accepted")
+          eq(userFriends.status, "accepted")
         ),
       });
 
-      const friendIds = userFriends.map((f) =>
+      const friendIds = friendConnections.map((f) =>
         f.userId === ctx.auth.userId ? f.friendUserId : f.userId
       );
 
       // Fetch friends' RSVPs (going status only)
       const friendsRsvps =
         eventIds.length > 0 && friendIds.length > 0
-          ? await ctx.db.query.rsvps.findMany({
+          ? await ctx.db.query.eventRsvps.findMany({
             where: and(
-              inArray(rsvps.eventId, eventIds),
-              inArray(rsvps.userId, friendIds),
-              eq(rsvps.status, "going")
+              inArray(eventRsvps.eventId, eventIds),
+              inArray(eventRsvps.userId, friendIds),
+              eq(eventRsvps.status, "going")
             ),
             with: {
               user: true,
@@ -847,10 +847,10 @@ export const eventRouter = router({
       // Get user's RSVP if authenticated
       let userRsvp = null;
       if (ctx.auth.userId) {
-        userRsvp = await ctx.db.query.rsvps.findFirst({
+        userRsvp = await ctx.db.query.eventRsvps.findFirst({
           where: and(
-            eq(rsvps.eventId, input.eventId),
-            eq(rsvps.userId, ctx.auth.userId)
+            eq(eventRsvps.eventId, input.eventId),
+            eq(eventRsvps.userId, ctx.auth.userId)
           ),
         });
       }
@@ -904,7 +904,7 @@ export const eventRouter = router({
 
       // Upsert RSVP
       const [rsvp] = await ctx.db
-        .insert(rsvps)
+        .insert(eventRsvps)
         .values({
           userId: ctx.auth.userId,
           eventId: input.eventId,
@@ -912,7 +912,7 @@ export const eventRouter = router({
           partnerRsvpByUserId: null,
         })
         .onConflictDoUpdate({
-          target: [rsvps.userId, rsvps.eventId],
+          target: [eventRsvps.userId, eventRsvps.eventId],
           set: {
             status: input.status,
             partnerRsvpByUserId: null,
@@ -923,10 +923,10 @@ export const eventRouter = router({
 
       if (partnerUserId) {
         if (shouldMirrorPartnerRsvp) {
-          const existingPartnerRsvp = await ctx.db.query.rsvps.findFirst({
+          const existingPartnerRsvp = await ctx.db.query.eventRsvps.findFirst({
             where: and(
-              eq(rsvps.userId, partnerUserId),
-              eq(rsvps.eventId, input.eventId)
+              eq(eventRsvps.userId, partnerUserId),
+              eq(eventRsvps.eventId, input.eventId)
             ),
           });
 
@@ -936,7 +936,7 @@ export const eventRouter = router({
 
           if (canWriteMirroredRsvp) {
             await ctx.db
-              .insert(rsvps)
+              .insert(eventRsvps)
               .values({
                 userId: partnerUserId,
                 eventId: input.eventId,
@@ -944,7 +944,7 @@ export const eventRouter = router({
                 partnerRsvpByUserId: ctx.auth.userId,
               })
               .onConflictDoUpdate({
-                target: [rsvps.userId, rsvps.eventId],
+                target: [eventRsvps.userId, eventRsvps.eventId],
                 set: {
                   status: input.status,
                   partnerRsvpByUserId: ctx.auth.userId,
@@ -953,11 +953,11 @@ export const eventRouter = router({
               });
           }
         } else {
-          await ctx.db.delete(rsvps).where(
+          await ctx.db.delete(eventRsvps).where(
             and(
-              eq(rsvps.userId, partnerUserId),
-              eq(rsvps.eventId, input.eventId),
-              eq(rsvps.partnerRsvpByUserId, ctx.auth.userId)
+              eq(eventRsvps.userId, partnerUserId),
+              eq(eventRsvps.eventId, input.eventId),
+              eq(eventRsvps.partnerRsvpByUserId, ctx.auth.userId)
             )
           );
         }
@@ -999,20 +999,20 @@ export const eventRouter = router({
         : null;
 
       await ctx.db
-        .delete(rsvps)
+        .delete(eventRsvps)
         .where(
           and(
-            eq(rsvps.eventId, input.eventId),
-            eq(rsvps.userId, ctx.auth.userId)
+            eq(eventRsvps.eventId, input.eventId),
+            eq(eventRsvps.userId, ctx.auth.userId)
           )
         );
 
       if (partnerUserId) {
-        await ctx.db.delete(rsvps).where(
+        await ctx.db.delete(eventRsvps).where(
           and(
-            eq(rsvps.eventId, input.eventId),
-            eq(rsvps.userId, partnerUserId),
-            eq(rsvps.partnerRsvpByUserId, ctx.auth.userId)
+            eq(eventRsvps.eventId, input.eventId),
+            eq(eventRsvps.userId, partnerUserId),
+            eq(eventRsvps.partnerRsvpByUserId, ctx.auth.userId)
           )
         );
       }
@@ -1028,28 +1028,28 @@ export const eventRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const conditions = [eq(rsvps.eventId, input.eventId)];
+      const conditions = [eq(eventRsvps.eventId, input.eventId)];
 
       if (input.statusFilter) {
-        conditions.push(eq(rsvps.status, input.statusFilter));
+        conditions.push(eq(eventRsvps.status, input.statusFilter));
       }
 
-      return await ctx.db.query.rsvps.findMany({
+      return await ctx.db.query.eventRsvps.findMany({
         where: and(...conditions),
         with: {
           user: true,
         },
-        orderBy: [desc(rsvps.createdAt)],
+        orderBy: [desc(eventRsvps.createdAt)],
       });
     }),
 
   getUserRsvp: protectedProcedure
     .input(z.object({ eventId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      const rsvp = await ctx.db.query.rsvps.findFirst({
+      const rsvp = await ctx.db.query.eventRsvps.findFirst({
         where: and(
-          eq(rsvps.eventId, input.eventId),
-          eq(rsvps.userId, ctx.auth.userId)
+          eq(eventRsvps.eventId, input.eventId),
+          eq(eventRsvps.userId, ctx.auth.userId)
         ),
       });
 
@@ -1448,10 +1448,10 @@ export const eventRouter = router({
       const eventIds = recentEvents.map((e) => e.id);
       const userRsvps =
         eventIds.length > 0
-          ? await ctx.db.query.rsvps.findMany({
+          ? await ctx.db.query.eventRsvps.findMany({
               where: and(
-                eq(rsvps.userId, ctx.auth.userId),
-                inArray(rsvps.eventId, eventIds)
+                eq(eventRsvps.userId, ctx.auth.userId),
+                inArray(eventRsvps.eventId, eventIds)
               ),
             })
           : [];
@@ -1462,28 +1462,28 @@ export const eventRouter = router({
       // currentUser already fetched above
 
       // Fetch user's friends
-      const userFriends = await ctx.db.query.friends.findMany({
+      const friendConnections = await ctx.db.query.userFriends.findMany({
         where: and(
           or(
-            eq(friends.userId, ctx.auth.userId),
-            eq(friends.friendUserId, ctx.auth.userId)
+            eq(userFriends.userId, ctx.auth.userId),
+            eq(userFriends.friendUserId, ctx.auth.userId)
           ),
-          eq(friends.status, "accepted")
+          eq(userFriends.status, "accepted")
         ),
       });
 
-      const friendIds = userFriends.map((f) =>
+      const friendIds = friendConnections.map((f) =>
         f.userId === ctx.auth.userId ? f.friendUserId : f.userId
       );
 
       // Fetch friends' RSVPs (going status only)
       const friendsRsvps =
         eventIds.length > 0 && friendIds.length > 0
-          ? await ctx.db.query.rsvps.findMany({
+          ? await ctx.db.query.eventRsvps.findMany({
               where: and(
-                inArray(rsvps.eventId, eventIds),
-                inArray(rsvps.userId, friendIds),
-                eq(rsvps.status, "going")
+                inArray(eventRsvps.eventId, eventIds),
+                inArray(eventRsvps.userId, friendIds),
+                eq(eventRsvps.status, "going")
               ),
               with: {
                 user: true,
