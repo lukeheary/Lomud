@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { router, protectedProcedure } from "../init";
-import { users, userFriends, activityEvents, userPartners } from "../../db/schema";
+import { users, userFriends, userActivity, userPartners } from "../../db/schema";
 import { eq, and, or, ne, like, sql, inArray, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
@@ -350,9 +350,9 @@ export const friendsRouter = router({
       }
 
       // 2. Fetch activity for these friends
-      const activities = await ctx.db.query.activityEvents.findMany({
-        where: inArray(activityEvents.actorUserId, friendIds),
-        orderBy: [desc(activityEvents.createdAt)],
+      const activities = await ctx.db.query.userActivity.findMany({
+        where: inArray(userActivity.actorUserId, friendIds),
+        orderBy: [desc(userActivity.createdAt)],
         limit: input.limit,
         offset: input.offset,
         with: {
@@ -377,7 +377,8 @@ export const friendsRouter = router({
             .filter(
               (activity) =>
                 (activity.type === "rsvp_going" ||
-                  activity.type === "rsvp_interested") &&
+                  activity.type === "rsvp_interested" ||
+                  activity.type === "rsvp_not_going") &&
                 ((activity.metadata as { includePartner?: boolean } | null)
                   ?.includePartner === true)
             )
@@ -426,7 +427,9 @@ export const friendsRouter = router({
           (activity.metadata as { includePartner?: boolean } | null)
             ?.includePartner === true;
         const isPartnerEligibleType =
-          activity.type === "rsvp_going" || activity.type === "rsvp_interested";
+          activity.type === "rsvp_going" ||
+          activity.type === "rsvp_interested" ||
+          activity.type === "rsvp_not_going";
         const partnerFirstName = partnerFirstNameByActorId.get(
           activity.actorUserId
         );

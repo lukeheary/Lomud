@@ -204,6 +204,13 @@
       "when": 1771700000000,
       "tag": "0028_rename_friends_and_rsvps_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1771750000000,
+      "tag": "0029_add_rsvp_not_going_activity",
+      "breakpoints": true
     }
   ]
 }

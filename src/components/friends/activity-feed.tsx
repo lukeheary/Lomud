@@ -10,6 +10,7 @@ import {
   Building2,
   CalendarPlus,
   Circle,
+  X,
 } from "lucide-react";
 import { formatDistanceToNow, startOfDay } from "date-fns";
 import Link from "next/link";
@@ -37,6 +38,8 @@ function ActivityItem({ activity }: ActivityItemProps) {
         return <CheckCircle2 className="h-4 w-4 text-green-500" />;
       case "rsvp_interested":
         return <Star className="h-4 w-4 text-yellow-500" />;
+      case "rsvp_not_going":
+        return <X className="h-4 w-4 text-red-500" />;
       case "follow_venue":
         return <Building2 className="h-4 w-4 text-blue-500" />;
       case "follow_organizer":
@@ -114,6 +117,36 @@ function ActivityItem({ activity }: ActivityItemProps) {
               : isPluralSubject
                 ? "are interested in"
                 : "is interested in"}{" "}
+            <Link
+              href={`/event/${entityId}`}
+              className="font-medium text-primary hover:underline"
+            >
+              {entityName}
+            </Link>
+            {activity.event?.venue?.name && (
+              <>
+                {" "}
+                at{" "}
+                {activity.event.venue?.slug ? (
+                  <Link
+                    href={`/venue/${activity.event.venue.slug}`}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    {activity.event.venue?.name}
+                  </Link>
+                ) : (
+                  <span className="font-medium text-foreground">
+                    {activity.event.venue?.name}
+                  </span>
+                )}
+              </>
+            )}
+          </>
+        );
+      case "rsvp_not_going":
+        return (
+          <>
+            {subjectName} {isPluralSubject ? "are" : "is"} no longer going to{" "}
             <Link
               href={`/event/${entityId}`}
               className="font-medium text-primary hover:underline"

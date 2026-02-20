@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { adminProcedure, protectedProcedure, publicProcedure, router } from "../init";
+import {
+  adminProcedure,
+  protectedProcedure,
+  publicProcedure,
+  router,
+} from "../init";
 import {
   categories,
   eventRsvps,
@@ -15,17 +20,7 @@ import {
   userPartners,
   users,
 } from "../../db/schema";
-import {
-  and,
-  desc,
-  eq,
-  gte,
-  ilike,
-  inArray,
-  lte,
-  or,
-  sql,
-} from "drizzle-orm";
+import { and, desc, eq, gte, ilike, inArray, lte, or, sql } from "drizzle-orm";
 import { uploadImageFromUrl, BUCKET_NAME } from "@/lib/s3";
 import { TRPCError } from "@trpc/server";
 import { logActivity } from "../../utils/activity-logger";
@@ -143,15 +138,15 @@ export const eventRouter = router({
         });
       }
 
-      if (event) {
-        void logActivity({
-          actorUserId: ctx.auth.userId,
-          type: "created_event",
-          entityType: "event",
-          entityId: event.id,
-          metadata: {},
-        });
-      }
+      // if (event) {
+      //   void logActivity({
+      //     actorUserId: ctx.auth.userId,
+      //     type: "created_event",
+      //     entityType: "event",
+      //     entityId: event.id,
+      //     metadata: {},
+      //   });
+      // }
 
       if (!event) return event;
 
@@ -240,7 +235,10 @@ export const eventRouter = router({
         });
       }
 
-      if (input.recurrence.untilDate && input.recurrence.untilDate < input.startAt) {
+      if (
+        input.recurrence.untilDate &&
+        input.recurrence.untilDate < input.startAt
+      ) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Series end date must be after the first event date",
@@ -300,18 +298,18 @@ export const eventRouter = router({
         seriesIds: [series.id],
       });
 
-      if (generated.firstCreatedEventId) {
-        void logActivity({
-          actorUserId: ctx.auth.userId,
-          type: "created_event",
-          entityType: "event",
-          entityId: generated.firstCreatedEventId,
-          metadata: {
-            recurring: true,
-            seriesId: series.id,
-          },
-        });
-      }
+      // if (generated.firstCreatedEventId) {
+      //   void logActivity({
+      //     actorUserId: ctx.auth.userId,
+      //     type: "created_event",
+      //     entityType: "event",
+      //     entityId: generated.firstCreatedEventId,
+      //     metadata: {
+      //       recurring: true,
+      //       seriesId: series.id,
+      //     },
+      //   });
+      // }
 
       return {
         seriesId: series.id,
@@ -488,10 +486,7 @@ export const eventRouter = router({
       const s3BucketHost = `${BUCKET_NAME}.s3`;
       await Promise.allSettled(
         created.map(async (row) => {
-          if (
-            !row.coverImageUrl ||
-            row.coverImageUrl.includes(s3BucketHost)
-          ) {
+          if (!row.coverImageUrl || row.coverImageUrl.includes(s3BucketHost)) {
             return;
           }
           try {
@@ -586,7 +581,10 @@ export const eventRouter = router({
             });
           }
           if (cityRecord?.latitude != null && cityRecord?.longitude != null) {
-            originCity = { latitude: cityRecord.latitude, longitude: cityRecord.longitude };
+            originCity = {
+              latitude: cityRecord.latitude,
+              longitude: cityRecord.longitude,
+            };
           }
         }
 
@@ -746,11 +744,11 @@ export const eventRouter = router({
       const userRsvps =
         eventIds.length > 0
           ? await ctx.db.query.eventRsvps.findMany({
-            where: and(
-              eq(eventRsvps.userId, ctx.auth.userId),
-              inArray(eventRsvps.eventId, eventIds)
-            ),
-          })
+              where: and(
+                eq(eventRsvps.userId, ctx.auth.userId),
+                inArray(eventRsvps.eventId, eventIds)
+              ),
+            })
           : [];
 
       // Create a map of event IDs to RSVPs
@@ -775,15 +773,15 @@ export const eventRouter = router({
       const friendsRsvps =
         eventIds.length > 0 && friendIds.length > 0
           ? await ctx.db.query.eventRsvps.findMany({
-            where: and(
-              inArray(eventRsvps.eventId, eventIds),
-              inArray(eventRsvps.userId, friendIds),
-              eq(eventRsvps.status, "going")
-            ),
-            with: {
-              user: true,
-            },
-          })
+              where: and(
+                inArray(eventRsvps.eventId, eventIds),
+                inArray(eventRsvps.userId, friendIds),
+                eq(eventRsvps.status, "going")
+              ),
+              with: {
+                user: true,
+              },
+            })
           : [];
 
       // Create a map of event IDs to attendees (current user + friends)
@@ -882,6 +880,13 @@ export const eventRouter = router({
         });
       }
 
+      const existingUserRsvp = await ctx.db.query.eventRsvps.findFirst({
+        where: and(
+          eq(eventRsvps.userId, ctx.auth.userId),
+          eq(eventRsvps.eventId, input.eventId)
+        ),
+      });
+
       const partnerRelationship = await ctx.db.query.userPartners.findFirst({
         where: and(
           eq(userPartners.status, "accepted"),
@@ -896,6 +901,15 @@ export const eventRouter = router({
         ? partnerRelationship.requesterId === ctx.auth.userId
           ? partnerRelationship.recipientId
           : partnerRelationship.requesterId
+        : null;
+      const existingMirroredPartnerRsvp = partnerUserId
+        ? await ctx.db.query.eventRsvps.findFirst({
+            where: and(
+              eq(eventRsvps.userId, partnerUserId),
+              eq(eventRsvps.eventId, input.eventId),
+              eq(eventRsvps.partnerRsvpByUserId, ctx.auth.userId)
+            ),
+          })
         : null;
       const shouldMirrorPartnerRsvp =
         Boolean(partnerUserId) &&
@@ -953,13 +967,15 @@ export const eventRouter = router({
               });
           }
         } else {
-          await ctx.db.delete(eventRsvps).where(
-            and(
-              eq(eventRsvps.userId, partnerUserId),
-              eq(eventRsvps.eventId, input.eventId),
-              eq(eventRsvps.partnerRsvpByUserId, ctx.auth.userId)
-            )
-          );
+          await ctx.db
+            .delete(eventRsvps)
+            .where(
+              and(
+                eq(eventRsvps.userId, partnerUserId),
+                eq(eventRsvps.eventId, input.eventId),
+                eq(eventRsvps.partnerRsvpByUserId, ctx.auth.userId)
+              )
+            );
         }
       }
 
@@ -974,6 +990,22 @@ export const eventRouter = router({
             includePartner: shouldMirrorPartnerRsvp,
           },
         });
+      } else if (
+        input.status === "not_going" &&
+        existingUserRsvp?.status === "going"
+      ) {
+        void logActivity({
+          actorUserId: ctx.auth.userId,
+          type: "rsvp_not_going",
+          entityType: "event",
+          entityId: input.eventId,
+          metadata: {
+            includePartner: Boolean(
+              existingMirroredPartnerRsvp &&
+              existingMirroredPartnerRsvp.status === "going"
+            ),
+          },
+        });
       }
 
       return rsvp;
@@ -982,6 +1014,13 @@ export const eventRouter = router({
   deleteRsvp: protectedProcedure
     .input(z.object({ eventId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
+      const existingUserRsvp = await ctx.db.query.eventRsvps.findFirst({
+        where: and(
+          eq(eventRsvps.eventId, input.eventId),
+          eq(eventRsvps.userId, ctx.auth.userId)
+        ),
+      });
+
       const partnerRelationship = await ctx.db.query.userPartners.findFirst({
         where: and(
           eq(userPartners.status, "accepted"),
@@ -997,6 +1036,15 @@ export const eventRouter = router({
           ? partnerRelationship.recipientId
           : partnerRelationship.requesterId
         : null;
+      const existingMirroredPartnerRsvp = partnerUserId
+        ? await ctx.db.query.eventRsvps.findFirst({
+            where: and(
+              eq(eventRsvps.eventId, input.eventId),
+              eq(eventRsvps.userId, partnerUserId),
+              eq(eventRsvps.partnerRsvpByUserId, ctx.auth.userId)
+            ),
+          })
+        : null;
 
       await ctx.db
         .delete(eventRsvps)
@@ -1008,13 +1056,30 @@ export const eventRouter = router({
         );
 
       if (partnerUserId) {
-        await ctx.db.delete(eventRsvps).where(
-          and(
-            eq(eventRsvps.eventId, input.eventId),
-            eq(eventRsvps.userId, partnerUserId),
-            eq(eventRsvps.partnerRsvpByUserId, ctx.auth.userId)
-          )
-        );
+        await ctx.db
+          .delete(eventRsvps)
+          .where(
+            and(
+              eq(eventRsvps.eventId, input.eventId),
+              eq(eventRsvps.userId, partnerUserId),
+              eq(eventRsvps.partnerRsvpByUserId, ctx.auth.userId)
+            )
+          );
+      }
+
+      if (existingUserRsvp?.status === "going") {
+        void logActivity({
+          actorUserId: ctx.auth.userId,
+          type: "rsvp_not_going",
+          entityType: "event",
+          entityId: input.eventId,
+          metadata: {
+            includePartner: Boolean(
+              existingMirroredPartnerRsvp &&
+              existingMirroredPartnerRsvp.status === "going"
+            ),
+          },
+        });
       }
 
       return { success: true };
@@ -1129,7 +1194,8 @@ export const eventRouter = router({
         updateData.description = updates.description;
       if (updates.coverImageUrl !== undefined)
         updateData.coverImageUrl = updates.coverImageUrl;
-      if (updates.eventUrl !== undefined) updateData.eventUrl = updates.eventUrl;
+      if (updates.eventUrl !== undefined)
+        updateData.eventUrl = updates.eventUrl;
       if (updates.source !== undefined) updateData.source = updates.source;
       if (updates.externalId !== undefined)
         updateData.externalId = updates.externalId;
@@ -1140,8 +1206,7 @@ export const eventRouter = router({
       if (updates.state !== undefined) updateData.state = updates.state;
       if (updates.visibility !== undefined)
         updateData.visibility = updates.visibility;
-      if (updates.venueId !== undefined)
-        updateData.venueId = updates.venueId;
+      if (updates.venueId !== undefined) updateData.venueId = updates.venueId;
       if (updates.organizerId !== undefined)
         updateData.organizerId = updates.organizerId;
 
@@ -1244,12 +1309,14 @@ export const eventRouter = router({
         });
 
         // Fall back to cities table if not a metro area
-        const originCity = metro ?? await ctx.db.query.cities.findFirst({
-          where: eq(cities.name, input.city),
-        });
+        const originCity =
+          metro ??
+          (await ctx.db.query.cities.findFirst({
+            where: eq(cities.name, input.city),
+          }));
 
         if (originCity?.latitude != null && originCity?.longitude != null) {
-          const radiusMiles = (metro?.radiusMiles) ?? 20;
+          const radiusMiles = metro?.radiusMiles ?? 20;
 
           const distanceSql = sql`
             (
@@ -1379,7 +1446,10 @@ export const eventRouter = router({
             });
           }
           if (cityRecord?.latitude != null && cityRecord?.longitude != null) {
-            originCity = { latitude: cityRecord.latitude, longitude: cityRecord.longitude };
+            originCity = {
+              latitude: cityRecord.latitude,
+              longitude: cityRecord.longitude,
+            };
           }
         }
 

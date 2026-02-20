@@ -14,7 +14,7 @@ import {
   placeCategories,
   placeMembers,
   placeFollows,
-  activityEvents,
+  userActivity,
 } from "./schema";
 import { inArray } from "drizzle-orm";
 
@@ -40,7 +40,7 @@ async function main() {
   await db.delete(eventCategories);
   await db.delete(placeMembers);
   await db.delete(placeFollows);
-  await db.delete(activityEvents);
+  await db.delete(userActivity);
 
   // Then core tables
   await db.delete(events);

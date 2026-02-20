@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { activityEvents, activityEntityTypeEnum, activityTypeEnum } from "../db/schema";
+import { userActivity, activityEntityTypeEnum, activityTypeEnum } from "../db/schema";
 import { z } from "zod";
 
 type ActivityType = (typeof activityTypeEnum.enumValues)[number];
@@ -21,7 +21,7 @@ export async function logActivity({
     metadata,
 }: LogActivityParams) {
     try {
-        await db.insert(activityEvents).values({
+        await db.insert(userActivity).values({
             actorUserId,
             type,
             entityType,

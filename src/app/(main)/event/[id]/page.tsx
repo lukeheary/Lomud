@@ -110,6 +110,7 @@ export default function EventPage() {
       // });
       utils.event.getEventById.invalidate();
       utils.event.listEventAttendees.invalidate();
+      utils.friends.getFriendFeed.invalidate();
     },
     onError: (error) => {
       toast({
@@ -122,12 +123,13 @@ export default function EventPage() {
 
   const deleteRsvpMutation = trpc.event.deleteRsvp.useMutation({
     onSuccess: () => {
-      toast({
-        title: "RSVP Removed",
-        description: "Your RSVP has been removed",
-      });
+      // toast({
+      //   title: "RSVP Removed",
+      //   description: "Your RSVP has been removed",
+      // });
       utils.event.getEventById.invalidate();
       utils.event.listEventAttendees.invalidate();
+      utils.friends.getFriendFeed.invalidate();
     },
     onError: (error) => {
       toast({

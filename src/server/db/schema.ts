@@ -45,6 +45,7 @@ export const genderEnum = pgEnum("gender", ["male", "female", "other"]);
 export const activityTypeEnum = pgEnum("activity_type", [
   "rsvp_going",
   "rsvp_interested",
+  "rsvp_not_going",
   "follow_place",
   "created_event",
   "checked_in",
@@ -120,7 +121,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   receivedPartnerRequests: many(userPartners, {
     relationName: "partnerReceipts",
   }),
-  activities: many(activityEvents),
+  activities: many(userActivity),
 }));
 
 // ============================================================================
@@ -667,8 +668,8 @@ export const userFriendsRelations = relations(userFriends, ({ one }) => ({
 // ============================================================================
 // ACTIVITY TABLE (Append-only)
 // ============================================================================
-export const activityEvents = pgTable(
-  "activity",
+export const userActivity = pgTable(
+  "user_activity",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     actorUserId: text("actor_user_id")
@@ -688,17 +689,17 @@ export const activityEvents = pgTable(
   })
 );
 
-export const activityEventsRelations = relations(activityEvents, ({ one }) => ({
+export const userActivityRelations = relations(userActivity, ({ one }) => ({
   actor: one(users, {
-    fields: [activityEvents.actorUserId],
+    fields: [userActivity.actorUserId],
     references: [users.id],
   }),
   event: one(events, {
-    fields: [activityEvents.entityId],
+    fields: [userActivity.entityId],
     references: [events.id],
   }),
   place: one(places, {
-    fields: [activityEvents.entityId],
+    fields: [userActivity.entityId],
     references: [places.id],
   }),
 }));
