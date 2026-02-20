@@ -23,7 +23,6 @@ import {
 } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { ResponsiveSelect } from "@/components/ui/responsive-select";
-import { getDistanceMiles, type Coordinates } from "@/lib/geo";
 import { resolveMetroArea } from "@/lib/metro-areas";
 import { cn } from "@/lib/utils";
 import { StickySearchBar } from "@/components/ui/sticky-search-bar";
@@ -32,7 +31,7 @@ type FilterType = "all" | "venues" | "organizers" | "following";
 
 function PlaceSkeletonGrid({ count = 9 }: { count?: number }) {
   return (
-    <div className="grid gap-2 py-2 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-2 pb-8 md:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: count }).map((_, index) => (
         <div
           key={`place-skeleton-${index}`}
@@ -60,7 +59,7 @@ function PlacesPageContent() {
 
   // Scroll to top and focus search input when navbar search button is clicked
   const scrollToSearchAndFocus = useCallback(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo(0, 0);
     searchInputRef.current?.focus();
   }, []);
 
@@ -128,55 +127,6 @@ function PlacesPageContent() {
     return metro?.city ?? currentUser.city;
   }, [selectedCity, currentUser?.city, currentUser?.state, cities]);
 
-  const referenceCity =
-    selectedCity && selectedCity !== "all"
-      ? selectedCity
-      : (effectiveCity ?? null);
-
-  const referenceCityRecord = useMemo(() => {
-    if (!referenceCity || !cities) return null;
-    const matches = cities.filter((city) => city.city === referenceCity);
-    if (matches.length === 0) return null;
-    if (currentUser?.state) {
-      const preferred = matches.find(
-        (city) => city.state === currentUser.state
-      );
-      if (preferred) return preferred;
-    }
-    return matches[0];
-  }, [referenceCity, cities, currentUser?.state]);
-
-  const referenceCoords = useMemo<Coordinates | null>(() => {
-    if (
-      referenceCityRecord?.latitude == null ||
-      referenceCityRecord?.longitude == null
-    ) {
-      return null;
-    }
-    return {
-      latitude: referenceCityRecord.latitude,
-      longitude: referenceCityRecord.longitude,
-    };
-  }, [referenceCityRecord]);
-
-  const cityDistanceMap = useMemo(() => {
-    if (!cities || !referenceCoords) return new Map<string, number>();
-
-    const map = new Map<string, number>();
-    cities.forEach((city) => {
-      if (city.latitude == null || city.longitude == null) return;
-      const distance = getDistanceMiles(referenceCoords, {
-        latitude: city.latitude,
-        longitude: city.longitude,
-      });
-      if (distance != null) {
-        map.set(`${city.city}|${city.state}`, distance);
-      }
-    });
-
-    return map;
-  }, [cities, referenceCoords]);
-
   // Don't run queries until we know the user's city (to avoid flash of "all cities")
   const isReady = !isLoadingUser;
 
@@ -222,38 +172,10 @@ function PlacesPageContent() {
         longitude: place.longitude,
         eventCount: place.eventCount,
       }))
-      .sort((a, b) => {
-        if (referenceCoords) {
-          const aDistance =
-            getDistanceMiles(
-              a.latitude != null && a.longitude != null
-                ? { latitude: a.latitude, longitude: a.longitude }
-                : null,
-              referenceCoords
-            ) ??
-            (a.city && a.state
-              ? cityDistanceMap.get(`${a.city}|${a.state}`)
-              : null) ??
-            Number.POSITIVE_INFINITY;
-
-          const bDistance =
-            getDistanceMiles(
-              b.latitude != null && b.longitude != null
-                ? { latitude: b.latitude, longitude: b.longitude }
-                : null,
-              referenceCoords
-            ) ??
-            (b.city && b.state
-              ? cityDistanceMap.get(`${b.city}|${b.state}`)
-              : null) ??
-            Number.POSITIVE_INFINITY;
-
-          if (aDistance !== bDistance) return aDistance - bDistance;
-        }
-
-        return a.name.localeCompare(b.name);
-      });
-  }, [placesData, referenceCoords, cityDistanceMap]);
+      .sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+      );
+  }, [placesData]);
 
   const isLoading = isLoadingPlaces;
 
@@ -264,49 +186,49 @@ function PlacesPageContent() {
 
       {/* Search and Filters */}
       <StickySearchBar>
-          <Suspense fallback={null}>
-            <SearchInput
-              ref={searchInputRef}
-              placeholder="Search venues & organizers..."
-              value={searchQuery}
-              onChange={setSearchQuery}
-              className="w-full"
-            />
-          </Suspense>
+        <Suspense fallback={null}>
+          <SearchInput
+            ref={searchInputRef}
+            placeholder="Search venues & organizers..."
+            value={searchQuery}
+            onChange={setSearchQuery}
+            className="w-full"
+          />
+        </Suspense>
 
-          {/* Filters */}
-          <div className="flex shrink-0 gap-2">
-            {/* Type Filter */}
-            <ResponsiveSelect
-              value={filterType}
-              onValueChange={(value) => setFilterType(value as FilterType)}
-              options={[
-                { value: "all", label: "All" },
-                { value: "venues", label: "Venues" },
-                { value: "organizers", label: "Organizers" },
-                { value: "following", label: "Following" },
-              ]}
-              placeholder="Filter"
-              title="Filter Places"
-              className="w-40 sm:w-[170px]"
-            />
+        {/* Filters */}
+        <div className="flex shrink-0 gap-2">
+          {/* Type Filter */}
+          <ResponsiveSelect
+            value={filterType}
+            onValueChange={(value) => setFilterType(value as FilterType)}
+            options={[
+              { value: "all", label: "All" },
+              { value: "venues", label: "Venues" },
+              { value: "organizers", label: "Organizers" },
+              { value: "following", label: "Following" },
+            ]}
+            placeholder="Filter"
+            title="Filter Places"
+            className="w-40 sm:w-[170px]"
+          />
 
-            {/* City Filter */}
-            <ResponsiveSelect
-              value={effectiveCity ?? "all"}
-              onValueChange={setSelectedCity}
-              options={[
-                { value: "all", label: "All Cities" },
-                ...(cities?.map((city) => ({
-                  value: city.city,
-                  label: `${city.city}, ${city.state}`,
-                })) || []),
-              ]}
-              placeholder="Select city"
-              title="Select City"
-              className="w-48 grow"
-            />
-          </div>
+          {/* City Filter */}
+          <ResponsiveSelect
+            value={effectiveCity ?? "all"}
+            onValueChange={setSelectedCity}
+            options={[
+              { value: "all", label: "All Cities" },
+              ...(cities?.map((city) => ({
+                value: city.city,
+                label: `${city.city}, ${city.state}`,
+              })) || []),
+            ]}
+            placeholder="Select city"
+            title="Select City"
+            className="w-48 grow"
+          />
+        </div>
       </StickySearchBar>
 
       {/* Loading State */}
@@ -314,7 +236,7 @@ function PlacesPageContent() {
 
       {/* Combined Grid */}
       {!isLoading && isReady && combinedItems.length > 0 && (
-        <div className="grid gap-2 py-2 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-2 pb-8 md:grid-cols-2 lg:grid-cols-3">
           {combinedItems.map((item) => (
             <Link
               key={`${item.type}-${item.id}`}
@@ -359,7 +281,7 @@ function PlacesPageContent() {
                         className={cn(
                           "flex items-center gap-1.5 text-sm",
                           item.eventCount === 0
-                            ? "text-muted-foreground/40"
+                            ? "hidden"
                             : "text-muted-foreground"
                         )}
                       >

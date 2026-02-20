@@ -187,8 +187,11 @@ function FriendsPageContent() {
           </Suspense>
 
           {!isSearchMode && (
-            <div className="flex shrink-0 gap-2">
-              <Link href="/friends/list" className="md:w-32 lg:w-40">
+            <div className="flex w-full shrink-0 gap-2 sm:w-auto">
+              <Link
+                href="/friends/list"
+                className="flex-1 sm:flex-none sm:w-32 lg:w-40"
+              >
                 <div className="flex h-12 cursor-pointer items-center justify-between rounded-full bg-muted px-4 transition-colors hover:bg-muted/80">
                   <p className="flex flex-row items-center gap-1.5 text-base font-medium lg:text-lg">
                     <span>{acceptedFriends.length}</span>
@@ -199,7 +202,10 @@ function FriendsPageContent() {
                   <ChevronRight className="h-4 w-4 text-muted-foreground lg:h-5 lg:w-5" />
                 </div>
               </Link>
-              <Link href="/friends/requests" className="md:w-32 lg:w-40">
+              <Link
+                href="/friends/requests"
+                className="flex-1 sm:flex-none sm:w-32 lg:w-40"
+              >
                 <div className="flex h-12 cursor-pointer items-center justify-between rounded-full bg-muted px-4 transition-colors hover:bg-muted/80">
                   <p className="flex flex-row items-center gap-1.5 text-base font-medium lg:text-lg">
                     <span>{receivedRequests.length}</span>

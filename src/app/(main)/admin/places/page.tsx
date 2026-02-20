@@ -189,12 +189,14 @@ export default function AdminPlacesPage() {
   };
 
   // Filter places by search query
-  const filteredPlaces = places?.filter(
-    (place) =>
-      place.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (place.city &&
-        place.city.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredPlaces = places
+    ?.filter(
+      (place) =>
+        place.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (place.city &&
+          place.city.toLowerCase().includes(searchQuery.toLowerCase()))
+    )
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
 
   const isVenue = activeTab === "venue";
   const typeLabel = isVenue ? "Venue" : "Organizer";

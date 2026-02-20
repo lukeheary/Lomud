@@ -325,8 +325,7 @@ function HomePageContent() {
     }
   );
 
-  const showSkeletons =
-    !isReady || (isLoading && !events);
+  const showSkeletons = !isReady || (isLoading && !events);
 
   // Fetch recently added events (for when search is focused but no query)
   const { data: recentEvents, isLoading: recentLoading } =
@@ -665,17 +664,15 @@ function HomePageContent() {
         isCurrentWeek && (
           <div className="mb-4">
             <StickySectionHeader>
-              <div className="flex items-center gap-1 pb-1 md:pb-2">
-                <Link
-                  href="/friends"
-                  className="flex items-center gap-1 transition-colors hover:text-primary"
-                >
-                  <h1 className="text-xl font-bold tracking-tight">
-                    Recent Activity
-                  </h1>
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-              </div>
+              <Link
+                href="/friends"
+                className="flex items-center gap-1 transition-colors hover:text-primary"
+              >
+                <h1 className="text-xl font-bold tracking-tight">
+                  Recent Activity
+                </h1>
+                <ChevronRight className="h-4 w-4" />
+              </Link>
             </StickySectionHeader>
             <div className="container mx-auto px-4">
               <ActivityFeed limit={3} hideWhenEmpty hidePastEvents />
@@ -685,20 +682,12 @@ function HomePageContent() {
 
       {/* Week View - outside container for full-width sticky headers */}
       {!isSearchMode && viewMode === "week" && events && !showSkeletons && (
-        <div className="space-y-6">
-          {daysToDisplay.map((date, index) => {
+        <div className="space-y-4">
+          {daysToDisplay.map((date) => {
             const dateKey = format(date, "yyyy-MM-dd");
             const dayEvents = eventsByDay[dateKey] || [];
             const isToday = isSameDay(date, new Date());
-            const currentHour = new Date().getHours();
-            const isEvening = currentHour >= 17;
-
-            // Format the date header - use Today/Tonight for current day
-            const dateHeader = isToday
-              ? isEvening
-                ? "Tonight"
-                : "Today"
-              : format(date, "EEEE, MMMM d");
+            const dateHeader = format(date, "EEE, MMM d");
 
             return (
               <div key={dateKey}>
