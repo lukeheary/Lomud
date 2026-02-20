@@ -15,7 +15,7 @@ function NewEventPageContent() {
   const isRecurring = searchParams.get("recurring") === "true";
 
   return (
-    <div className="container mx-auto max-w-2xl space-y-6 py-8">
+    <div className="container mx-auto max-w-2xl space-y-6 py-4">
       <BackButtonHeader
         backHref="/home"
         title={isRecurring ? "Create Recurring Event" : "Create Event"}

@@ -326,7 +326,7 @@ function HomePageContent() {
   );
 
   const showSkeletons =
-    !isReady || isLoading || (isFetching && !isSearching && !isSearchMode);
+    !isReady || (isLoading && !events);
 
   // Fetch recently added events (for when search is focused but no query)
   const { data: recentEvents, isLoading: recentLoading } =

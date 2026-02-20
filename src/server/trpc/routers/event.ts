@@ -16,7 +16,17 @@ import {
   userPartners,
   users,
 } from "../../db/schema";
-import { and, desc, eq, gte, ilike, inArray, lte, or, sql } from "drizzle-orm";
+import {
+  and,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  lte,
+  or,
+  sql,
+} from "drizzle-orm";
 import { uploadImageFromUrl, BUCKET_NAME } from "@/lib/s3";
 import { TRPCError } from "@trpc/server";
 import { logActivity } from "../../utils/activity-logger";
@@ -379,7 +389,7 @@ export const eventRouter = router({
       }
 
       const seenKeys = new Set<string>();
-      const filteredEvents = input.events.filter((event) => {
+      const dedupedEvents = input.events.filter((event) => {
         if (event.source && event.externalId) {
           const key = `${event.source}::${event.externalId}`;
           if (existingKeys.has(key)) return false;
@@ -389,12 +399,12 @@ export const eventRouter = router({
         return true;
       });
 
-      if (filteredEvents.length === 0) {
+      if (dedupedEvents.length === 0) {
         return { created: 0 };
       }
 
       const allCategoryKeys = Array.from(
-        new Set(filteredEvents.flatMap((event) => event.categories || []))
+        new Set(dedupedEvents.flatMap((event) => event.categories || []))
       );
       const validBatchCategoryKeys = new Set(
         await filterExistingCategoryKeys(ctx.db, allCategoryKeys, {
@@ -414,7 +424,7 @@ export const eventRouter = router({
           ? `${event.source}::${event.externalId}`
           : `${event.title}::${event.startAt.toISOString()}::${event.city}::${event.state}`;
 
-      const values = filteredEvents.map((event) => {
+      const values = dedupedEvents.map((event) => {
         const categoryKeys = (event.categories || []).filter((key) =>
           validBatchCategoryKeys.has(key)
         );
@@ -451,11 +461,11 @@ export const eventRouter = router({
         })
         .returning();
 
-      if (created.length > 0) {
-        const categoryKeysByEventKey = new Map(
-          values.map((value) => [value.eventKey, value.categoryKeys])
-        );
+      const categoryKeysByEventKey = new Map(
+        values.map((value) => [value.eventKey, value.categoryKeys])
+      );
 
+      if (created.length > 0) {
         await Promise.all(
           created.map(async (row) => {
             const rowEventKey = toEventKey({
@@ -1171,6 +1181,48 @@ export const eventRouter = router({
       });
 
       return refreshed ? mapEventCategoryData(refreshed) : updatedEvent;
+    }),
+
+  deleteEvent: protectedProcedure
+    .input(z.object({ eventId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const event = await ctx.db.query.events.findFirst({
+        where: eq(events.id, input.eventId),
+      });
+
+      if (!event) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Event not found",
+        });
+      }
+
+      const user = await ctx.db.query.users.findFirst({
+        where: eq(users.id, ctx.auth.userId),
+      });
+      const isAdmin = user?.role === "admin";
+      const isCreator = event.createdByUserId === ctx.auth.userId;
+
+      if (!isAdmin && !isCreator) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have permission to delete this event",
+        });
+      }
+
+      const [deletedEvent] = await ctx.db
+        .delete(events)
+        .where(eq(events.id, input.eventId))
+        .returning({ id: events.id });
+
+      if (!deletedEvent) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to delete event",
+        });
+      }
+
+      return { success: true };
     }),
 
   listPublicEventsPreview: publicProcedure

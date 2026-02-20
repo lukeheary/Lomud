@@ -22,6 +22,7 @@ export default function EditEventPage() {
   const eventId = params.id as string;
   const router = useRouter();
   const { toast } = useToast();
+  const utils = trpc.useUtils();
 
   // Fetch event data
   const { data: event, isLoading: eventLoading } =
@@ -112,6 +113,28 @@ export default function EditEventPage() {
         description: "Event updated successfully",
       });
       router.push(`/event/${eventId}`);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMutation = trpc.event.deleteEvent.useMutation({
+    onSuccess: async () => {
+      await Promise.all([
+        utils.event.getEventById.invalidate({ eventId }),
+        utils.event.listEventsByRange.invalidate(),
+        utils.event.getRecentlyAddedEvents.invalidate(),
+      ]);
+      toast({
+        title: "Event deleted",
+        description: "The event has been removed from the platform",
+      });
+      router.push("/home");
     },
     onError: (error) => {
       toast({
@@ -232,6 +255,14 @@ export default function EditEventPage() {
     };
 
     performUpdate();
+  };
+
+  const handleDelete = () => {
+    const confirmed = window.confirm(
+      "Delete this event? It will be hidden across the platform."
+    );
+    if (!confirmed) return;
+    deleteMutation.mutate({ eventId });
   };
 
   if (eventLoading) {
@@ -378,13 +409,26 @@ export default function EditEventPage() {
               <Button
                 type="button"
                 variant="outline"
+                onClick={handleDelete}
+                disabled={updateMutation.isPending || deleteMutation.isPending}
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                {deleteMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Delete Event
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => router.push(`/event/${eventId}`)}
+                disabled={updateMutation.isPending || deleteMutation.isPending}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                disabled={updateMutation.isPending}
+                disabled={updateMutation.isPending || deleteMutation.isPending}
                 className="flex-1"
               >
                 {updateMutation.isPending && (

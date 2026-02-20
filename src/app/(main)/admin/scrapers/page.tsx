@@ -15,6 +15,7 @@ import {
   MapPin,
   Play,
   Search,
+  X,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useToast } from "@/hooks/use-toast";
@@ -30,6 +31,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 type ScraperType = "dice" | "posh" | "clubcafe" | "ticketmaster";
 
@@ -70,6 +76,15 @@ interface ScrapedEvent {
 interface EditableScrapedEvent extends ScrapedEvent {
   editableStartAt: string;
   editableEndAt: string;
+  venueId?: string | null;
+  linkedVenue?: SelectedVenue | null;
+}
+
+interface SelectedVenue {
+  id: string;
+  name: string;
+  city: string | null;
+  state: string | null;
 }
 
 interface ScrapeResult {
@@ -116,12 +131,130 @@ function toDateTimeLocalInput(value: string | null) {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
+function VenueDropdown({
+  selected,
+  onSelect,
+  placeholder = "Link to a venue (optional)",
+}: {
+  selected: SelectedVenue | null;
+  onSelect: (venue: SelectedVenue | null) => void;
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const { data: results, isLoading } = trpc.place.searchPlaces.useQuery(
+    { query: search, type: "venue" },
+    { enabled: search.length > 1 }
+  );
+
+  if (selected) {
+    return (
+      <div className="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2 text-sm">
+        <Building className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <span className="font-medium">{selected.name}</span>
+        {selected.city && selected.state && (
+          <span className="text-muted-foreground">
+            {selected.city}, {selected.state}
+          </span>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="ml-auto h-6 w-6 text-muted-foreground hover:text-destructive"
+          onClick={() => onSelect(null)}
+        >
+          <X className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          className="w-full justify-between text-muted-foreground"
+          size="sm"
+        >
+          <span className="flex items-center gap-2">
+            <Building className="h-4 w-4" />
+            {placeholder}
+          </span>
+          <Search className="h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+        <div className="flex items-center border-b px-3 py-2">
+          <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+          <input
+            className="flex h-8 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            placeholder="Search venues..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <div className="max-h-[220px] overflow-auto p-1">
+          {isLoading && (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-4 w-4 animate-spin" />
+            </div>
+          )}
+          {!isLoading &&
+            results?.map((venue) => (
+              <button
+                key={venue.id}
+                type="button"
+                className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
+                onClick={() => {
+                  onSelect({
+                    id: venue.id,
+                    name: venue.name,
+                    city: venue.city,
+                    state: venue.state,
+                  });
+                  setOpen(false);
+                  setSearch("");
+                }}
+              >
+                <div className="font-medium">{venue.name}</div>
+                {venue.city && venue.state && (
+                  <div className="text-xs text-muted-foreground">
+                    {venue.city}, {venue.state}
+                  </div>
+                )}
+              </button>
+            ))}
+          {!isLoading && search.length > 1 && results?.length === 0 && (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              No venues found
+            </p>
+          )}
+          {search.length <= 1 && (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              Type at least 2 characters...
+            </p>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function EventCard({
   event,
   onUpdate,
+  showVenueSelector,
+  selectedVenue,
+  onSelectVenue,
 }: {
   event: EditableScrapedEvent;
   onUpdate: (patch: Partial<EditableScrapedEvent>) => void;
+  showVenueSelector: boolean;
+  selectedVenue: SelectedVenue | null;
+  onSelectVenue: (venue: SelectedVenue | null) => void;
 }) {
   const [showFullDesc, setShowFullDesc] = useState(false);
 
@@ -185,6 +318,26 @@ function EventCard({
               </div>
             </div>
 
+            {showVenueSelector && (
+              <div className="space-y-1">
+                {event.venueName && (
+                  <p className="text-xs text-muted-foreground">
+                    Scraped venue:
+                    <span className="ml-1 font-medium text-foreground">
+                      {event.venueName}
+                    </span>
+                  </p>
+                )}
+                <p className="text-xs font-medium text-muted-foreground">
+                  Venue (optional)
+                </p>
+                <VenueDropdown
+                  selected={selectedVenue}
+                  onSelect={onSelectVenue}
+                />
+              </div>
+            )}
+
             <div className="flex flex-wrap gap-1.5">
               {event.categories.map((cat) => (
                 <Badge key={cat} variant="secondary" className="text-xs">
@@ -219,6 +372,7 @@ export default function AdminScrapersPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ScrapeResult | null>(null);
   const [editableEvents, setEditableEvents] = useState<EditableScrapedEvent[]>([]);
+  const [defaultVenue, setDefaultVenue] = useState<SelectedVenue | null>(null);
   const [importedCount, setImportedCount] = useState<number | null>(null);
 
   const queryInput = useMemo(
@@ -259,6 +413,7 @@ export default function AdminScrapersPage() {
     setError(null);
     setResult(null);
     setEditableEvents([]);
+    setDefaultVenue(null);
     setImportedCount(null);
 
     try {
@@ -314,6 +469,8 @@ export default function AdminScrapersPage() {
           ...event,
           editableStartAt: toDateTimeLocalInput(event.startAt),
           editableEndAt: toDateTimeLocalInput(event.endAt),
+          venueId: null,
+          linkedVenue: null,
         }))
       );
     } catch (err) {
@@ -349,6 +506,10 @@ export default function AdminScrapersPage() {
         address: event.address,
         city: event.city,
         state: event.state,
+        venueId:
+          selectedRow.place.type === "organizer"
+            ? event.venueId ?? defaultVenue?.id ?? undefined
+            : undefined,
         // Scrapers no longer auto-assign categories.
         categories: [],
         visibility: event.visibility as "public" | "private",
@@ -538,6 +699,17 @@ export default function AdminScrapersPage() {
                   {selectedRow.place.name}
                 </span>
               </p>
+              {selectedRow.place.type === "organizer" && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">
+                    Default venue for scraped events
+                  </p>
+                  <VenueDropdown
+                    selected={defaultVenue}
+                    onSelect={setDefaultVenue}
+                  />
+                </div>
+              )}
               <div className="flex items-center justify-between border-t pt-4">
                 <p className="text-sm text-muted-foreground">
                   {editableEvents.length} events to import
@@ -570,6 +742,19 @@ export default function AdminScrapersPage() {
               <EventCard
                 key={`${event.externalId ?? event.title}-${idx}`}
                 event={event}
+                showVenueSelector={selectedRow.place.type === "organizer"}
+                selectedVenue={event.linkedVenue ?? null}
+                onSelectVenue={(venue) => {
+                  setEditableEvents((prev) => {
+                    const next = [...prev];
+                    next[idx] = {
+                      ...next[idx],
+                      venueId: venue?.id ?? null,
+                      linkedVenue: venue,
+                    };
+                    return next;
+                  });
+                }}
                 onUpdate={(patch) => {
                   setEditableEvents((prev) => {
                     const next = [...prev];

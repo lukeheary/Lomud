@@ -201,23 +201,24 @@ export default function ProfilePage() {
     utils.friends.listFriends.invalidate();
   };
 
-  const sendPartnerRequestMutation = trpc.partners.sendPartnerRequest.useMutation({
-    onSuccess: () => {
-      toast({
-        title: "Partner request sent",
-        description: "Your partner request has been sent",
-      });
-      setPartnerSearch("");
-      invalidatePartnerQueries();
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+  const sendPartnerRequestMutation =
+    trpc.partners.sendPartnerRequest.useMutation({
+      onSuccess: () => {
+        toast({
+          title: "Partner request sent",
+          description: "Your partner request has been sent",
+        });
+        setPartnerSearch("");
+        invalidatePartnerQueries();
+      },
+      onError: (error) => {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      },
+    });
 
   const acceptPartnerRequestMutation =
     trpc.partners.acceptPartnerRequest.useMutation({
@@ -485,25 +486,28 @@ export default function ProfilePage() {
             isRequester: false,
           }
         : null;
-  const acceptedRelationship = myPartner?.status === "accepted" ? myPartner : null;
+  const acceptedRelationship =
+    myPartner?.status === "accepted" ? myPartner : null;
 
   const acceptedFriendCandidates = (acceptedFriends || [])
     .map((friendship) => friendship.friend)
     .filter((friend): friend is NonNullable<typeof friend> => Boolean(friend));
-  const filteredPartnerCandidates = acceptedFriendCandidates.filter((friend) => {
-    const fullName = `${friend.firstName || ""} ${friend.lastName || ""}`
-      .trim()
-      .toLowerCase();
-    const query = partnerSearch.trim().toLowerCase();
-    return (
-      query.length === 0 ||
-      fullName.includes(query) ||
-      (friend.username || "").toLowerCase().includes(query)
-    );
-  });
+  const filteredPartnerCandidates = acceptedFriendCandidates.filter(
+    (friend) => {
+      const fullName = `${friend.firstName || ""} ${friend.lastName || ""}`
+        .trim()
+        .toLowerCase();
+      const query = partnerSearch.trim().toLowerCase();
+      return (
+        query.length === 0 ||
+        fullName.includes(query) ||
+        (friend.username || "").toLowerCase().includes(query)
+      );
+    }
+  );
 
   return (
-    <div className="container mx-auto max-w-2xl space-y-6 py-8">
+    <div className="container mx-auto max-w-2xl space-y-6 py-4">
       {/*<div className="flex items-center justify-between">*/}
       {/*  <h1 className="text-3xl font-bold">Profile</h1>*/}
       {/*  /!*<UserButton afterSignOutUrl="/sign-in" />*!/*/}
@@ -879,7 +883,9 @@ export default function ProfilePage() {
                   You need an accepted friend before you can choose a partner.
                 </p>
               ) : filteredPartnerCandidates.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No friends found.</p>
+                <p className="text-sm text-muted-foreground">
+                  No friends found.
+                </p>
               ) : (
                 <div className="space-y-2">
                   {filteredPartnerCandidates.slice(0, 6).map((friend) => (

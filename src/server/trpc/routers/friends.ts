@@ -366,9 +366,14 @@ export const friendsRouter = router({
         },
       });
 
+      const visibleActivities = activities.filter((activity) => {
+        if (activity.entityType !== "event") return true;
+        return Boolean(activity.event);
+      });
+
       const actorIdsWithPartnerIncluded = [
         ...new Set(
-          activities
+          visibleActivities
             .filter(
               (activity) =>
                 (activity.type === "rsvp_going" ||
@@ -381,7 +386,7 @@ export const friendsRouter = router({
       ];
 
       if (actorIdsWithPartnerIncluded.length === 0) {
-        return activities;
+        return visibleActivities;
       }
 
       const actorIdSet = new Set(actorIdsWithPartnerIncluded);
@@ -416,7 +421,7 @@ export const friendsRouter = router({
         }
       }
 
-      return activities.map((activity) => {
+      return visibleActivities.map((activity) => {
         const includePartner =
           (activity.metadata as { includePartner?: boolean } | null)
             ?.includePartner === true;

@@ -11,7 +11,18 @@ import {
   placeMembers,
   places,
 } from "../../db/schema";
-import { and, asc, desc, eq, gte, ilike, inArray, lt, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  lt,
+  or,
+  sql,
+} from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { logActivity } from "../../utils/activity-logger";
 import {
@@ -261,7 +272,12 @@ export const placeRouter = router({
           count: sql<number>`count(*)::int`,
         })
         .from(events)
-        .where(and(inArray(events.venueId, placeIds), gte(events.startAt, now)))
+        .where(
+          and(
+            inArray(events.venueId, placeIds),
+            gte(events.startAt, now)
+          )
+        )
         .groupBy(events.venueId);
 
       // Count upcoming events where this place is the organizer
@@ -271,7 +287,12 @@ export const placeRouter = router({
           count: sql<number>`count(*)::int`,
         })
         .from(events)
-        .where(and(inArray(events.organizerId, placeIds), gte(events.startAt, now)))
+        .where(
+          and(
+            inArray(events.organizerId, placeIds),
+            gte(events.startAt, now)
+          )
+        )
         .groupBy(events.organizerId);
 
       const countMap = new Map<string, number>();
