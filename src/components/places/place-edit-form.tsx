@@ -331,7 +331,7 @@ export function PlaceEditForm({
         <Label>{typeLabel} Profile Image</Label>
         <S3Uploader
           folder={placeId ? `places/${placeId}` : "places"}
-          fileName="logoImage.png"
+          fileName="logo-image.png"
           currentImageUrl={formData.logoImageUrl}
           onUploadComplete={(url) =>
             setFormData((prev) => ({ ...prev, logoImageUrl: url }))
@@ -349,7 +349,7 @@ export function PlaceEditForm({
         <Label>Banner Image (Optional)</Label>
         <S3Uploader
           folder={placeId ? `places/${placeId}` : "places"}
-          fileName="coverImage.png"
+          fileName="cover-image.png"
           currentImageUrl={formData.coverImageUrl}
           onUploadComplete={(url) =>
             setFormData((prev) => ({ ...prev, coverImageUrl: url }))

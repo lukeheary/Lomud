@@ -226,7 +226,7 @@ export default function OnboardingPage() {
                 setFormData({ ...formData, avatarImageUrl: "" })
               }
               folder={`users/${user?.id}`}
-              fileName="avatarImage.png"
+              fileName="avatar-image.png"
               className="w-full max-w-[200px]"
             />
             {!formData.avatarImageUrl && (

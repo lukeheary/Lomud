@@ -110,7 +110,9 @@ export function EventForm({
       (endHour === startHour && endMinute <= startMinute);
 
     const endDateString = isOvernight
-      ? addDays(new Date(`${dateString}T00:00`), 1).toISOString().slice(0, 10)
+      ? addDays(new Date(`${dateString}T00:00`), 1)
+          .toISOString()
+          .slice(0, 10)
       : dateString;
 
     setFormData((prev) => ({
@@ -236,7 +238,10 @@ export function EventForm({
     }
 
     if (isRecurringDefault) {
-      if (recurrenceData.frequency === "weekly" && recurrenceData.daysOfWeek.length === 0) {
+      if (
+        recurrenceData.frequency === "weekly" &&
+        recurrenceData.daysOfWeek.length === 0
+      ) {
         toast({
           title: "Validation Error",
           description: "Select at least one weekday for a weekly recurrence",
@@ -374,7 +379,9 @@ export function EventForm({
       const nextStartAt = buildDateTime(date, startTime);
       const endDate = getDatePart(prev.endAt);
       const endTime = getTimePart(prev.endAt);
-      const nextEndAt = endDate ? buildDateTime(date, endTime || "23:00") : prev.endAt;
+      const nextEndAt = endDate
+        ? buildDateTime(date, endTime || "23:00")
+        : prev.endAt;
       return {
         ...prev,
         startAt: nextStartAt,
@@ -398,7 +405,8 @@ export function EventForm({
       return;
     }
     setFormData((prev) => {
-      const time = getTimePart(prev.endAt) || getTimePart(prev.startAt) || "23:00";
+      const time =
+        getTimePart(prev.endAt) || getTimePart(prev.startAt) || "23:00";
       return {
         ...prev,
         endAt: buildDateTime(date, time),
@@ -468,7 +476,7 @@ export function EventForm({
               <Label htmlFor="image">Event Image</Label>
               <S3Uploader
                 folder="events"
-                fileName="coverImage.png"
+                fileName="cover-image.png"
                 currentImageUrl={formData.coverImageUrl}
                 onUploadComplete={(url: string) =>
                   setFormData({ ...formData, coverImageUrl: url })
@@ -486,7 +494,9 @@ export function EventForm({
               <Input
                 id="title"
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
                 placeholder="Summer Music Festival"
                 required
               />
@@ -509,7 +519,9 @@ export function EventForm({
               <Label htmlFor="categories">Categories</Label>
               <CategoryMultiSelect
                 value={formData.categories}
-                onChange={(categories) => setFormData({ ...formData, categories })}
+                onChange={(categories) =>
+                  setFormData({ ...formData, categories })
+                }
                 placeholder="Select categories..."
               />
             </div>
@@ -610,7 +622,8 @@ export function EventForm({
                     <Label>Days of week</Label>
                     <div className="flex flex-wrap gap-2">
                       {WEEKDAY_LABELS.map((label, index) => {
-                        const selected = recurrenceData.daysOfWeek.includes(index);
+                        const selected =
+                          recurrenceData.daysOfWeek.includes(index);
                         return (
                           <Button
                             key={label}
@@ -650,7 +663,9 @@ export function EventForm({
                 </Button>
               )}
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSubmitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 {isRecurringDefault ? "Create Recurring Event" : "Create Event"}
               </Button>
             </div>

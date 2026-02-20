@@ -305,7 +305,7 @@ export default function EditEventPage() {
               <Label htmlFor="image">Event Image</Label>
               <S3Uploader
                 folder={`events/${eventId}`}
-                fileName="coverImage.png"
+                fileName="cover-image.png"
                 currentImageUrl={formData.coverImageUrl}
                 onUploadComplete={(url) =>
                   setFormData({ ...formData, coverImageUrl: url })
