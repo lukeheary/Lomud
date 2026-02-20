@@ -7,7 +7,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import {
   Calendar,
   MapPin,
@@ -84,7 +84,10 @@ export default function EventPage() {
   const categoryLabelMap = useMemo(
     () =>
       Object.fromEntries(
-        (activeCategories || []).map((category) => [category.key, category.label])
+        (activeCategories || []).map((category) => [
+          category.key,
+          category.label,
+        ])
       ),
     [activeCategories]
   );
@@ -413,17 +416,22 @@ export default function EventPage() {
               </Button>
             </div>
             {hasActivePartner && (
-              <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
-                <Checkbox
-                  id="include-partner"
-                  checked={includePartner}
-                  onCheckedChange={(checked) => setIncludePartner(checked === true)}
-                  disabled={
-                    rsvpMutation.isPending || deleteRsvpMutation.isPending
-                  }
-                />
-                <label htmlFor="include-partner" className="cursor-pointer">
-                  Include {myPartner.partner.firstName}
+              <div className="mb-4 w-full text-sm text-muted-foreground sm:w-fit">
+                <label
+                  htmlFor="include-partner"
+                  className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-full border border-border px-4 py-2 sm:min-w-[220px]"
+                >
+                  <span className="text-foreground">
+                    Going with {myPartner.partner.firstName}
+                  </span>
+                  <Switch
+                    id="include-partner"
+                    checked={includePartner}
+                    onCheckedChange={setIncludePartner}
+                    disabled={
+                      rsvpMutation.isPending || deleteRsvpMutation.isPending
+                    }
+                  />
                 </label>
               </div>
             )}
