@@ -691,8 +691,8 @@ function HomePageContent() {
             const isEvening = currentHour >= 17;
             const dateHeader = isToday
               ? isEvening
-                ? "Tonight"
-                : "Today"
+                ? "Tonight's Events"
+                : "Today's Events"
               : format(date, "EEE, MMM d");
 
             return (

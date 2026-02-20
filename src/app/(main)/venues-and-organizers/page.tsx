@@ -31,7 +31,7 @@ type FilterType = "all" | "venues" | "organizers" | "following";
 
 function PlaceSkeletonGrid({ count = 9 }: { count?: number }) {
   return (
-    <div className="grid gap-2 pb-8 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: count }).map((_, index) => (
         <div
           key={`place-skeleton-${index}`}
@@ -180,7 +180,7 @@ function PlacesPageContent() {
   const isLoading = isLoadingPlaces;
 
   return (
-    <div className="container mx-auto pt-4">
+    <div className="container mx-auto pb-8 pt-4">
       {/* Sticky sentinel for intersection observer */}
       <div ref={stickySentinelRef} className="h-px w-full" />
 
@@ -236,7 +236,7 @@ function PlacesPageContent() {
 
       {/* Combined Grid */}
       {!isLoading && isReady && combinedItems.length > 0 && (
-        <div className="grid gap-2 pb-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
           {combinedItems.map((item) => (
             <Link
               key={`${item.type}-${item.id}`}

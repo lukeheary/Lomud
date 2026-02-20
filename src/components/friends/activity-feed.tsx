@@ -13,7 +13,11 @@ import {
   Circle,
   X,
 } from "lucide-react";
-import { differenceInCalendarDays, formatDistanceToNow, startOfDay } from "date-fns";
+import {
+  differenceInCalendarDays,
+  formatDistanceToNow,
+  startOfDay,
+} from "date-fns";
 import Link from "next/link";
 import { formatRelativeEventDate } from "@/lib/utils";
 import { StickySectionHeader } from "@/components/ui/sticky-section-header";
@@ -292,7 +296,7 @@ interface ActivityFeedProps {
 function getRecencyLabel(createdAt: Date) {
   const daysAgo = Math.max(0, differenceInCalendarDays(new Date(), createdAt));
 
-  if (daysAgo === 0) return "Today";
+  if (daysAgo === 0) return "Today's Activity";
   if (daysAgo === 1) return "Yesterday";
   if (daysAgo < 7) return `${daysAgo} Days Ago`;
   if (daysAgo < 14) return "Last week";
@@ -375,7 +379,10 @@ export function ActivityFeed({
             </StickySectionHeader>
             <div className="flex flex-col">
               {group.items.map((activity: any) => (
-                <div key={activity.id} className="relative pb-3 last:pb-0 md:pb-4">
+                <div
+                  key={activity.id}
+                  className="relative pb-3 last:pb-0 md:pb-4"
+                >
                   <ActivityItem activity={activity} />
                 </div>
               ))}

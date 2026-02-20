@@ -7,12 +7,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { useNavbarSearch } from "@/contexts/nav-search-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Loader2,
-  ChevronRight,
-  UserPlus,
-  X,
-} from "lucide-react";
+import { Loader2, ChevronRight, UserPlus, X } from "lucide-react";
 import { ActivityFeed } from "@/components/friends/activity-feed";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryState } from "nuqs";
@@ -168,56 +163,56 @@ function FriendsPageContent() {
   const isSearching = searchQuery.length >= 2;
 
   return (
-    <div className="container mx-auto pt-4">
+    <div className="container mx-auto pb-8 pt-4">
       {/* Sticky sentinel for intersection observer */}
       <div ref={stickySentinelRef} className="h-px w-full" />
 
       <StickySearchBar>
-          <Suspense fallback={null}>
-            <SearchInput
-              ref={searchInputRef}
-              placeholder="Search friends or find new people..."
-              value={searchQuery}
-              onChange={setSearchQuery}
-              onFocus={() => setIsSearchMode(true)}
-              showBack={isSearchMode}
-              onBack={handleExitSearch}
-              className="w-full"
-            />
-          </Suspense>
+        <Suspense fallback={null}>
+          <SearchInput
+            ref={searchInputRef}
+            placeholder="Search friends or find new people..."
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onFocus={() => setIsSearchMode(true)}
+            showBack={isSearchMode}
+            onBack={handleExitSearch}
+            className="w-full"
+          />
+        </Suspense>
 
-          {!isSearchMode && (
-            <div className="flex w-full shrink-0 gap-2 sm:w-auto">
-              <Link
-                href="/friends/list"
-                className="flex-1 sm:flex-none sm:w-32 lg:w-40"
-              >
-                <div className="flex h-12 cursor-pointer items-center justify-between rounded-full bg-muted px-4 transition-colors hover:bg-muted/80">
-                  <p className="flex flex-row items-center gap-1.5 text-base font-medium lg:text-lg">
-                    <span>{acceptedFriends.length}</span>
-                    <span className={"text-sm text-muted-foreground"}>
-                      {pluralize("Friend", acceptedFriends.length)}
-                    </span>
-                  </p>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground lg:h-5 lg:w-5" />
-                </div>
-              </Link>
-              <Link
-                href="/friends/requests"
-                className="flex-1 sm:flex-none sm:w-32 lg:w-40"
-              >
-                <div className="flex h-12 cursor-pointer items-center justify-between rounded-full bg-muted px-4 transition-colors hover:bg-muted/80">
-                  <p className="flex flex-row items-center gap-1.5 text-base font-medium lg:text-lg">
-                    <span>{receivedRequests.length}</span>
-                    <span className={"text-sm text-muted-foreground"}>
-                      {pluralize("Request", receivedRequests.length)}
-                    </span>
-                  </p>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground lg:h-5 lg:w-5" />
-                </div>
-              </Link>
-            </div>
-          )}
+        {!isSearchMode && (
+          <div className="flex w-full shrink-0 gap-2 sm:w-auto">
+            <Link
+              href="/friends/list"
+              className="flex-1 sm:w-32 sm:flex-none lg:w-40"
+            >
+              <div className="flex h-12 cursor-pointer items-center justify-between rounded-full bg-muted px-4 transition-colors hover:bg-muted/80">
+                <p className="flex flex-row items-center gap-1.5 text-base font-medium lg:text-lg">
+                  <span>{acceptedFriends.length}</span>
+                  <span className={"text-sm text-muted-foreground"}>
+                    {pluralize("Friend", acceptedFriends.length)}
+                  </span>
+                </p>
+                <ChevronRight className="h-4 w-4 text-muted-foreground lg:h-5 lg:w-5" />
+              </div>
+            </Link>
+            <Link
+              href="/friends/requests"
+              className="flex-1 sm:w-32 sm:flex-none lg:w-40"
+            >
+              <div className="flex h-12 cursor-pointer items-center justify-between rounded-full bg-muted px-4 transition-colors hover:bg-muted/80">
+                <p className="flex flex-row items-center gap-1.5 text-base font-medium lg:text-lg">
+                  <span>{receivedRequests.length}</span>
+                  <span className={"text-sm text-muted-foreground"}>
+                    {pluralize("Request", receivedRequests.length)}
+                  </span>
+                </p>
+                <ChevronRight className="h-4 w-4 text-muted-foreground lg:h-5 lg:w-5" />
+              </div>
+            </Link>
+          </div>
+        )}
       </StickySearchBar>
 
       {isSearchMode ? (
