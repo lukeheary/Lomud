@@ -367,8 +367,7 @@ function FriendsPageContent() {
 
           {/* Activity Feed */}
           <div>
-            <h2 className="mb-3 text-xl font-semibold">Activity</h2>
-            <ActivityFeed />
+            <ActivityFeed groupByRecency groupHeaderClassName="-mx-4" />
           </div>
         </>
       )}

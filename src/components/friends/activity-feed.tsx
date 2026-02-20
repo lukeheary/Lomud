@@ -6,15 +6,17 @@ import {
   Loader2,
   Users,
   CheckCircle2,
+  Check,
   Star,
   Building2,
   CalendarPlus,
   Circle,
   X,
 } from "lucide-react";
-import { formatDistanceToNow, startOfDay } from "date-fns";
+import { differenceInCalendarDays, formatDistanceToNow, startOfDay } from "date-fns";
 import Link from "next/link";
 import { formatRelativeEventDate } from "@/lib/utils";
+import { StickySectionHeader } from "@/components/ui/sticky-section-header";
 
 interface ActivityItemProps {
   activity: any;
@@ -35,7 +37,7 @@ function ActivityItem({ activity }: ActivityItemProps) {
   const renderIcon = () => {
     switch (type) {
       case "rsvp_going":
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+        return <Check className="h-4 w-4 text-green-500" />;
       case "rsvp_interested":
         return <Star className="h-4 w-4 text-yellow-500" />;
       case "rsvp_not_going":
@@ -79,7 +81,11 @@ function ActivityItem({ activity }: ActivityItemProps) {
         return (
           <>
             {subjectName}{" "}
-            {isEventPast ? "went to" : isPluralSubject ? "are going to" : "is going to"}{" "}
+            {isEventPast
+              ? "went to"
+              : isPluralSubject
+                ? "are going to"
+                : "is going to"}{" "}
             <Link
               href={`/event/${entityId}`}
               className="font-medium text-primary hover:underline"
@@ -254,7 +260,7 @@ function ActivityItem({ activity }: ActivityItemProps) {
           name={actor.firstName}
           className="h-10 w-10 border-2 border-background ring-2 ring-muted/20"
         />
-        <div className="absolute -right-[6px] -top-[1px] rounded-full bg-background p-0.5">
+        <div className="absolute -right-[6px] -top-[0.5px] rounded-full bg-card p-0.5">
           {renderIcon()}
         </div>
       </div>
@@ -279,12 +285,28 @@ interface ActivityFeedProps {
   limit?: number;
   hideWhenEmpty?: boolean;
   hidePastEvents?: boolean;
+  groupByRecency?: boolean;
+  groupHeaderClassName?: string;
+}
+
+function getRecencyLabel(createdAt: Date) {
+  const daysAgo = Math.max(0, differenceInCalendarDays(new Date(), createdAt));
+
+  if (daysAgo === 0) return "Today";
+  if (daysAgo === 1) return "Yesterday";
+  if (daysAgo < 7) return `${daysAgo} Days Ago`;
+  if (daysAgo < 14) return "Last week";
+
+  const weeksAgo = Math.floor(daysAgo / 7);
+  return `${weeksAgo} Weeks ago`;
 }
 
 export function ActivityFeed({
   limit = 50,
   hideWhenEmpty = false,
   hidePastEvents = false,
+  groupByRecency = false,
+  groupHeaderClassName,
 }: ActivityFeedProps) {
   const { data: rawActivities, isLoading } =
     trpc.friends.getFriendFeed.useQuery({
@@ -322,10 +344,52 @@ export function ActivityFeed({
     );
   }
 
+  if (groupByRecency) {
+    const sortedActivities = [...activities].sort(
+      (a: any, b: any) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    const groups = sortedActivities.reduce(
+      (acc: Array<{ label: string; items: any[] }>, activity: any) => {
+        const label = getRecencyLabel(new Date(activity.createdAt));
+        const lastGroup = acc[acc.length - 1];
+        if (!lastGroup || lastGroup.label !== label) {
+          acc.push({ label, items: [activity] });
+        } else {
+          lastGroup.items.push(activity);
+        }
+        return acc;
+      },
+      []
+    );
+
+    return (
+      <div className="space-y-4">
+        {groups.map((group) => (
+          <div key={`${group.label}-${group.items[0]?.id || "group"}`}>
+            <StickySectionHeader className={groupHeaderClassName}>
+              <h2 className="text-xl font-semibold tracking-tight">
+                {group.label}
+              </h2>
+            </StickySectionHeader>
+            <div className="flex flex-col">
+              {group.items.map((activity: any) => (
+                <div key={activity.id} className="relative pb-3 last:pb-0 md:pb-4">
+                  <ActivityItem activity={activity} />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col">
-        {activities.map((activity: any, index: number) => (
+        {activities.map((activity: any) => (
           <div key={activity.id} className="relative pb-3 last:pb-0 md:pb-4">
             <ActivityItem activity={activity} />
           </div>
