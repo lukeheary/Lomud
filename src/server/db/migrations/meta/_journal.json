@@ -211,6 +211,13 @@
       "when": 1771750000000,
       "tag": "0029_add_rsvp_not_going_activity",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1771800000000,
+      "tag": "0030_add_monthly_recurrence_frequency",
+      "breakpoints": true
     }
   ]
 }

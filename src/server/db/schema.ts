@@ -68,6 +68,7 @@ export const placeMemberRoleEnum = pgEnum("place_member_role", [
 export const recurrenceFrequencyEnum = pgEnum("recurrence_frequency", [
   "daily",
   "weekly",
+  "monthly",
 ]);
 
 export const partnerStatusEnum = pgEnum("partner_status", [

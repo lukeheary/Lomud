@@ -183,7 +183,7 @@ export const eventRouter = router({
         categories: z.array(z.string()).optional().default([]),
         visibility: z.enum(["public", "private"]).default("public"),
         recurrence: z.object({
-          frequency: z.enum(["daily", "weekly"]),
+          frequency: z.enum(["daily", "weekly", "monthly"]),
           interval: z.number().int().min(1).max(12).default(1),
           daysOfWeek: z.array(z.number().int().min(0).max(6)).optional(),
           untilDate: z.date().optional(),

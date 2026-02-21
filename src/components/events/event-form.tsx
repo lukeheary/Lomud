@@ -32,6 +32,16 @@ interface EventFormProps {
 }
 
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const FULL_WEEKDAY_LABELS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+const ORDINAL_LABELS = ["First", "Second", "Third", "Fourth", "Fifth"];
 
 export function EventForm({
   venueId,
@@ -55,7 +65,7 @@ export function EventForm({
   });
 
   const [recurrenceData, setRecurrenceData] = useState({
-    frequency: "weekly" as "daily" | "weekly",
+    frequency: "weekly" as "daily" | "weekly" | "monthly",
     interval: 1,
     daysOfWeek: [] as number[],
     untilDate: "",
@@ -157,7 +167,7 @@ export function EventForm({
   }, [venue]);
 
   useEffect(() => {
-    if (!isRecurringDefault || recurrenceData.frequency !== "weekly") return;
+    if (!isRecurringDefault || recurrenceData.frequency === "daily") return;
     if (recurrenceData.daysOfWeek.length > 0) return;
     const startDate = getDatePart(formData.startAt);
     if (!startDate) return;
@@ -173,6 +183,25 @@ export function EventForm({
     recurrenceData.daysOfWeek.length,
     formData.startAt,
   ]);
+
+  const monthlyPatternLabel = (() => {
+    if (!isRecurringDefault || recurrenceData.frequency !== "monthly") return null;
+    const startDate = getDatePart(formData.startAt);
+    if (!startDate) return null;
+    const date = new Date(`${startDate}T00:00`);
+    const weekday = date.getDay();
+    const ordinal = Math.floor((date.getDate() - 1) / 7);
+    const ordinalLabel = ORDINAL_LABELS[Math.min(ordinal, ORDINAL_LABELS.length - 1)];
+    return `${ordinalLabel} ${FULL_WEEKDAY_LABELS[weekday]}`;
+  })();
+
+  const weeklyPatternLabel = (() => {
+    if (!isRecurringDefault || recurrenceData.frequency !== "weekly") return null;
+    if (recurrenceData.daysOfWeek.length === 0) return null;
+    return recurrenceData.daysOfWeek
+      .map((day) => FULL_WEEKDAY_LABELS[day] ?? WEEKDAY_LABELS[day])
+      .join(", ");
+  })();
 
   const createVenueMutation = trpc.place.createPlace.useMutation();
 
@@ -318,9 +347,11 @@ export function EventForm({
           frequency: recurrenceData.frequency,
           interval: recurrenceData.interval,
           daysOfWeek:
-            recurrenceData.frequency === "weekly"
-              ? recurrenceData.daysOfWeek
-              : undefined,
+            recurrenceData.frequency === "daily"
+              ? undefined
+              : recurrenceData.frequency === "monthly"
+                ? recurrenceData.daysOfWeek.slice(0, 1)
+                : recurrenceData.daysOfWeek,
           untilDate: recurrenceData.untilDate
             ? new Date(`${recurrenceData.untilDate}T23:59:59`)
             : undefined,
@@ -364,6 +395,14 @@ export function EventForm({
           daysOfWeek: [weekday],
         }));
       }
+    }
+
+    if (isRecurringDefault && recurrenceData.frequency === "monthly") {
+      const weekday = new Date(`${date}T00:00`).getDay();
+      setRecurrenceData((prev) => ({
+        ...prev,
+        daysOfWeek: [weekday],
+      }));
     }
 
     const venueHours = selectedVenue?.hours || (venue?.hours as VenueHours);
@@ -579,12 +618,25 @@ export function EventForm({
                     <Select
                       value={recurrenceData.frequency}
                       onValueChange={(value) => {
-                        const nextFrequency = value as "daily" | "weekly";
+                        const nextFrequency = value as
+                          | "daily"
+                          | "weekly"
+                          | "monthly";
+                        const startDate = getDatePart(formData.startAt);
+                        const startWeekday = startDate
+                          ? new Date(`${startDate}T00:00`).getDay()
+                          : new Date().getDay();
                         setRecurrenceData((prev) => ({
                           ...prev,
                           frequency: nextFrequency,
                           daysOfWeek:
-                            nextFrequency === "weekly" ? prev.daysOfWeek : [],
+                            nextFrequency === "daily"
+                              ? []
+                              : nextFrequency === "monthly"
+                                ? [startWeekday]
+                                : prev.daysOfWeek.length > 0
+                                  ? prev.daysOfWeek
+                                  : [startWeekday],
                         }));
                       }}
                     >
@@ -594,6 +646,7 @@ export function EventForm({
                       <SelectContent>
                         <SelectItem value="daily">Daily</SelectItem>
                         <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -637,6 +690,47 @@ export function EventForm({
                         );
                       })}
                     </div>
+                    <p className="text-sm text-muted-foreground">
+                      {weeklyPatternLabel
+                        ? `Repeats every ${
+                            recurrenceData.interval === 1
+                              ? "week"
+                              : `${recurrenceData.interval} weeks`
+                          } on ${weeklyPatternLabel}.`
+                        : "Select one or more weekdays to define weekly recurrence."}
+                    </p>
+                  </div>
+                )}
+
+                {recurrenceData.frequency === "daily" && (
+                  <p className="text-sm text-muted-foreground">
+                    Repeats every{" "}
+                    {recurrenceData.interval === 1
+                      ? "day"
+                      : `${recurrenceData.interval} days`}{" "}
+                    based on the start date.
+                  </p>
+                )}
+
+                {recurrenceData.frequency === "monthly" && (
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label>Pattern Date</Label>
+                      <DatePicker
+                        value={getDatePart(formData.startAt)}
+                        onChange={handleStartDateChange}
+                        placeholder="Select pattern date"
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {monthlyPatternLabel
+                        ? `Repeats on the ${monthlyPatternLabel} of every ${
+                            recurrenceData.interval === 1
+                              ? "month"
+                              : `${recurrenceData.interval} months`
+                          } based on the pattern date.`
+                        : "Pick a pattern date to define monthly recurrence."}
+                    </p>
                   </div>
                 )}
 

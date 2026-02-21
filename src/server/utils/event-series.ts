@@ -22,18 +22,18 @@ interface MaterializeResult {
 }
 
 export function normalizeSeriesDaysOfWeek(
-  frequency: "daily" | "weekly",
+  frequency: "daily" | "weekly" | "monthly",
   daysOfWeek: number[] | null | undefined,
   startAt: Date
 ) {
-  if (frequency !== "weekly") return null;
+  if (frequency === "daily") return null;
 
   const deduped = Array.from(
     new Set((daysOfWeek ?? []).filter((day) => day >= 0 && day <= 6))
   ).sort((a, b) => a - b);
 
   if (deduped.length > 0) {
-    return deduped;
+    return frequency === "monthly" ? [deduped[0]] : deduped;
   }
 
   return [startAt.getDay()];
@@ -55,6 +55,48 @@ function addDays(value: Date, days: number) {
   const date = new Date(value);
   date.setDate(date.getDate() + days);
   return date;
+}
+
+function addMonths(value: Date, months: number) {
+  const date = new Date(value);
+  date.setMonth(date.getMonth() + months);
+  return date;
+}
+
+function startOfMonth(value: Date) {
+  const date = startOfDay(value);
+  date.setDate(1);
+  return date;
+}
+
+function getMonthsBetween(start: Date, end: Date) {
+  return (
+    (end.getFullYear() - start.getFullYear()) * 12 +
+    (end.getMonth() - start.getMonth())
+  );
+}
+
+function getWeekdayOrdinalInMonth(value: Date) {
+  return Math.floor((value.getDate() - 1) / 7) + 1;
+}
+
+function getNthWeekdayOfMonth(
+  year: number,
+  month: number,
+  weekday: number,
+  ordinal: number
+) {
+  const firstDay = new Date(year, month, 1);
+  const firstDayWeekday = firstDay.getDay();
+  const offset = (weekday - firstDayWeekday + 7) % 7;
+  const dayOfMonth = 1 + offset + (ordinal - 1) * 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  if (dayOfMonth > daysInMonth) {
+    return null;
+  }
+
+  return new Date(year, month, dayOfMonth);
 }
 
 function combineDateWithSeriesTime(day: Date, seriesStartAt: Date) {
@@ -148,6 +190,50 @@ function buildWeeklyOccurrences(
   return occurrences;
 }
 
+function buildMonthlyOccurrences(
+  series: EventSeriesRow,
+  effectiveStart: Date,
+  effectiveEnd: Date
+) {
+  const intervalMonths = Math.max(1, series.interval);
+  const daysOfWeek = normalizeSeriesDaysOfWeek(
+    "monthly",
+    series.daysOfWeek,
+    series.startAt
+  );
+  const weekday = daysOfWeek?.[0] ?? series.startAt.getDay();
+  const weekdayOrdinal = getWeekdayOrdinalInMonth(series.startAt);
+
+  const occurrences: Date[] = [];
+  const seriesStartDay = startOfDay(series.startAt);
+  const anchorMonthStart = startOfMonth(series.startAt);
+  let cursorMonthStart = startOfMonth(effectiveStart);
+  const endMonthStart = startOfMonth(effectiveEnd);
+
+  while (cursorMonthStart <= endMonthStart) {
+    const monthsSinceAnchor = getMonthsBetween(anchorMonthStart, cursorMonthStart);
+    if (monthsSinceAnchor >= 0 && monthsSinceAnchor % intervalMonths === 0) {
+      const occurrenceDay = getNthWeekdayOfMonth(
+        cursorMonthStart.getFullYear(),
+        cursorMonthStart.getMonth(),
+        weekday,
+        weekdayOrdinal
+      );
+
+      if (occurrenceDay && occurrenceDay >= seriesStartDay) {
+        const occurrence = combineDateWithSeriesTime(occurrenceDay, series.startAt);
+        if (occurrence >= effectiveStart && occurrence <= effectiveEnd) {
+          occurrences.push(occurrence);
+        }
+      }
+    }
+
+    cursorMonthStart = addMonths(cursorMonthStart, 1);
+  }
+
+  return occurrences;
+}
+
 function buildSeriesOccurrences(
   series: EventSeriesRow,
   windowStart: Date,
@@ -158,6 +244,14 @@ function buildSeriesOccurrences(
 
   if (series.frequency === "daily") {
     return buildDailyOccurrences(
+      series,
+      clampedWindow.effectiveStart,
+      clampedWindow.effectiveEnd
+    );
+  }
+
+  if (series.frequency === "monthly") {
+    return buildMonthlyOccurrences(
       series,
       clampedWindow.effectiveStart,
       clampedWindow.effectiveEnd
